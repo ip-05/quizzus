@@ -1,0 +1,16 @@
+{
+  "name": "quizzus",
+  "version": "1.0.0",
+  "description": "Quizzus is a game-based learning platform, used as educational technology.",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ip-05/quizzus.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ip-05/quizzus/issues"
+  },
+  "homepage": "https://github.com/ip-05/quizzus#readme"
+}
