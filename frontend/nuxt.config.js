@@ -1,11 +1,16 @@
 import { defineNuxtConfig } from 'nuxt/config';
 
 export default defineNuxtConfig({
-  css: ['~/assets/css/main.css'],
-  buildModules: ['@nuxtjs/google-fonts'],
-  googleFonts: {
-    families: {
-      Inter: [400, 500, 600],
-    },
+  app: {
+    meta: [
+      {
+        name: 'viewport',
+        content: 'width=device-width, initial-scale=1',
+      },
+      {
+        charset: 'utf-8',
+      },
+    ],
   },
+  css: ['~/assets/css/main.css'],
 });
