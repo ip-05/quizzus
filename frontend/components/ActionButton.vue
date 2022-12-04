@@ -1,14 +1,13 @@
 <template>
   <button class="button" @click="handleClick">
     <div class="button__img">
-      <img v-if="type === 'hamburger'" src="@/assets/svg/icon-hamburger-menu.svg" alt="Menu" />
-      <img v-if="type === 'avatar'" src="@/assets/svg/icon-login.svg" alt="Avatar" />
+      <img :src="img" :alt="alt" />
     </div>
   </button>
 </template>
 
 <script setup>
-import { defineProps } from 'vue';
+import { computed, defineProps } from 'vue';
 import { useDynamicIslandStore } from '~/stores/dynamicIsland';
 
 const island = useDynamicIslandStore();
@@ -16,9 +15,17 @@ const island = useDynamicIslandStore();
 const props = defineProps({
   type: {
     type: String,
-    default: 'hamburger',
+    default: 'default',
   },
 });
+
+const imgs = {
+  default: { src: '_nuxt/assets/svg/icon-default.svg', alt: 'Icon' },
+  hamburger: { src: '_nuxt/assets/svg/icon-hamburger-menu.svg', alt: 'Menu' },
+  avatar: { src: '_nuxt/assets/svg/icon-login.svg', alt: 'Login' },
+};
+const img = computed(() => imgs[props.type].src);
+const alt = computed(() => imgs[props.type].alt);
 
 const handleClick = () => {
   if (props.type === 'hamburger') {
