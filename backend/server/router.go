@@ -20,9 +20,8 @@ func NewRouter() *gin.Engine {
 		c.JSON(http.StatusOK, gin.H{"data": "hello world"})
 	})
 
-	authGroup.POST("/login", auth.Login)
-
-	authGroup.GET("/login", auth.Test)
+	authGroup.GET("/google", auth.GoogleLogin)
+	authGroup.GET("/google/callback", auth.GoogleCallback)
 
 	return router
 
