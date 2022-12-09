@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/ip-05/quizzus/middleware"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -22,6 +23,10 @@ func NewRouter() *gin.Engine {
 
 	authGroup.GET("/google", auth.GoogleLogin)
 	authGroup.GET("/google/callback", auth.GoogleCallback)
+
+	authGroup.Use(middleware.AuthMiddleware())
+	authGroup.GET("/logout", auth.Logout)
+	authGroup.GET("/me", auth.Me)
 
 	return router
 
