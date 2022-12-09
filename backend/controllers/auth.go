@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"github.com/ip-05/quizzus/middleware"
 	"io"
 	"net/http"
 	"time"
@@ -26,7 +27,7 @@ type UserInfo struct {
 type AuthController struct{}
 
 var googleOauthConfig = &oauth2.Config{
-	RedirectURL:  "http://lvh.me:3000/auth/google/callback",
+	RedirectURL:  "http://localhost:3000/auth/google/callback",
 	ClientID:     "803763517959-q54ngud26hr2098offk8v59vh5j274vn.apps.googleusercontent.com",
 	ClientSecret: "sus",
 	Scopes: []string{
@@ -41,12 +42,11 @@ func (a AuthController) GoogleLogin(c *gin.Context) {
 	b := make([]byte, 16)
 	rand.Read(b)
 	oauthState := base64.URLEncoding.EncodeToString(b)
-	c.SetCookie("oauthstate", oauthState, expiration, "*", "lvh.me", false, false)
+	c.SetCookie("oauthstate", oauthState, expiration, "*", "localhost", false, false)
 
 	url := googleOauthConfig.AuthCodeURL(oauthState)
 
 	c.Redirect(http.StatusTemporaryRedirect, url)
-
 }
 
 func (a AuthController) GoogleCallback(c *gin.Context) {
@@ -96,5 +96,17 @@ func (a AuthController) GoogleCallback(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error while signing JWT token"})
 	}
+	c.SetCookie("token", tokenString, 7*24*60*60, "/", "localhost", false, false)
 	c.JSON(http.StatusOK, gin.H{"token": tokenString})
+}
+
+func (a AuthController) Me(c *gin.Context) {
+	authedUser, _ := c.Get("authedUser")
+	user := authedUser.(middleware.AuthedUser)
+	c.JSON(http.StatusOK, user)
+}
+
+func (a AuthController) Logout(c *gin.Context) {
+	c.SetCookie("token", "", -1, "/", "localhost", false, false)
+	c.JSON(http.StatusOK, gin.H{"message": "Successfully logged out"})
 }
