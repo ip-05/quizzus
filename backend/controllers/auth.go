@@ -5,6 +5,8 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"github.com/ip-05/quizzus/config"
 	"github.com/ip-05/quizzus/middleware"
 	"io"
 	"net/http"
@@ -26,10 +28,12 @@ type UserInfo struct {
 
 type AuthController struct{}
 
+var cfg = config.GetConfig()
+
 var googleOauthConfig = &oauth2.Config{
-	RedirectURL:  "http://localhost:3000/auth/google/callback",
-	ClientID:     "803763517959-q54ngud26hr2098offk8v59vh5j274vn.apps.googleusercontent.com",
-	ClientSecret: "sus",
+	RedirectURL:  fmt.Sprintf("http://%s:%d/auth/google/callback", cfg.Server.Host, cfg.Server.Port),
+	ClientID:     cfg.Google.ClientId,
+	ClientSecret: cfg.Google.ClientSecret,
 	Scopes: []string{
 		"https://www.googleapis.com/auth/userinfo.email",
 		"https://www.googleapis.com/auth/userinfo.profile",
@@ -42,7 +46,7 @@ func (a AuthController) GoogleLogin(c *gin.Context) {
 	b := make([]byte, 16)
 	rand.Read(b)
 	oauthState := base64.URLEncoding.EncodeToString(b)
-	c.SetCookie("oauthstate", oauthState, expiration, "*", "localhost", false, false)
+	c.SetCookie("oauthstate", oauthState, expiration, "*", cfg.Server.Host, false, false)
 
 	url := googleOauthConfig.AuthCodeURL(oauthState)
 
@@ -83,7 +87,7 @@ func (a AuthController) GoogleCallback(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error while parsing user info"})
 	}
 
-	secretKey := []byte("sussyballs")
+	secretKey := []byte(cfg.Secrets.Jwt)
 	tokenJWT := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":             userInfo.Id,
 		"name":           userInfo.GivenName,
@@ -96,7 +100,8 @@ func (a AuthController) GoogleCallback(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error while signing JWT token"})
 	}
-	c.SetCookie("token", tokenString, 7*24*60*60, "/", "localhost", false, false)
+
+	c.SetCookie("token", tokenString, 7*24*60*60, "/", cfg.Server.Host, false, false)
 	c.JSON(http.StatusOK, gin.H{"token": tokenString})
 }
 
@@ -107,6 +112,6 @@ func (a AuthController) Me(c *gin.Context) {
 }
 
 func (a AuthController) Logout(c *gin.Context) {
-	c.SetCookie("token", "", -1, "/", "localhost", false, false)
+	c.SetCookie("token", "", -1, "/", cfg.Server.Host, false, false)
 	c.JSON(http.StatusOK, gin.H{"message": "Successfully logged out"})
 }

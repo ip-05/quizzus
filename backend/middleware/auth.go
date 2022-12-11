@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/ip-05/quizzus/config"
 	"net/http"
 	"time"
 )
@@ -16,6 +17,8 @@ type AuthedUser struct {
 }
 
 func AuthMiddleware() gin.HandlerFunc {
+	cfg := config.GetConfig()
+
 	return func(c *gin.Context) {
 		tokenString, err := c.Cookie("token")
 		if err != nil {
@@ -23,7 +26,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		secret := []byte("sussyballs")
+		secret := []byte(cfg.Secrets.Jwt)
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])

@@ -1,0 +1,10 @@
+[server]
+host = "localhost"
+port = 1234
+
+[google]
+client_id = "id"
+client_secret = "secret"
+
+[secrets]
+jwt = "jwt"
