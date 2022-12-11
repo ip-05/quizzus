@@ -1,8 +1,13 @@
 package server
 
+import (
+	"fmt"
+	"github.com/ip-05/quizzus/config"
+)
+
 func Init() {
-	// config := config.GetConfig()
 	r := NewRouter()
 
-	r.Run("0.0.0.0:3000")
+	cfg := config.GetConfig()
+	r.Run(fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port))
 }
