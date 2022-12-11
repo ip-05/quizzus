@@ -1,8 +1,8 @@
 package config
 
 import (
+	"fmt"
 	"github.com/spf13/viper"
-	"log"
 )
 
 type Config struct {
@@ -27,18 +27,14 @@ type SecretConfig struct {
 
 var config *Config
 
-func GetConfig() *Config {
-	if config != nil {
-		return config
-	}
-
+func InitConfig(name string) *Config {
 	viper.AddConfigPath("config")
-	viper.SetConfigName("config")
+	viper.SetConfigName(name)
 	viper.SetConfigType("toml")
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		log.Fatalf("Error while reading config: %s", err.Error())
+		panic(fmt.Sprintf("Error while reading config: %s", err.Error()))
 	}
 
 	serverConfig := ServerConfig{
@@ -62,4 +58,11 @@ func GetConfig() *Config {
 	}
 
 	return config
+}
+
+func GetConfig() *Config {
+	if config != nil {
+		return config
+	}
+	return InitConfig("config")
 }
