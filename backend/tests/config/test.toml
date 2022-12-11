@@ -1,4 +1,6 @@
 [server]
+secure = false
+domain = "localhost"
 host = "localhost"
 port = 1234
 
