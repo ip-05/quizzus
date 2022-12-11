@@ -1,6 +1,7 @@
 [server]
 secure = false
 domain = "localhost"
+base = "http://localhost:1234"
 host = "localhost"
 port = 1234
 

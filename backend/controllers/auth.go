@@ -31,7 +31,7 @@ type AuthController struct{}
 var cfg = config.GetConfig()
 
 var googleOauthConfig = &oauth2.Config{
-	RedirectURL:  fmt.Sprintf("http://%s:%d/auth/google/callback", cfg.Server.Domain, cfg.Server.Port),
+	RedirectURL:  fmt.Sprintf("%s/auth/google/callback", cfg.Server.Base),
 	ClientID:     cfg.Google.ClientId,
 	ClientSecret: cfg.Google.ClientSecret,
 	Scopes: []string{
