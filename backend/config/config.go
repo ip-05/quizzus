@@ -14,6 +14,7 @@ type Config struct {
 type ServerConfig struct {
 	Secure bool
 	Domain string
+	Base   string
 	Host   string
 	Port   int64
 }
@@ -42,6 +43,7 @@ func InitConfig(name string) *Config {
 	serverConfig := ServerConfig{
 		Secure: viper.Get("server.secure").(bool),
 		Domain: viper.Get("server.domain").(string),
+		Base:   viper.Get("server.base").(string),
 		Host:   viper.Get("server.host").(string),
 		Port:   viper.Get("server.port").(int64),
 	}
