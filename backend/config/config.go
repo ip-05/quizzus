@@ -12,8 +12,10 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	Host string
-	Port int64
+	Secure bool
+	Domain string
+	Host   string
+	Port   int64
 }
 
 type GoogleConfig struct {
@@ -38,8 +40,10 @@ func InitConfig(name string) *Config {
 	}
 
 	serverConfig := ServerConfig{
-		Host: viper.Get("server.host").(string),
-		Port: viper.Get("server.port").(int64),
+		Secure: viper.Get("server.secure").(bool),
+		Domain: viper.Get("server.domain").(string),
+		Host:   viper.Get("server.host").(string),
+		Port:   viper.Get("server.port").(int64),
 	}
 
 	googleConfig := GoogleConfig{

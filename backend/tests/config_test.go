@@ -9,6 +9,8 @@ import (
 func TestConfigServer(t *testing.T) {
 	cfg := config.InitConfig("test")
 
+	assert.Equal(t, false, cfg.Server.Secure, "should be equal")
+	assert.Equal(t, "localhost", cfg.Server.Domain, "should be equal")
 	assert.Equal(t, "localhost", cfg.Server.Host, "should be equal")
 	assert.Equal(t, int64(1234), cfg.Server.Port, "should be equal")
 }

@@ -31,7 +31,7 @@ type AuthController struct{}
 var cfg = config.GetConfig()
 
 var googleOauthConfig = &oauth2.Config{
-	RedirectURL:  fmt.Sprintf("http://%s:%d/auth/google/callback", cfg.Server.Host, cfg.Server.Port),
+	RedirectURL:  fmt.Sprintf("http://%s:%d/auth/google/callback", cfg.Server.Domain, cfg.Server.Port),
 	ClientID:     cfg.Google.ClientId,
 	ClientSecret: cfg.Google.ClientSecret,
 	Scopes: []string{
@@ -46,7 +46,7 @@ func (a AuthController) GoogleLogin(c *gin.Context) {
 	b := make([]byte, 16)
 	rand.Read(b)
 	oauthState := base64.URLEncoding.EncodeToString(b)
-	c.SetCookie("oauthstate", oauthState, expiration, "*", cfg.Server.Host, false, false)
+	c.SetCookie("oauthstate", oauthState, expiration, "*", cfg.Server.Domain, cfg.Server.Secure, false)
 
 	url := googleOauthConfig.AuthCodeURL(oauthState)
 
@@ -101,7 +101,7 @@ func (a AuthController) GoogleCallback(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error while signing JWT token"})
 	}
 
-	c.SetCookie("token", tokenString, 7*24*60*60, "/", cfg.Server.Host, false, false)
+	c.SetCookie("token", tokenString, 7*24*60*60, "/", cfg.Server.Domain, cfg.Server.Secure, false)
 	c.JSON(http.StatusOK, gin.H{"token": tokenString})
 }
 
@@ -112,6 +112,6 @@ func (a AuthController) Me(c *gin.Context) {
 }
 
 func (a AuthController) Logout(c *gin.Context) {
-	c.SetCookie("token", "", -1, "/", cfg.Server.Host, false, false)
+	c.SetCookie("token", "", -1, "/", cfg.Server.Domain, cfg.Server.Secure, false)
 	c.JSON(http.StatusOK, gin.H{"message": "Successfully logged out"})
 }
