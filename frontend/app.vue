@@ -1,7 +1,11 @@
 <template>
   <div class="wrapper">
-    <header class="header">
-      <dynamic-island />
+    <header class="header__wrapper">
+      <div class="header">
+        <action-button type="hamburger" />
+        <dynamic-island />
+        <action-button type="avatar" class="header__last" />
+      </div>
     </header>
     <main class="main">
       <NuxtPage />
@@ -17,12 +21,30 @@
   </div>
 </template>
 
+<script setup></script>
+
 <style scoped>
 .wrapper {
   width: 100%;
   min-height: 100vh;
   display: grid;
   grid-template-rows: 70px 1fr auto;
+}
+
+.header {
+  max-width: 1280px;
+  width: calc(100% - 20px);
+  height: auto;
+  display: grid;
+  grid-template-columns: 50px 1fr 50px;
+  gap: 10px;
+  margin: 0 auto;
+  padding-top: 10px;
+  position: relative;
+}
+
+.header__last {
+  grid-column: 3;
 }
 
 .main {
