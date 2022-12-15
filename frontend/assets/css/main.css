@@ -8,16 +8,16 @@
 
 :root {
   /* backgrounds */
-  --background-main-color: rgb(255,255,255);
-  --background-secondary-color: rgb(242,242,242);
+  --background-main-color: rgb(255, 255, 255);
+  --background-secondary-color: rgb(242, 242, 242);
 
   /* border */
-  --border-color: rgb(242,242,242);
+  --border-color: rgb(242, 242, 242);
 
   /* font color */
-  --font-primary-color: rgb(51,51,51);
-  --font-secondary-color: rgb(156,163,175);
-  --font-active-color: rgb(46,204,113);
+  --font-primary-color: rgb(51, 51, 51);
+  --font-secondary-color: rgb(156, 163, 175);
+  --font-active-color: rgb(46, 204, 113);
 
   /* font sizes */
   --font-primary-size: 24px;
@@ -26,10 +26,10 @@
   --font-quaternary-size: 14px;
 
   /* other colors */
-  --green-color: rgb(46,204,113);
-  --red-color: rgb(231,76,60);
-  --blue-color: rgb(51,152,219);
-  --yellow-color: rgb(241,196,15);
+  --green-color: rgb(46, 204, 113);
+  --red-color: rgb(231, 76, 60);
+  --blue-color: rgb(51, 152, 219);
+  --yellow-color: rgb(241, 196, 15);
 }
 
 @font-face {
@@ -50,7 +50,8 @@
   font-weight: 700;
 }
 
-html, body {
+html,
+body {
   width: 100%;
   height: 100%;
   font-size: 10px;

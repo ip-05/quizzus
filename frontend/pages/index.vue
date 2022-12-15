@@ -2,10 +2,9 @@
   <div class="main">
     <div class="title">Quizzus</div>
     <div class="desciption">
-      <span>
-        Completely free and user-friendly platform for creating<br />
-        quizzes, sharing them with your friends and coworkers.
-      </span>
+      <div class="slogan">
+        {{ slogan }}
+      </div>
     </div>
     <div class="actions">
       <NuxtLink to="/new" class="link">
@@ -16,7 +15,25 @@
   </div>
 </template>
 
-<script setup></script>
+<script setup>
+import { ref, onMounted } from 'vue';
+
+const slogans = ref([
+  'Fun, free, and educational!',
+  'Learn, compete, and have fun!',
+  'The ultimate quiz challenge platform!',
+  'Knowledge is power, and Quizzus is your source!',
+  'Join the quiz revolution and test your skills!',
+  'Where brains and brawn come together in friendly competition!',
+  'Sharpen your mind and take on the competition!',
+]);
+
+const slogan = ref('');
+
+onMounted(() => {
+  slogan.value = slogans.value[Math.floor(Math.random() * slogans.value.length)];
+});
+</script>
 
 <style scoped>
 .main {
@@ -50,5 +67,10 @@
 
 .link {
   text-decoration: none;
+}
+
+.slogan {
+  min-height: 27px;
+  height: auto;
 }
 </style>
