@@ -70,6 +70,7 @@ onMounted(() => {
 }
 
 .slogan {
-  height: 1vh;
+  min-height: 27px;
+  height: auto;
 }
 </style>
