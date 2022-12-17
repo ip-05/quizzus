@@ -1,7 +1,7 @@
 <template>
   <button class="button">
     <div class="icon">
-      <img src="~/assets/svg/icon-add-color.svg" alt="Icon Create New Game" />
+      <nuxt-img src="svg/icon-add-color.svg" alt="Icon Create New Game" />
     </div>
     <span class="text">Create Game</span>
   </button>
