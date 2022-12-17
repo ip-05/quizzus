@@ -1,7 +1,7 @@
 <template>
   <form action="" class="form" :class="{ 'form--join': type === 'join' }">
     <div class="img">
-      <img :src="img" :alt="alt" />
+      <nuxt-img :src="img" :alt="alt" />
     </div>
     <slot>
       <button class="button" type="submit">{{ alt }}</button>
@@ -20,10 +20,10 @@ const props = defineProps({
 });
 
 const imgs = {
-  createroom: { src: '_nuxt/assets/svg/icon-createroom-giant.svg', alt: 'Create Room' },
-  workshop: { src: '_nuxt/assets/svg/icon-workshop-giant.svg', alt: 'Workshop' },
-  join: { src: '_nuxt/assets/svg/icon-entercode-giant.svg', alt: 'Enter Code to Join' },
-  settings: { src: '_nuxt/assets/svg/icon-settings-giant.svg', alt: 'Settings' },
+  createroom: { src: 'svg/icon-createroom-giant.svg', alt: 'Create Room' },
+  workshop: { src: 'svg/icon-workshop-giant.svg', alt: 'Workshop' },
+  join: { src: 'svg/icon-entercode-giant.svg', alt: 'Enter Code to Join' },
+  settings: { src: 'svg/icon-settings-giant.svg', alt: 'Settings' },
 };
 const img = computed(() => imgs[props.type].src);
 const alt = computed(() => imgs[props.type].alt);

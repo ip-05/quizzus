@@ -1,7 +1,7 @@
 <template>
   <form action="" class="form" :class="{ formHasIcon: hasIcon }" @submit.prevent="handleJoin">
     <div v-if="hasIcon" class="icon">
-      <img src="~/assets/svg/icon-search.svg" alt="Search Icon" />
+      <nuxt-img src="svg/icon-search.svg" alt="Search Icon" />
     </div>
     <input v-model="code" class="input" type="text" placeholder="Enter Code To Join" />
   </form>

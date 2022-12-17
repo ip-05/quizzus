@@ -7,7 +7,7 @@
       <div class="header" @click.capture="openIsland">
         <div class="header__status">Welcome to Quizzus</div>
         <div v-if="isOpen" class="header__icon">
-          <img style="cursor: pointer" src="~/assets/svg/icon-close.svg" @click="closeIsland" />
+          <nuxt-img style="cursor: pointer" src="svg/icon-close.svg" @click="closeIsland" />
         </div>
       </div>
       <Transition name="body">

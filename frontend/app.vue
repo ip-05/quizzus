@@ -13,7 +13,7 @@
     <footer class="footer">
       <div>
         <a class="footer__link" href="https://github.com/ip-05/quizzus">
-          <img class="footer__icon" src="~/assets/svg/icon-github.svg" alt="GitHub Icon" />
+          <nuxt-img class="footer__icon" src="svg/icon-github.svg" alt="GitHub Icon" />
         </a>
       </div>
       <span class="footer__copyright">© 2022 Quizzus. All rights reserved</span>

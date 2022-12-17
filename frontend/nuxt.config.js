@@ -1,7 +1,7 @@
 import { defineNuxtConfig } from 'nuxt/config';
 
 export default defineNuxtConfig({
-  modules: ['@pinia/nuxt'],
+  modules: ['@pinia/nuxt', '@nuxt/image-edge'],
   app: {
     meta: [
       {
@@ -14,4 +14,7 @@ export default defineNuxtConfig({
     ],
   },
   css: ['~/assets/css/main.css'],
+  image: {
+    dir: 'assets/images'
+  }
 });
