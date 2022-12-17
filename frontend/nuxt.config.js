@@ -13,8 +13,5 @@ export default defineNuxtConfig({
       },
     ],
   },
-  css: ['~/assets/css/main.css'],
-  image: {
-    dir: 'static'
-  }
+  css: ['~/assets/css/main.css']
 });
