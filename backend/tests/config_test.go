@@ -29,6 +29,12 @@ func TestConfigSecrets(t *testing.T) {
 	assert.Equal(t, "jwt", cfg.Secrets.Jwt, "should be equal")
 }
 
+func TestConfigFrontend(t *testing.T) {
+	cfg := config.InitConfig("test")
+
+	assert.Equal(t, "http://localhost:4321", cfg.Frontend.Base, "should be equal")
+}
+
 func TestConfigInvalid(t *testing.T) {
 	assert.Panics(t, func() {
 		config.InitConfig("test_panic")

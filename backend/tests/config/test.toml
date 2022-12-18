@@ -9,5 +9,8 @@ port = 1234
 client_id = "id"
 client_secret = "secret"
 
+[frontend]
+base = "http://localhost:4321"
+
 [secrets]
 jwt = "jwt"
