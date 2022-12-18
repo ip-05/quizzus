@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"github.com/ip-05/quizzus/config"
 	"github.com/ip-05/quizzus/middleware"
 	"io"
@@ -31,7 +30,7 @@ type AuthController struct{}
 var cfg = config.GetConfig()
 
 var googleOauthConfig = &oauth2.Config{
-	RedirectURL:  fmt.Sprintf("%s/auth/google/callback", cfg.Server.Base),
+	RedirectURL:  cfg.Frontend.Base,
 	ClientID:     cfg.Google.ClientId,
 	ClientSecret: cfg.Google.ClientSecret,
 	Scopes: []string{
@@ -50,27 +49,31 @@ func (a AuthController) GoogleLogin(c *gin.Context) {
 
 	url := googleOauthConfig.AuthCodeURL(oauthState)
 
-	c.Redirect(http.StatusTemporaryRedirect, url)
+	c.JSON(http.StatusOK, gin.H{"redirectUrl": url})
 }
 
 func (a AuthController) GoogleCallback(c *gin.Context) {
 	oauthState, err := c.Cookie("oauthstate")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid cookie"})
+		return
 	}
 
 	if c.Request.FormValue("state") != oauthState {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error while verifying auth token"})
+		return
 	}
 
 	token, err := googleOauthConfig.Exchange(context.Background(), c.Request.FormValue("code"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error while verifying auth token"})
+		return
 	}
 
 	response, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error while verifying auth token"})
+		return
 	}
 
 	defer response.Body.Close()
@@ -78,6 +81,7 @@ func (a AuthController) GoogleCallback(c *gin.Context) {
 	contents, err := io.ReadAll(response.Body)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error while verifying auth token"})
+		return
 	}
 
 	var userInfo UserInfo
@@ -85,6 +89,7 @@ func (a AuthController) GoogleCallback(c *gin.Context) {
 	err = json.Unmarshal(contents, &userInfo)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error while parsing user info"})
+		return
 	}
 
 	secretKey := []byte(cfg.Secrets.Jwt)
@@ -99,19 +104,15 @@ func (a AuthController) GoogleCallback(c *gin.Context) {
 	tokenString, err := tokenJWT.SignedString(secretKey)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error while signing JWT token"})
+		return
 	}
 
 	c.SetCookie("token", tokenString, 7*24*60*60, "/", cfg.Server.Domain, cfg.Server.Secure, false)
-	c.JSON(http.StatusOK, gin.H{"token": tokenString})
+	c.JSON(http.StatusOK, gin.H{"message": "Successfully authenticated user", "token": tokenString})
 }
 
 func (a AuthController) Me(c *gin.Context) {
 	authedUser, _ := c.Get("authedUser")
 	user := authedUser.(middleware.AuthedUser)
 	c.JSON(http.StatusOK, user)
-}
-
-func (a AuthController) Logout(c *gin.Context) {
-	c.SetCookie("token", "", -1, "/", cfg.Server.Domain, cfg.Server.Secure, false)
-	c.JSON(http.StatusOK, gin.H{"message": "Successfully logged out"})
 }
