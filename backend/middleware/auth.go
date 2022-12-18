@@ -6,6 +6,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/ip-05/quizzus/config"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -20,11 +21,13 @@ func AuthMiddleware() gin.HandlerFunc {
 	cfg := config.GetConfig()
 
 	return func(c *gin.Context) {
-		tokenString, err := c.Cookie("token")
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Missing `token` cookie."})
+		header := c.GetHeader("Authorization")
+		if header == "" {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Missing `Authorization` header."})
 			return
 		}
+
+		tokenString := strings.Split(header, " ")[1]
 
 		secret := []byte(cfg.Secrets.Jwt)
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -36,7 +39,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		})
 
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid `token` cookie."})
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid token."})
 			return
 		}
 
@@ -44,7 +47,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			exp := int64(claims["exp"].(float64))
 			now := time.Now().Unix()
 			if now > exp {
-				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Expired `token` cookie."})
+				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Expired token."})
 				return
 			}
 
@@ -57,7 +60,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.Set("authedUser", authedUser)
 			c.Next()
 		} else {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid `token` cookie."})
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid token."})
 		}
 	}
 }
