@@ -6,9 +6,10 @@ import (
 )
 
 type Config struct {
-	Google  *GoogleConfig
-	Server  *ServerConfig
-	Secrets *SecretConfig
+	Google   *GoogleConfig
+	Server   *ServerConfig
+	Secrets  *SecretConfig
+	Frontend *FrontendConfig
 }
 
 type ServerConfig struct {
@@ -26,6 +27,10 @@ type GoogleConfig struct {
 
 type SecretConfig struct {
 	Jwt string
+}
+
+type FrontendConfig struct {
+	Base string
 }
 
 var config *Config
@@ -57,10 +62,15 @@ func InitConfig(name string) *Config {
 		Jwt: viper.Get("secrets.jwt").(string),
 	}
 
+	frontendConfig := FrontendConfig{
+		Base: viper.Get("frontend.base").(string),
+	}
+
 	config = &Config{
-		Server:  &serverConfig,
-		Google:  &googleConfig,
-		Secrets: &secretConfig,
+		Server:   &serverConfig,
+		Google:   &googleConfig,
+		Secrets:  &secretConfig,
+		Frontend: &frontendConfig,
 	}
 
 	return config
