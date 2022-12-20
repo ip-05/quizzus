@@ -7,16 +7,24 @@
       </div>
     </div>
     <div class="actions">
-      <NuxtLink to="/new" class="link">
-        <home-create-button />
-      </NuxtLink>
-      <enter-code-input has-icon />
+      <div v-if="authStore.isAuthed">
+        <NuxtLink to="/new" class="link">
+          <home-create-button />
+        </NuxtLink>
+        <enter-code-input has-icon />
+      </div>
+      <div v-else>
+        <google-signin />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useAuthStore } from '../stores/auth';
+
+const authStore = useAuthStore();
 
 const slogans = ref([
   'Fun, free, and educational!',
@@ -60,7 +68,7 @@ onMounted(() => {
   margin-bottom: 40px;
 }
 
-.actions {
+.actions * {
   display: flex;
   gap: 10px;
 }
