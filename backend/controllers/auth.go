@@ -5,11 +5,13 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
-	"github.com/ip-05/quizzus/config"
-	"github.com/ip-05/quizzus/middleware"
+	"fmt"
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/ip-05/quizzus/config"
+	"github.com/ip-05/quizzus/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
@@ -30,7 +32,7 @@ type AuthController struct{}
 var cfg = config.GetConfig()
 
 var googleOauthConfig = &oauth2.Config{
-	RedirectURL:  cfg.Frontend.Base,
+	RedirectURL:  fmt.Sprintf("%s/auth/google", cfg.Frontend.Base),
 	ClientID:     cfg.Google.ClientId,
 	ClientSecret: cfg.Google.ClientSecret,
 	Scopes: []string{
