@@ -1,11 +1,17 @@
 <template>
-  <button class="button">
+  <button class="button" @click="authStore.signInGoogle">
     <div class="icon">
       <nuxt-img src="svg/icon-google.svg" alt="Sign In with Google" />
     </div>
     <span class="text">Sign In with Google</span>
   </button>
 </template>
+
+<script setup>
+import { useAuthStore } from '../stores/auth';
+
+const authStore = useAuthStore();
+</script>
 
 <style scoped>
 .button {
