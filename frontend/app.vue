@@ -2,9 +2,9 @@
   <div class="wrapper">
     <header class="header__wrapper">
       <div class="header">
-        <action-button type="hamburger" />
-        <dynamic-island />
-        <action-button type="avatar" class="header__last" />
+        <left-action-button mode="hamburger" class="header__first" />
+        <dynamic-island class="header__center" />
+        <profile-popup class="header__last" />
       </div>
     </header>
     <main class="main">
@@ -43,8 +43,27 @@
   position: relative;
 }
 
+.header__first {
+  position: absolute;
+  top: 10px;
+  left: 0;
+}
+
+.header__center {
+  position: absolute;
+  top: 10px;
+  left: 60px;
+  right: 60px;
+}
+
 .header__last {
-  grid-column: 3;
+  position: absolute;
+  top: 10px;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
 
 .main {
