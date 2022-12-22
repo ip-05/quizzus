@@ -42,7 +42,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import { useDynamicIslandStore } from '~/stores/dynamicIsland';
 
 const island = useDynamicIslandStore();
@@ -93,17 +93,14 @@ const closeIsland = () => {
 }
 
 .nav__wrapper {
-  position: absolute;
-  top: 10px;
-  left: 60px;
-  right: 60px;
   text-align: center;
   transition: all 250ms ease;
 }
 
 .nav--active {
-  left: 0px;
-  right: 0px;
+  left: 0px !important;
+  right: 0px !important;
+  z-index: 10;
 }
 
 .nav--active > .nav {
