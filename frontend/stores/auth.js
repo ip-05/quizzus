@@ -8,7 +8,12 @@ export const useAuthStore = defineStore('AuthStore', () => {
 
   const isAuthed = ref(false);
   const token = ref(null);
-  const user = ref(null);
+  const user = ref({
+    id: null,
+    name: null,
+    email: null,
+    profilePicture: null,
+  });
 
   onMounted(async () => {
     const localToken = localStorage.getItem('token');
@@ -16,7 +21,6 @@ export const useAuthStore = defineStore('AuthStore', () => {
       isAuthed.value = true;
       token.value = localToken;
       await getMe();
-      console.log(user.value);
     }
   });
 
@@ -40,6 +44,13 @@ export const useAuthStore = defineStore('AuthStore', () => {
     user.value = data;
   }
 
+  function logout() {
+    localStorage.removeItem('token');
+    token.value = null;
+    user.value = null;
+    isAuthed.value = false;
+  }
+
   async function authenticate(jwt) {
     isAuthed.value = true;
     token.value = jwt;
@@ -47,5 +58,5 @@ export const useAuthStore = defineStore('AuthStore', () => {
     await getMe();
   }
 
-  return { isAuthed, token, signInGoogle, authenticate };
+  return { isAuthed, user, token, signInGoogle, authenticate, logout };
 });
