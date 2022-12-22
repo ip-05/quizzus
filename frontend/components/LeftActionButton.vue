@@ -1,7 +1,7 @@
 <template>
   <button class="button" @click="handleClick">
     <div class="button__img">
-      <nuxt-img :src="img" :alt="alt" />
+      <nuxt-img class="img" :src="imgSrc || img" :alt="alt" />
     </div>
   </button>
 </template>
@@ -13,9 +13,13 @@ import { useDynamicIslandStore } from '~/stores/dynamicIsland';
 const island = useDynamicIslandStore();
 
 const props = defineProps({
-  type: {
+  mode: {
     type: String,
     default: 'default',
+  },
+  imgSrc: {
+    type: String,
+    default: null,
   },
 });
 
@@ -24,13 +28,14 @@ const imgs = {
   hamburger: { src: 'svg/icon-hamburger-menu.svg', alt: 'Menu' },
   avatar: { src: 'svg/icon-login.svg', alt: 'Login' },
 };
-const img = computed(() => imgs[props.type].src);
-const alt = computed(() => imgs[props.type].alt);
+const img = computed(() => imgs[props.mode].src);
+const alt = computed(() => imgs[props.mode].alt);
 
 const handleClick = () => {
   if (props.type === 'hamburger') {
-    island.active();
+    return island.active();
   }
+  console.log('profile click');
 };
 </script>
 
@@ -54,9 +59,14 @@ const handleClick = () => {
   height: 30px;
 }
 
-.button_img img {
+.img {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  border-radius: 50%;
+}
+
+.popup {
+  height: auto !important;
 }
 </style>
