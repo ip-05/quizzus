@@ -13,7 +13,7 @@
       <Transition name="body">
         <div v-if="isOpen" class="body">
           <div class="body__navigation">
-            <NuxtLink class="body__navlink" to="/">
+            <NuxtLink class="body__navlink" to="/new">
               <island-button type="createroom" />
             </NuxtLink>
             <NuxtLink class="body__navlink" to="/">
