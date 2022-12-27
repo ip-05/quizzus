@@ -10,12 +10,14 @@
     />
     <Transition name="backdrop">
       <div v-if="isOpen" class="popup">
-        <medium-button v-if="!authStore.isAuthed" mode="google" @click="authStore.signInGoogle">Sign In</medium-button>
+        <medium-button v-if="!authStore.isAuthed" src="svg/icon-google.svg" @click="authStore.signInGoogle"
+          >Sign In</medium-button
+        >
         <NuxtLink v-if="authStore.isAuthed" to="/" class="popup__link">
-          <medium-button mode="settings">Settings</medium-button>
+          <medium-button src="svg/icon-settings.svg">Settings</medium-button>
         </NuxtLink>
         <NuxtLink v-if="authStore.isAuthed" to="/" class="popup__link">
-          <medium-button mode="logout" @click="handleLogout">Logout</medium-button>
+          <medium-button src="svg/icon-logout.svg" @click="handleLogout">Logout</medium-button>
         </NuxtLink>
       </div>
     </Transition>
