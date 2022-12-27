@@ -1,7 +1,7 @@
 <template>
-  <button class="button">
-    <div class="img">
-      <nuxt-img :src="img" :alt="alt" />
+  <button class="button" :class="{ 'button--minimalistic': minimalistic }">
+    <div class="img" :class="{ 'img--small': smallIcon }">
+      <nuxt-img :src="src" />
     </div>
     <span class="text">
       <slot>Medium Button</slot>
@@ -10,22 +10,22 @@
 </template>
 
 <script setup>
-import { computed, defineProps } from 'vue';
+import { defineProps } from 'vue';
 
-const props = defineProps({
-  mode: {
+defineProps({
+  src: {
     type: String,
-    default: 'default',
+    default: 'svg/icon-settings.svg',
+  },
+  minimalistic: {
+    type: Boolean,
+    default: false,
+  },
+  smallIcon: {
+    type: Boolean,
+    default: false,
   },
 });
-
-const imgs = {
-  logout: { src: 'svg/icon-logout.svg', alt: 'log out' },
-  settings: { src: 'svg/icon-settings.svg', alt: 'Settings' },
-  google: { src: 'svg/icon-google-small.svg', alt: 'Sign In' },
-};
-const img = computed(() => imgs[props.mode].src);
-const alt = computed(() => imgs[props.mode].alt);
 </script>
 
 <style scoped>
@@ -52,6 +52,11 @@ const alt = computed(() => imgs[props.mode].alt);
   height: 24px;
 }
 
+.img--small {
+  width: 16px;
+  height: 16px;
+}
+
 .img img {
   width: 100%;
   height: 100%;
@@ -63,5 +68,15 @@ const alt = computed(() => imgs[props.mode].alt);
   font-family: 'Inter-SemiBold', sans-serif;
   font-size: var(--font-quaternary-size);
   line-height: 20px;
+}
+
+.button--minimalistic {
+  width: auto;
+  padding: 0;
+  display: inline-flex;
+}
+
+.button--minimalistic:hover {
+  background: none;
 }
 </style>
