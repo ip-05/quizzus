@@ -1,5 +1,5 @@
 <template>
-  <form class="form" :class="{ 'form--minimalistic': minimalistic }">
+  <div class="form" :class="{ 'form--minimalistic': minimalistic }">
     <div class="icon">
       <nuxt-img :src="img" alt="Icon" />
     </div>
@@ -10,7 +10,7 @@
       :value="modelValue"
       @input="$emit('update:modelValue', $event.target.value)"
     />
-  </form>
+  </div>
 </template>
 
 <script setup>
@@ -61,8 +61,8 @@ defineProps({
 }
 
 .icon {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
 }
 
 .icon img {
