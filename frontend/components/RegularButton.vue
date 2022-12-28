@@ -30,6 +30,7 @@ const props = defineProps({
   font-family: 'Inter-SemiBold', sans-serif;
   background: var(--background-secondary-color);
   cursor: pointer;
+  transition: all 250ms ease;
 }
 
 .button--active {
