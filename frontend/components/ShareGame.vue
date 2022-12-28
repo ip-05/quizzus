@@ -33,9 +33,9 @@
     </div>
     <div class="footer">
       <regular-button @click="$emit('back')">Back</regular-button>
-      <regular-button @click="clipboardCode">Save to Workshop and Leave</regular-button>
+      <regular-button>Save to Workshop and Leave</regular-button>
       <NuxtLink :to="game" class="footer__last">
-        <regular-button active @click="clipboardCode">Go to Game</regular-button>
+        <regular-button active>Go to Game</regular-button>
       </NuxtLink>
     </div>
   </div>

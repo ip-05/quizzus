@@ -41,7 +41,7 @@
       </div>
       <div class="footer">
         <NuxtLink to="/">
-          <regular-button>Cancel</regular-button>
+          <regular-button @click="newGameStore.resetGame">Cancel</regular-button>
         </NuxtLink>
         <regular-button
           active
@@ -56,6 +56,7 @@
 
 <script setup>
 import { reactive, computed } from 'vue';
+import { useNewGameStore } from '../stores/new';
 
 const game = reactive({
   topic: null,
@@ -63,6 +64,16 @@ const game = reactive({
   time: null,
   questions: [{ id: 0, name: null, answer: null, optionA: null, optionB: null, optionC: null, optionD: null }],
 });
+
+// Load saved game from store
+const newGameStore = useNewGameStore();
+if (!newGameStore.isEmptyGame) {
+  const { game: storedGame } = newGameStore;
+  const keys = Object.keys(storedGame);
+  for (const key of keys) {
+    game[key] = storedGame[key];
+  }
+}
 
 // Can question be removed
 const removable = computed(() => game.questions.length <= 1);
