@@ -7,15 +7,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/ip-05/quizzus/models"
 )
-
-type GameInfo struct {
-	InviteCode string     `json:"code"`
-	Topic      string     `json:"topic"`
-	RoundTime  int        `json:"roundTime"`
-	Points     float64    `json:"points"`
-	Questions  []Question `json:"questions"`
-}
 
 type Question struct {
 	Name    string   `json:"name"`
@@ -37,7 +30,8 @@ type CreateBody struct {
 type GameController struct{}
 
 func (g GameController) CreateGame(c *gin.Context) {
-	var gameInfo GameInfo
+	var game models.Game
+
 	var body CreateBody
 
 	if err := c.BindJSON(&body); err != nil {
@@ -45,39 +39,53 @@ func (g GameController) CreateGame(c *gin.Context) {
 		return
 	}
 
-	gameInfo.InviteCode = generateCode()
+	game.InviteCode = generateCode()
 
 	if len(body.Topic) > 128 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "too long topic name"})
 		return
 	}
-	gameInfo.Topic = body.Topic
+	game.Topic = body.Topic
 
 	if body.RoundTime < 10 || body.RoundTime > 60 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "round time should be over 10 or below 60 (seconds)"})
 		return
 	}
-	gameInfo.RoundTime = body.RoundTime
+	game.RoundTime = body.RoundTime
 
 	if body.Points <= 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "points should not be lower than 0"})
 		return
 	}
-	gameInfo.Points = body.Points
+	game.Points = body.Points
+
+	//models.DB.Create(&game)
 
 	for _, v := range body.Questions {
 		if len(v.Options) != 4 {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "should be 4 options"})
 			return
 		}
-		gameInfo.Questions = append(gameInfo.Questions, v)
-	}
 
-	c.JSON(http.StatusOK, gameInfo)
+		question := models.Question{Name: v.Name}
+		//models.DB.Create(&question)
+		game.Questions = append(game.Questions, question)
+
+		for _, j := range v.Options {
+			option := models.Option{Name: j.Name, Correct: j.Correct}
+			//models.DB.Create(&option)
+			question.Options = append(question.Options, option)
+		}
+	}
+	models.DB.Create(&game.Questions)
+	models.DB.Create(&game)
+
+	models.DB.First(&game, game.Id).Preload("Questions")
+	c.JSON(http.StatusOK, game)
 }
 
 func (g GameController) FindByCode(c *gin.Context) {
-	//var game GameInfo
+	//var game game
 	c.JSON(http.StatusBadRequest, gin.H{"message": "not yet implemented"})
 }
 

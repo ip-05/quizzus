@@ -14,3 +14,11 @@ client_secret = ""
 
 [secrets]
 jwt = ""
+
+[db]
+host = "localhost"
+port = 5432
+user = "postgres"
+password = "password"
+name = "quizzus"
+secure = false
