@@ -40,8 +40,11 @@ func NewRouter() *gin.Engine {
 	authGroup.Use(middleware.AuthMiddleware())
 	authGroup.GET("/me", auth.Me)
 
-	router.GET("/game/:id", game.FindByCode)
+	//router.GET("/game/:id", game.GetById)
+	router.GET("/game/:code", game.GetByCode)
 	router.POST("/game", game.CreateGame)
+	//router.PATCH("/game/:id", game.Update)
+	//router.DELETE("/game", game.Delete)
 
 	return router
 }
