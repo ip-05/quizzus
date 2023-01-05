@@ -44,7 +44,7 @@ func NewRouter() *gin.Engine {
 	router.GET("/games", game.Get)
 	router.POST("/games", game.CreateGame)
 	router.PATCH("/games", game.Update)
-	//router.DELETE("/game", game.Delete)
+	router.DELETE("/games", game.Delete)
 
 	return router
 }

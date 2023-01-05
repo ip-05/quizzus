@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/ip-05/quizzus/models"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type CreateQuestion struct {
@@ -235,47 +236,25 @@ func (g GameController) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, game)
 }
 
-// func (g GameController) Update(c *gin.Context) {
-// 	var game models.Game
-// 	var body CreateBody
+func (g GameController) Delete(c *gin.Context) {
+	var game models.Game
 
-// 	if err := c.BindJSON(&body); err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
-// 		return
-// 	}
+	id, _ := strconv.Atoi(c.Query("id"))
+	code := c.Query("invite_code")
+	models.DB.Preload("Questions.Options").Where("invite_code = ? or id = ?", code, id).First(&game)
 
-// 	id := c.Param("id")
-// 	models.DB.Preload("Questions.Options").Where("id = ?", id).First(&game)
+	if game.Id == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Game not found"})
+		return
+	}
 
-// 	// if err := models.DB.Preload("Questions.Options").Where("id = ?", id).First(&game).Error; err != nil {
-// 	// 	c.AbortWithStatus(404)
-// 	// 	fmt.Println(err)
-// 	// }
-// 	// c.BindJSON(&game)
-// 	// models.DB.Save(&game)
-// 	// c.JSON(200, game)
-// 	models.DB.Model(&game).Where("id = ?", id).Updates(models.Game{Topic: body.Topic, RoundTime: body.RoundTime, Points: body.Points})
+	for _, v := range game.Questions {
+		models.DB.Select(clause.Associations).Unscoped().Delete(&v)
+	}
+	models.DB.Select(clause.Associations).Unscoped().Delete(&game)
 
-// 	for _, q := range body.Questions {
-// 		var question models.Question
-// 		qId := q.Id
-// 		models.DB.Model(&question).Where("id = ?", qId).Updates(models.Question{Name: q.Name})
-
-// 		for _, o := range q.Options {
-// 			var option models.Option
-// 			oId := o.Id
-// 			models.DB.Model(&option).Where("id = ?", oId).Updates(models.Option{Name: o.Name, Correct: o.Correct})
-
-// 		}
-// 		//v.Name = body.Questions
-// 	}
-// 	//models.DB.Save(&game)
-// 	c.JSON(http.StatusOK, game)
-// }
-
-// func (g GameController) Delete(c *gin.Context) {
-// 	//var game models.Game
-// }
+	c.JSON(http.StatusOK, gin.H{"message": "Successfully deleted"})
+}
 
 func generateCode() string {
 	bytes := make([]byte, 4)
