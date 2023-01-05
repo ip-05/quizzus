@@ -113,65 +113,6 @@ func (g GameController) Get(c *gin.Context) {
 	c.JSON(http.StatusOK, game)
 }
 
-// func (g GameController) Update(c *gin.Context) {
-// 	var game models.Game
-// 	var body UpdateBody
-
-// 	if err := c.BindJSON(&body); err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
-// 		return
-// 	}
-
-// 	id, _ := strconv.Atoi(c.Query("id"))
-// 	code := c.Query("invite_code")
-// 	models.DB.Preload("Questions.Options").Where("invite_code = ? or id = ?", code, id).First(&game)
-
-// 	if game.Id == 0 {
-// 		c.JSON(http.StatusNotFound, gin.H{"error": "Game not found"})
-// 		return
-// 	}
-
-// 	game.Topic = body.Topic
-// 	game.RoundTime = body.RoundTime
-// 	game.Points = body.Points
-
-// 	models.DB.Transaction(func(tx *gorm.DB) error {
-// 		for _, x := range body.Questions {
-// 			found := false
-// 			for _, y := range game.Questions {
-// 				if x.Id == y.Id {
-// 					found = true
-// 					y.Name = x.Name
-
-// 					for i, v := range x.Options {
-// 						y.Options[i].Name = v.Name
-// 						y.Options[i].Correct = v.Correct
-// 					}
-
-// 					break
-// 				}
-// 			}
-
-// 			if !found {
-// 				question := models.Question{
-// 					Name: x.Name,
-// 				}
-
-// 				for i := 0; i < 4; i++ {
-// 					question.Options = append(question.Options, models.Option{Name: x.Options[i].Name, Correct: x.Options[i].Correct})
-// 				}
-
-// 				game.Questions = append(game.Questions, question)
-// 			}
-// 		}
-
-// 		models.DB.Session(&gorm.Session{FullSaveAssociations: true}).Updates(&game)
-// 		return nil
-// 	})
-
-// 	c.JSON(http.StatusOK, game)
-// }
-
 func (g GameController) Update(c *gin.Context) {
 	var game models.Game
 	var body UpdateBody
@@ -226,8 +167,14 @@ func (g GameController) Update(c *gin.Context) {
 
 	for _, v := range ids {
 		if v == 1 {
+			// for j, v2 := range game.Questions {
+			// 	if v2.Id == i {
+			// 		game.Questions = append(game.Questions[:j], game.Questions[j+1:]...)
+			// 	}
+			// }
 			// models.DB.Unscoped().Where("id = ?", i).Delete(&models.Question{})
 			// DELETE HERE
+			//models.DB.Select("Options").Unscoped().Delete(&models.Question{}, i)
 		}
 	}
 
