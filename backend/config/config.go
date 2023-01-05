@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+
 	"github.com/spf13/viper"
 )
 
@@ -10,6 +11,7 @@ type Config struct {
 	Server   *ServerConfig
 	Secrets  *SecretConfig
 	Frontend *FrontendConfig
+	Database *DatabaseConfig
 }
 
 type ServerConfig struct {
@@ -31,6 +33,15 @@ type SecretConfig struct {
 
 type FrontendConfig struct {
 	Base string
+}
+
+type DatabaseConfig struct {
+	Host     string
+	Port     int64
+	User     string
+	Password string
+	DbName   string
+	Secure   bool
 }
 
 var config *Config
@@ -66,11 +77,21 @@ func InitConfig(name string) *Config {
 		Base: viper.Get("frontend.base").(string),
 	}
 
+	dbConfig := DatabaseConfig{
+		Host:     viper.Get("db.host").(string),
+		Port:     viper.Get("db.port").(int64),
+		User:     viper.Get("db.user").(string),
+		Password: viper.Get("db.password").(string),
+		DbName:   viper.Get("db.name").(string),
+		Secure:   viper.Get("db.secure").(bool),
+	}
+
 	config = &Config{
 		Server:   &serverConfig,
 		Google:   &googleConfig,
 		Secrets:  &secretConfig,
 		Frontend: &frontendConfig,
+		Database: &dbConfig,
 	}
 
 	return config
