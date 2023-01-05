@@ -162,19 +162,19 @@ func (g GameController) Update(c *gin.Context) {
 			}
 
 			game.Questions = append(game.Questions, question)
+			ids[x.Id] += 1
 		}
 	}
 
-	for _, v := range ids {
+	for i, v := range ids {
 		if v == 1 {
-			// for j, v2 := range game.Questions {
-			// 	if v2.Id == i {
-			// 		game.Questions = append(game.Questions[:j], game.Questions[j+1:]...)
-			// 	}
-			// }
-			// models.DB.Unscoped().Where("id = ?", i).Delete(&models.Question{})
-			// DELETE HERE
-			//models.DB.Select("Options").Unscoped().Delete(&models.Question{}, i)
+			for j, v2 := range game.Questions {
+				if v2.Id == i {
+					game.Questions = append(game.Questions[:j], game.Questions[j+1:]...)
+				}
+			}
+			models.DB.Select(clause.Associations).Unscoped().Delete(&models.Question{}, i)
+			models.DB.Exec("DELETE FROM options WHERE question_id = ?", i)
 		}
 	}
 
