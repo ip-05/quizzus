@@ -5,30 +5,47 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ip-05/quizzus/models"
+	"gorm.io/gorm"
 )
 
-type Question struct {
-	Name    string   `json:"name"`
-	Options []Option `json:"options"`
-	Id      uint     `json:"id"`
-	GameID  uint     `json:"gameId"`
+type CreateQuestion struct {
+	Name    string         `json:"name"`
+	Options []CreateOption `json:"options"`
 }
 
-type Option struct {
-	Name       string `json:"name"`
-	Correct    bool   `json:"correct"`
-	Id         uint   `json:"id"`
-	QuestionID uint   `json:"questionId"`
+type CreateOption struct {
+	Name    string `json:"name"`
+	Correct bool   `json:"correct"`
 }
 
 type CreateBody struct {
-	Topic     string     `json:"topic"`
-	RoundTime int        `json:"roundTime"`
-	Points    float64    `json:"points"`
-	Questions []Question `json:"questions"`
+	Topic     string           `json:"topic"`
+	RoundTime int              `json:"roundTime"`
+	Points    float64          `json:"points"`
+	Questions []CreateQuestion `json:"questions"`
+}
+
+type UpdateQuestion struct {
+	Id      uint           `json:"id"`
+	Name    string         `json:"name"`
+	Options []UpdateOption `json:"options"`
+}
+
+type UpdateOption struct {
+	Id      uint   `json:"id"`
+	Name    string `json:"name"`
+	Correct bool   `json:"correct"`
+}
+
+type UpdateBody struct {
+	Topic     string           `json:"topic"`
+	RoundTime int              `json:"roundTime"`
+	Points    float64          `json:"points"`
+	Questions []UpdateQuestion `json:"questions"`
 }
 
 type GameController struct{}
@@ -62,41 +79,159 @@ func (g GameController) CreateGame(c *gin.Context) {
 	}
 	game.Points = body.Points
 
-	models.DB.Create(&game)
-
 	for _, v := range body.Questions {
 		if len(v.Options) != 4 {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Should be 4 options"})
 			return
 		}
 		question := models.Question{Name: v.Name, GameID: game.Id}
-		models.DB.Create(&question)
 
 		for _, j := range v.Options {
 			option := models.Option{Name: j.Name, Correct: j.Correct, QuestionID: question.Id}
-			models.DB.Create(&option)
+			question.Options = append(question.Options, option)
 		}
+		game.Questions = append(game.Questions, question)
 	}
+
+	models.DB.Session(&gorm.Session{FullSaveAssociations: true}).Create(&game)
+
 	c.JSON(http.StatusOK, game)
 }
 
-func (g GameController) GetById(c *gin.Context) {
-	var game models.Game
-	id := c.Param("id")
-	models.DB.Preload("Questions.Options").First(&game, id)
-	c.JSON(http.StatusOK, game)
-}
-
-func (g GameController) GetByCode(c *gin.Context) {
+func (g GameController) Get(c *gin.Context) {
 	var game models.Game
 
-	code := c.Param("code")
-	models.DB.Preload("Questions.Options").Where("invite_code = ?", code).First(&game)
+	id, _ := strconv.Atoi(c.Query("id"))
+	code := c.Query("invite_code")
+	models.DB.Preload("Questions.Options").Where("invite_code = ? or id = ?", code, id).First(&game)
 
 	if game.Id == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Game not found"})
 		return
 	}
+	c.JSON(http.StatusOK, game)
+}
+
+// func (g GameController) Update(c *gin.Context) {
+// 	var game models.Game
+// 	var body UpdateBody
+
+// 	if err := c.BindJSON(&body); err != nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+// 		return
+// 	}
+
+// 	id, _ := strconv.Atoi(c.Query("id"))
+// 	code := c.Query("invite_code")
+// 	models.DB.Preload("Questions.Options").Where("invite_code = ? or id = ?", code, id).First(&game)
+
+// 	if game.Id == 0 {
+// 		c.JSON(http.StatusNotFound, gin.H{"error": "Game not found"})
+// 		return
+// 	}
+
+// 	game.Topic = body.Topic
+// 	game.RoundTime = body.RoundTime
+// 	game.Points = body.Points
+
+// 	models.DB.Transaction(func(tx *gorm.DB) error {
+// 		for _, x := range body.Questions {
+// 			found := false
+// 			for _, y := range game.Questions {
+// 				if x.Id == y.Id {
+// 					found = true
+// 					y.Name = x.Name
+
+// 					for i, v := range x.Options {
+// 						y.Options[i].Name = v.Name
+// 						y.Options[i].Correct = v.Correct
+// 					}
+
+// 					break
+// 				}
+// 			}
+
+// 			if !found {
+// 				question := models.Question{
+// 					Name: x.Name,
+// 				}
+
+// 				for i := 0; i < 4; i++ {
+// 					question.Options = append(question.Options, models.Option{Name: x.Options[i].Name, Correct: x.Options[i].Correct})
+// 				}
+
+// 				game.Questions = append(game.Questions, question)
+// 			}
+// 		}
+
+// 		models.DB.Session(&gorm.Session{FullSaveAssociations: true}).Updates(&game)
+// 		return nil
+// 	})
+
+// 	c.JSON(http.StatusOK, game)
+// }
+
+func (g GameController) Update(c *gin.Context) {
+	var game models.Game
+	var body UpdateBody
+
+	if err := c.BindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+
+	id, _ := strconv.Atoi(c.Query("id"))
+	code := c.Query("invite_code")
+	models.DB.Preload("Questions.Options").Where("invite_code = ? or id = ?", code, id).First(&game)
+
+	if game.Id == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Game not found"})
+		return
+	}
+
+	game.Topic = body.Topic
+	game.RoundTime = body.RoundTime
+	game.Points = body.Points
+
+	ids := make(map[uint]int)
+	for _, y := range game.Questions {
+		ids[y.Id] += 1
+	}
+
+	for i, x := range body.Questions {
+		ids[x.Id] += 1
+
+		fmt.Println(ids[x.Id])
+		if ids[x.Id] == 2 {
+			game.Questions[i].Name = x.Name
+
+			for j := 0; j < 4; j++ {
+				game.Questions[i].Options[j].Name = x.Options[j].Name
+				game.Questions[i].Options[j].Correct = x.Options[j].Correct
+			}
+		} else {
+			question := models.Question{
+
+				Name: x.Name,
+			}
+
+			for i := 0; i < 4; i++ {
+				question.Options = append(question.Options, models.Option{Name: x.Options[i].Name, Correct: x.Options[i].Correct})
+			}
+
+			game.Questions = append(game.Questions, question)
+		}
+	}
+
+	for _, v := range ids {
+		if v == 1 {
+			// models.DB.Unscoped().Where("id = ?", i).Delete(&models.Question{})
+			// DELETE HERE
+		}
+	}
+
+	models.DB.Session(&gorm.Session{FullSaveAssociations: true}).Updates(&game)
+
 	c.JSON(http.StatusOK, game)
 }
 
