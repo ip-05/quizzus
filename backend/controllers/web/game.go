@@ -131,8 +131,22 @@ func (g GameController) Update(c *gin.Context) {
 		return
 	}
 
+	if len(body.Topic) > 128 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Too long topic name"})
+		return
+	}
 	game.Topic = body.Topic
+
+	if body.RoundTime < 10 || body.RoundTime > 60 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Round time should be over 10 or below 60 (seconds)"})
+		return
+	}
 	game.RoundTime = body.RoundTime
+
+	if body.Points <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Points should not be lower than 0"})
+		return
+	}
 	game.Points = body.Points
 
 	ids := make(map[uint]int)
@@ -153,12 +167,15 @@ func (g GameController) Update(c *gin.Context) {
 			}
 		} else {
 			question := models.Question{
-
 				Name: x.Name,
 			}
 
 			for i := 0; i < 4; i++ {
 				question.Options = append(question.Options, models.Option{Name: x.Options[i].Name, Correct: x.Options[i].Correct})
+			}
+			if len(question.Options) != 4 {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Should be 4 options"})
+				return
 			}
 
 			game.Questions = append(game.Questions, question)

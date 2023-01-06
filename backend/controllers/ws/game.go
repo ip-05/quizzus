@@ -113,6 +113,7 @@ func (g *gameSocketController) JoinGame(ctx context.Context, data JoinGameData) 
 
 	if game.Id == 0 {
 		MessageReply(true, GameNotFound).Send(conn)
+		return
 	}
 
 	value, ok := g.Games[game.InviteCode]
