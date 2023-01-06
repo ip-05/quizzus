@@ -16,26 +16,19 @@
           <div class="about__title">Topic of the Game</div>
           <div class="about__title">Points per question</div>
           <div class="about__title">Round time</div>
-          <regular-input v-model="game.topic" placeholder="Enter the topic" img="svg/icon-pen-darker.svg" />
-          <regular-input v-model="game.points" placeholder="From 0.1 to 100" img="svg/icon-star.svg" />
-          <regular-input v-model="game.time" placeholder="From 10 to 60 seconds" img="svg/icon-clock-darker.svg" />
+          <regular-input v-model="topic" placeholder="Enter the topic" img="svg/icon-pen-darker.svg" />
+          <regular-input v-model="points" placeholder="From 0.1 to 100" img="svg/icon-star.svg" />
+          <regular-input v-model="time" placeholder="From 10 to 60 seconds" img="svg/icon-clock-darker.svg" />
         </div>
         <div class="questions">
           <div class="questions__title">List of questions</div>
           <TransitionGroup name="questions-list" tag="div">
-            <question-block
-              v-for="(question, idx) in game.questions"
-              :key="question.id"
-              :generated-id="idx"
-              :question="question"
-              :removable="removable"
-              class="question"
-              @update-questions="handleUpdateQuestions"
-              @remove="removeQuestionBlock"
-            />
+            <question-block v-for="{ id } in questions" :key="id" :generated-id="id" class="question" />
           </TransitionGroup>
           <div class="questions__add">
-            <medium-button minimalistic src="svg/icon-add.svg" @click="addQuestionBlock">Add question</medium-button>
+            <medium-button minimalistic src="svg/icon-add.svg" @click="newGameStore.appendQuestion()"
+              >Add question</medium-button
+            >
           </div>
         </div>
       </div>
@@ -45,8 +38,8 @@
         </NuxtLink>
         <regular-button
           active
-          :style="{ opacity: nextable ? '1' : '0.5' }"
-          @click="nextable ? $emit('next', game) : null"
+          :style="{ opacity: newGameStore.nextable ? '1' : '0.5' }"
+          @click="newGameStore.nextable ? $emit('next', game) : null"
           >Next</regular-button
         >
       </div>
@@ -55,60 +48,13 @@
 </template>
 
 <script setup>
-import { reactive, computed } from 'vue';
+import { storeToRefs } from 'pinia';
+import { ref } from 'vue';
 import { useNewGameStore } from '../stores/new';
 
-const game = reactive({
-  topic: null,
-  points: null,
-  time: null,
-  questions: [{ id: 0, name: null, answer: null, optionA: null, optionB: null, optionC: null, optionD: null }],
-});
-
-// Load saved game from store
 const newGameStore = useNewGameStore();
-if (!newGameStore.isEmptyGame) {
-  const { game: storedGame } = newGameStore;
-  const keys = Object.keys(storedGame);
-  for (const key of keys) {
-    game[key] = storedGame[key];
-  }
-}
 
-// Can question be removed
-const removable = computed(() => game.questions.length <= 1);
-
-// Next step is avaliable when all fields are filled
-const nextable = computed(() => {
-  if (!game.topic || !game.points || !game.time) return false;
-  return game.questions.every(
-    ({ id, name, optionA, optionB, optionC, optionD, answer }) =>
-      id.toString() && name && optionA && optionB && optionC && optionD && answer
-  );
-});
-
-// Triggers when question-block is updated
-const handleUpdateQuestions = (data) => {
-  const { id } = data;
-  if (game.questions.length <= 1) return (game.questions[0] = data);
-  for (let i = 0; i < game.questions.length; i++) {
-    const element = game.questions[i];
-    if (element.id === id) {
-      game.questions[i] = data;
-    }
-  }
-};
-
-const addQuestionBlock = () => {
-  // Finds last element id, creates new block with increased last id
-  const { length } = game.questions;
-  const { id: lastId } = game.questions[length - 1];
-  game.questions.push({ id: lastId + 1 });
-};
-
-const removeQuestionBlock = (id) => {
-  game.questions = game.questions.filter((q) => q.id !== id);
-};
+const { topic, time, points, questions } = storeToRefs(newGameStore);
 </script>
 
 <style scoped>

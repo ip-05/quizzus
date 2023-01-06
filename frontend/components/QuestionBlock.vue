@@ -2,15 +2,10 @@
   <div class="questions__wrapper">
     <div class="header">
       <div class="header__item title">
-        <regular-input v-model="questions.name" minimalistic placeholder="Question name" img="svg/icon-question.svg" />
+        <regular-input v-model="question.name" minimalistic placeholder="Question name" img="svg/icon-question.svg" />
       </div>
       <div class="header__item remove">
-        <medium-button
-          v-if="!removable"
-          minimalistic
-          small-icon
-          src="svg/icon-trash.svg"
-          @click="$emit('remove', questions.id)"
+        <medium-button v-if="!removable" minimalistic small-icon src="svg/icon-trash.svg" @click="removeQuestion"
           >Remove question</medium-button
         >
       </div>
@@ -18,20 +13,28 @@
     <form id="form" action="">
       <ul class="questions">
         <li class="questions__field">
-          <regular-input v-model="questions.optionA" placeholder="Enter an option A" img="svg/icon-triangle.svg" />
-          <input id="a" v-model="questions.answer" class="qiestion__radio" value="a" type="radio" name="answer" />
+          <regular-input
+            v-model="question.options[0].name"
+            placeholder="Enter an option A"
+            img="svg/icon-triangle.svg"
+          />
+          <input id="a" v-model="correctOption" :value="0" class="qiestion__radio" type="radio" name="answer" />
         </li>
         <li class="questions__field">
-          <regular-input v-model="questions.optionB" placeholder="Enter an option B" img="svg/icon-circle.svg" />
-          <input id="b" v-model="questions.answer" class="qiestion__radio" value="b" type="radio" name="answer" />
+          <regular-input v-model="question.options[1].name" placeholder="Enter an option B" img="svg/icon-circle.svg" />
+          <input id="b" v-model="correctOption" :value="1" class="qiestion__radio" type="radio" name="answer" />
         </li>
         <li class="questions__field">
-          <regular-input v-model="questions.optionC" placeholder="Enter an option C" img="svg/icon-square.svg" />
-          <input id="c" v-model="questions.answer" class="qiestion__radio" value="c" type="radio" name="answer" />
+          <regular-input v-model="question.options[2].name" placeholder="Enter an option C" img="svg/icon-square.svg" />
+          <input id="c" v-model="correctOption" :value="2" class="qiestion__radio" type="radio" name="answer" />
         </li>
         <li class="questions__field">
-          <regular-input v-model="questions.optionD" placeholder="Enter an option D" img="svg/icon-diamond.svg" />
-          <input id="d" v-model="questions.answer" class="qiestion__radio" value="d" type="radio" name="answer" />
+          <regular-input
+            v-model="question.options[3].name"
+            placeholder="Enter an option D"
+            img="svg/icon-diamond.svg"
+          />
+          <input id="d" v-model="correctOption" :value="3" class="qiestion__radio" type="radio" name="answer" />
         </li>
       </ul>
     </form>
@@ -39,51 +42,46 @@
 </template>
 
 <script setup>
-import { watch, reactive, defineEmits, defineProps } from 'vue';
+import { defineEmits, nextTick, defineProps, ref, watch, computed, onMounted } from 'vue';
+import { storeToRefs } from 'pinia';
+import { useNewGameStore } from '../stores/new';
 
+const newGameStore = useNewGameStore();
+
+const emit = defineEmits(['updateQuestions', 'remove']);
 const props = defineProps({
-  removable: {
-    type: Boolean,
-    default: false,
-  },
   generatedId: {
     type: Number,
     default: 0,
   },
-  question: {
-    type: Object,
-    default() {
-      return {
-        id: 0,
-        name: null,
-        optionA: null,
-        optionB: null,
-        optionC: null,
-        optionD: null,
-        answer: null,
-      };
-    },
-  },
-});
-const emit = defineEmits(['updateQuestions', 'remove']);
-
-const questions = reactive({
-  id: props.question.id || 0,
-  name: props.question.name || null,
-  optionA: props.question.optionA || null,
-  optionB: props.question.optionB || null,
-  optionC: props.question.optionC || null,
-  optionD: props.question.optionD || null,
-  answer: props.question.answer || null,
 });
 
-// Watching for fields changes and emits "updateQuestions" event with data
-watch(
-  () => [questions.name, questions.optionA, questions.optionB, questions.optionC, questions.optionD, questions.answer],
-  ([name, optionA, optionB, optionC, optionD, answer]) => {
-    emit('updateQuestions', { id: questions.id, name, optionA, optionB, optionC, optionD, answer });
+const { questions } = storeToRefs(newGameStore);
+const removable = computed(() => questions.value.length <= 1);
+
+const question = computed(() => questions.value.find((q) => q.id === props.generatedId));
+const correctOption = ref(null);
+
+onMounted(() => {
+  for (let i = 0; i < 4; i++) {
+    if (question.value.options[i].correct) {
+      correctOption.value = i;
+    }
   }
-);
+});
+
+// on radio button changes, correct sets to true
+watch(correctOption, (answer) => {
+  for (let i = 0; i < 4; i++) {
+    const checked = answer === i;
+    question.value.options[i].correct = checked;
+  }
+});
+
+const removeQuestion = async () => {
+  newGameStore.removeQuestion(props.generatedId);
+  await nextTick();
+};
 </script>
 
 <style scoped>

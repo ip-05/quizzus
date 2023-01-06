@@ -5,24 +5,78 @@ import { useCookie } from '#imports';
 export const useNewGameStore = defineStore('NewGameStore', () => {
   const tokenCookie = useCookie('token');
 
-  const code = ref(null);
-  const link = computed(() => `https://quizzus.fun/game/${code.value}`);
-  const game = ref(null);
-  const isEmptyGame = computed(() => game.value === null);
+  const topic = ref('');
+  const points = ref(null);
+  const time = ref(null);
 
-  function createGame(data) {
-    game.value = data;
+  const id = ref(0);
+  const questions = ref([]);
+  appendQuestion();
+
+  function appendQuestion() {
+    id.value += 1;
+    questions.value.push({
+      id: id.value,
+      name: '',
+      options: [
+        {
+          name: '',
+          correct: false,
+        },
+        {
+          name: '',
+          correct: false,
+        },
+        {
+          name: '',
+          correct: false,
+        },
+        {
+          name: '',
+          correct: false,
+        },
+      ],
+    });
   }
 
+  function removeQuestion(id) {
+    questions.value = questions.value.filter((q) => q.id !== id);
+  }
+
+  // Whether all necessary fields are filled
+  const nextable = computed(() => {
+    // If topic or points or time is not filled
+    if (!topic.value.length || !points.value || !time.value) return false;
+
+    // If there is no questions
+    if (!questions.value.length) return false;
+
+    const names = [];
+    const checks = [];
+    // Collects all text field and checks
+    for (const { name, options } of questions.value) {
+      names.push(name);
+      for (const { name, correct } of options) {
+        names.push(name);
+        checks.push(correct);
+      }
+    }
+
+    const questionsChecked = questions.value.length === checks.filter((c) => c === true).length;
+    const textsFilled = names.every((n) => n.length > 0);
+    return questionsChecked && textsFilled;
+  });
+
+  function postGame() {}
+
+  // User exits and game resets
   function resetGame() {
-    game.value = null;
+    topic.value = '';
+    points.value = null;
+    time.value = null;
+    questions.value = [];
+    appendQuestion();
   }
 
-  // Upload game to db
-  async function postNewGame() {}
-
-  // Get game code by id
-  async function getGameCode() {}
-
-  return { code, link, game, isEmptyGame, postNewGame, getGameCode, createGame, resetGame };
+  return { topic, time, points, questions, postGame, nextable, resetGame, appendQuestion, removeQuestion };
 });
