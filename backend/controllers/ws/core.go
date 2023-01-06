@@ -42,12 +42,10 @@ func DataReply[D any](error bool, message string, data D) SocketReply[D] {
 	}
 }
 
-func (s SocketReply[D]) Send(ctx context.Context) {
-	conn := ctx.Value("conn").(*websocket.Conn)
-
+func (s SocketReply[D]) Send(conn *websocket.Conn) {
 	bytes, _ := json.Marshal(s)
 
-	conn.Write(ctx, websocket.MessageText, bytes)
+	conn.Write(context.Background(), websocket.MessageText, bytes)
 }
 
 //
@@ -214,6 +212,13 @@ func (s SocketReply[D]) Send(ctx context.Context) {
 //	}
 //}
 
+const (
+	JoinGame  = "JOIN_GAME"
+	GetGame   = "GET_GAME"
+	LeaveGame = "LEAVE_GAME"
+	IsOwner   = "IS_OWNER"
+)
+
 func messageHandler(ctx context.Context, conn *websocket.Conn) error {
 	for {
 		select {
@@ -231,7 +236,7 @@ func messageHandler(ctx context.Context, conn *websocket.Conn) error {
 				var msg SocketMessage
 				err = json.Unmarshal(message, &msg)
 				if err != nil {
-					DataReply(true, "MESSAGE_ERROR", err.Error()).Send(ctx)
+					DataReply(true, "MESSAGE_ERROR", err.Error()).Send(conn)
 					break
 				}
 
@@ -239,11 +244,17 @@ func messageHandler(ctx context.Context, conn *websocket.Conn) error {
 					var data JoinGameData
 					err = json.Unmarshal(msg.Data, &data)
 					if err != nil {
-						DataReply(true, "DATA_ERROR", err.Error()).Send(ctx)
+						DataReply(true, "DATA_ERROR", err.Error()).Send(conn)
 						break
 					}
 
 					gameController.JoinGame(ctx, data)
+				} else if msg.Message == "LEAVE_GAME" {
+					gameController.LeaveGame(ctx)
+				} else if msg.Message == "GET_GAME" {
+					gameController.GetGame(ctx)
+				} else if msg.Message == "IS_OWNER" {
+					gameController.IsOwner(ctx)
 				}
 			}
 		}
@@ -270,7 +281,7 @@ func (w CoreController) HandleWS(c *gin.Context) {
 
 	user, err := gameController.InitUser(ctx)
 	if err != nil {
-		DataReply(true, "INIT_ERROR", err.Error()).Send(ctx)
+		DataReply(true, "INIT_ERROR", err.Error()).Send(conn)
 		return
 	}
 
@@ -279,7 +290,7 @@ func (w CoreController) HandleWS(c *gin.Context) {
 	err = messageHandler(ctx, conn)
 	if err != nil {
 		log.Printf("error: %s\n", err)
-		DataReply(true, "HANDLER_ERROR", err.Error()).Send(ctx)
+		DataReply(true, "HANDLER_ERROR", err.Error()).Send(conn)
 		return
 	}
 }

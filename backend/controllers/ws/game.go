@@ -21,8 +21,11 @@ const (
 const (
 	GameNotFound  = "GAME_NOT_FOUND"
 	AlreadyInGame = "ALREADY_IN_GAME"
+	NotInGame     = "NOT_IN_GAME"
 
-	JoinedGame = "JOINED_GAME"
+	JoinedGame  = "JOINED_GAME"
+	LeftGame    = "LEFT_GAME"
+	GameDeleted = "GAME_DELETED"
 )
 
 type User struct {
@@ -80,9 +83,11 @@ func (g *gameSocketController) JoinGame(ctx context.Context, data JoinGameData) 
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
+	conn := ctx.Value("conn").(*websocket.Conn)
+
 	user := ctx.Value("user").(*User)
 	if user.ActiveGame != nil {
-		MessageReply(true, AlreadyInGame).Send(ctx)
+		MessageReply(true, AlreadyInGame).Send(conn)
 		return
 	}
 
@@ -90,7 +95,7 @@ func (g *gameSocketController) JoinGame(ctx context.Context, data JoinGameData) 
 	models.DB.Preload("Questions.Options").Where("invite_code = ?", data.GameId).First(&game)
 
 	if game.Id == 0 {
-		MessageReply(true, GameNotFound).Send(ctx)
+		MessageReply(true, GameNotFound).Send(conn)
 	}
 
 	value, ok := g.Games[game.InviteCode]
@@ -98,7 +103,7 @@ func (g *gameSocketController) JoinGame(ctx context.Context, data JoinGameData) 
 		value.Members = append(value.Members, user)
 		user.ActiveGame = value
 
-		DataReply(false, JoinedGame, value).Send(ctx)
+		DataReply(false, JoinedGame, value).Send(conn)
 		return
 	}
 
@@ -112,5 +117,53 @@ func (g *gameSocketController) JoinGame(ctx context.Context, data JoinGameData) 
 
 	g.Games[newGame.InviteCode] = &newGame
 	user.ActiveGame = g.Games[newGame.InviteCode]
-	DataReply(false, JoinedGame, newGame).Send(ctx)
+	DataReply(false, JoinedGame, newGame).Send(conn)
+}
+
+func (g *gameSocketController) LeaveGame(ctx context.Context) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
+	conn := ctx.Value("conn").(*websocket.Conn)
+
+	user := ctx.Value("user").(*User)
+	if user.ActiveGame == nil {
+		MessageReply(true, NotInGame).Send(conn)
+		return
+	}
+
+	game := user.ActiveGame
+	if game.Owner == user {
+		for _, member := range game.Members {
+			member.ActiveGame = nil
+			MessageReply(false, GameDeleted).Send(member.Conn)
+		}
+		delete(g.Games, game.InviteCode)
+	}
+
+	user.ActiveGame = nil
+}
+
+func (g *gameSocketController) GetGame(ctx context.Context) {
+	conn := ctx.Value("conn").(*websocket.Conn)
+
+	user := ctx.Value("user").(*User)
+	if user.ActiveGame == nil {
+		MessageReply(true, NotInGame).Send(conn)
+		return
+	}
+
+	DataReply(false, GetGame, user.ActiveGame)
+}
+
+func (g *gameSocketController) IsOwner(ctx context.Context) {
+	conn := ctx.Value("conn").(*websocket.Conn)
+
+	user := ctx.Value("user").(*User)
+	if user.ActiveGame == nil {
+		MessageReply(true, NotInGame).Send(conn)
+		return
+	}
+
+	DataReply(false, IsOwner, user.ActiveGame.Owner == user).Send(conn)
 }
