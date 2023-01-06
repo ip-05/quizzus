@@ -7,6 +7,7 @@ import (
 	"github.com/ip-05/quizzus/models"
 	"nhooyr.io/websocket"
 	"sync"
+	"time"
 )
 
 type GameStatus = string
@@ -22,10 +23,12 @@ const (
 	GameNotFound  = "GAME_NOT_FOUND"
 	AlreadyInGame = "ALREADY_IN_GAME"
 	NotInGame     = "NOT_IN_GAME"
+	NotOwner      = "NOT_OWNER"
 
 	JoinedGame  = "JOINED_GAME"
 	LeftGame    = "LEFT_GAME"
 	GameDeleted = "GAME_DELETED"
+	UserLeft    = "USER_LEFT"
 )
 
 type User struct {
@@ -36,11 +39,11 @@ type User struct {
 }
 
 type Game struct {
-	Status     string      `json:"status"`
-	InviteCode string      `json:"inviteCode"`
-	Members    []*User     `json:"members"`
-	Owner      *User       `json:"owner"`
-	Data       models.Game `json:"data"`
+	Status     string           `json:"status"`
+	InviteCode string           `json:"inviteCode"`
+	Members    map[string]*User `json:"members"`
+	Owner      *User            `json:"owner"`
+	Data       models.Game      `json:"data"`
 }
 
 type gameSocketController struct {
@@ -100,7 +103,7 @@ func (g *gameSocketController) JoinGame(ctx context.Context, data JoinGameData) 
 
 	value, ok := g.Games[game.InviteCode]
 	if ok {
-		value.Members = append(value.Members, user)
+		value.Members[user.Id] = user
 		user.ActiveGame = value
 
 		DataReply(false, JoinedGame, value).Send(conn)
@@ -110,10 +113,12 @@ func (g *gameSocketController) JoinGame(ctx context.Context, data JoinGameData) 
 	newGame := Game{
 		Status:     Standby,
 		InviteCode: game.InviteCode,
-		Members:    []*User{user},
+		Members:    map[string]*User{},
 		Owner:      user,
 		Data:       game,
 	}
+
+	newGame.Members[user.Id] = user
 
 	g.Games[newGame.InviteCode] = &newGame
 	user.ActiveGame = g.Games[newGame.InviteCode]
@@ -141,7 +146,13 @@ func (g *gameSocketController) LeaveGame(ctx context.Context) {
 		delete(g.Games, game.InviteCode)
 	}
 
+	delete(game.Members, user.Id)
 	user.ActiveGame = nil
+	MessageReply(false, LeftGame).Send(conn)
+
+	for _, member := range game.Members {
+		DataReply(false, UserLeft, user).Send(member.Conn)
+	}
 }
 
 func (g *gameSocketController) GetGame(ctx context.Context) {
@@ -166,4 +177,60 @@ func (g *gameSocketController) IsOwner(ctx context.Context) {
 	}
 
 	DataReply(false, IsOwner, user.ActiveGame.Owner == user).Send(conn)
+}
+
+func (g *gameSocketController) StartGame(ctx context.Context) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
+	conn := ctx.Value("conn").(*websocket.Conn)
+
+	user := ctx.Value("user").(*User)
+	if user.ActiveGame == nil {
+		MessageReply(true, NotInGame).Send(conn)
+		return
+	}
+
+	if user.ActiveGame.Owner != user {
+		MessageReply(true, NotOwner).Send(conn)
+		return
+	}
+
+	user.ActiveGame.Status = Starting
+
+	n := 10
+	for range time.Tick(time.Second * 1) {
+		for _, member := range user.ActiveGame.Members {
+			if n == 0 {
+				user.ActiveGame.Status = InProgress
+				MessageReply(false, InProgress).Send(member.Conn)
+				return
+			}
+			DataReply(false, Starting, n).Send(member.Conn)
+		}
+
+		n -= 1
+	}
+}
+
+func (g *gameSocketController) ResetGame(ctx context.Context) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
+	conn := ctx.Value("conn").(*websocket.Conn)
+
+	user := ctx.Value("user").(*User)
+	if user.ActiveGame == nil {
+		MessageReply(true, NotInGame).Send(conn)
+		return
+	}
+
+	if user.ActiveGame.Owner != user {
+		MessageReply(true, NotOwner).Send(conn)
+		return
+	}
+
+	user.ActiveGame.Status = Standby
+
+	DataReply(false, ResetGame, user.ActiveGame).Send(conn)
 }

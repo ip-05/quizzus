@@ -30,6 +30,8 @@ const (
 	GetGame   = "GET_GAME"
 	LeaveGame = "LEAVE_GAME"
 	IsOwner   = "IS_OWNER"
+	StartGame = "START_GAME"
+	ResetGame = "RESET_GAME"
 )
 
 func MessageReply[D types.Nil](error bool, message string) SocketReply[D] {
@@ -90,6 +92,10 @@ func messageHandler(ctx context.Context, conn *websocket.Conn) error {
 					gameController.GetGame(ctx)
 				} else if msg.Message == IsOwner {
 					gameController.IsOwner(ctx)
+				} else if msg.Message == StartGame {
+					gameController.StartGame(ctx)
+				} else if msg.Message == ResetGame {
+					gameController.ResetGame(ctx)
 				}
 			}
 		}
