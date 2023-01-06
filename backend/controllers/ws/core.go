@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"go/types"
-	"log"
 	"net/http"
 	"nhooyr.io/websocket"
 	"time"
@@ -25,6 +24,13 @@ type SocketReply[D any] struct {
 	Message string `json:"message"`
 	Data    any    `json:"data"`
 }
+
+const (
+	JoinGame  = "JOIN_GAME"
+	GetGame   = "GET_GAME"
+	LeaveGame = "LEAVE_GAME"
+	IsOwner   = "IS_OWNER"
+)
 
 func MessageReply[D types.Nil](error bool, message string) SocketReply[D] {
 	return SocketReply[D]{
@@ -48,177 +54,6 @@ func (s SocketReply[D]) Send(conn *websocket.Conn) {
 	conn.Write(context.Background(), websocket.MessageText, bytes)
 }
 
-//
-//type SocketMessage struct {
-//	Message string            `json:"message"`
-//	Args    map[string]string `json:"args"`
-//}
-//
-//type User struct {
-//	Id           string          `json:"-"`
-//	Name         string          `json:"name"`
-//	CurrentLobby *Lobby          `json:"-"`
-//	Conn         *websocket.Conn `json:"-"`
-//}
-//
-//type LobbyStatus = string
-//
-//const (
-//	STANDBY     = "STANDBY"
-//	STARTING    = "STARTING"
-//	IN_PROGRESS = "IN_PROGRESS"
-//)
-//
-//type Lobby struct {
-//	Status  LobbyStatus `json:"status"`
-//	Owner   *User       `json:"owner"`
-//	Members []*User     `json:"members"`
-//	Game    models.Game `json:"game"`
-//}
-//
-//func NewWSController() *WebSocketController {
-//	ws := new(WebSocketController)
-//	ws.Lobbies = make(map[string]*Lobby)
-//	return ws
-//}
-//
-//func (user *User) ReadMessages(ctx context.Context, w *WebSocketController) error {
-//	for {
-//		select {
-//		case <-ctx.Done():
-//			{
-//				return nil
-//			}
-//		default:
-//			{
-//				_, message, err := user.Conn.Read(ctx)
-//				if err != nil {
-//					return err
-//				}
-//
-//				var msg SocketMessage
-//				err = json.Unmarshal(message, &msg)
-//				if err != nil {
-//					return err
-//				}
-//
-//				if msg.Message == "JOIN_GAME" {
-//					if user.CurrentLobby != nil {
-//						user.Conn.Write(ctx, websocket.MessageText, []byte("ALREADY_IN_GAME"))
-//						break
-//					}
-//
-//					var game models.Game
-//
-//					models.DB.Preload("Questions.Options").Where("invite_code = ?", msg.Args["game_id"]).First(&game)
-//
-//					if game.Id == 0 {
-//						user.Conn.Write(ctx, websocket.MessageText, []byte("GAME_NOT_FOUND"))
-//						break
-//					}
-//
-//					value, ok := w.Lobbies[game.InviteCode]
-//					if ok {
-//						value.Members = append(value.Members, user)
-//						user.CurrentLobby = value
-//						lobbyBytes, _ := json.Marshal(value)
-//
-//						user.Conn.Write(ctx, websocket.MessageText, lobbyBytes)
-//						break
-//					}
-//
-//					lobby := Lobby{
-//						Status:  STANDBY,
-//						Owner:   user,
-//						Members: []*User{user},
-//						Game:    game,
-//					}
-//
-//					w.Lobbies[game.InviteCode] = &lobby
-//					user.CurrentLobby = &lobby
-//
-//					lobbyBytes, _ := json.Marshal(lobby)
-//
-//					user.Conn.Write(ctx, websocket.MessageText, lobbyBytes)
-//				} else if msg.Message == "GET_GAME" {
-//					if user.CurrentLobby == nil {
-//						user.Conn.Write(ctx, websocket.MessageText, []byte("NOT_IN_GAME"))
-//						break
-//					}
-//
-//					lobbyBytes, _ := json.Marshal(user.CurrentLobby)
-//
-//					user.Conn.Write(ctx, websocket.MessageText, lobbyBytes)
-//				} else if msg.Message == "GAME_IS_OWNER" {
-//					if user.CurrentLobby == nil {
-//						user.Conn.Write(ctx, websocket.MessageText, []byte("NOT_IN_GAME"))
-//						break
-//					}
-//
-//					if user.CurrentLobby.Owner == user {
-//						user.Conn.Write(ctx, websocket.MessageText, []byte("true"))
-//					} else {
-//						user.Conn.Write(ctx, websocket.MessageText, []byte("false"))
-//					}
-//				} else if msg.Message == "DELETE_GAME" {
-//					if user.CurrentLobby == nil {
-//						user.Conn.Write(ctx, websocket.MessageText, []byte("NOT_IN_GAME"))
-//						break
-//					}
-//
-//					if user.CurrentLobby.Owner != user {
-//						user.Conn.Write(ctx, websocket.MessageText, []byte("NOT_OWNER"))
-//						break
-//					}
-//
-//					delete(w.Lobbies, user.CurrentLobby.Game.InviteCode)
-//
-//					for _, member := range user.CurrentLobby.Members {
-//						member.Conn.Write(ctx, websocket.MessageText, []byte("GAME_DELETED"))
-//						member.CurrentLobby = nil
-//					}
-//				} else if msg.Message == "START_GAME" {
-//					if user.CurrentLobby == nil {
-//						user.Conn.Write(ctx, websocket.MessageText, []byte("NOT_IN_GAME"))
-//						break
-//					}
-//
-//					if user.CurrentLobby.Owner != user {
-//						user.Conn.Write(ctx, websocket.MessageText, []byte("NOT_OWNER"))
-//						break
-//					}
-//
-//					user.CurrentLobby.Status = STARTING
-//
-//					n := 10
-//					for range time.Tick(time.Second) {
-//						for _, member := range user.CurrentLobby.Members {
-//							if n == 0 {
-//								member.Conn.Write(ctx, websocket.MessageText, []byte("GAME_STARTED"))
-//							} else {
-//								member.Conn.Write(ctx, websocket.MessageText, []byte("GAME_STARTING"))
-//							}
-//						}
-//
-//						if n == 0 {
-//							user.CurrentLobby.Status = IN_PROGRESS
-//							break
-//						}
-//						n -= 1
-//					}
-//				}
-//			}
-//		}
-//	}
-//}
-
-const (
-	JoinGame  = "JOIN_GAME"
-	GetGame   = "GET_GAME"
-	LeaveGame = "LEAVE_GAME"
-	IsOwner   = "IS_OWNER"
-)
-
 func messageHandler(ctx context.Context, conn *websocket.Conn) error {
 	for {
 		select {
@@ -240,7 +75,7 @@ func messageHandler(ctx context.Context, conn *websocket.Conn) error {
 					break
 				}
 
-				if msg.Message == "JOIN_GAME" {
+				if msg.Message == JoinGame {
 					var data JoinGameData
 					err = json.Unmarshal(msg.Data, &data)
 					if err != nil {
@@ -249,11 +84,11 @@ func messageHandler(ctx context.Context, conn *websocket.Conn) error {
 					}
 
 					gameController.JoinGame(ctx, data)
-				} else if msg.Message == "LEAVE_GAME" {
+				} else if msg.Message == LeaveGame {
 					gameController.LeaveGame(ctx)
-				} else if msg.Message == "GET_GAME" {
+				} else if msg.Message == GetGame {
 					gameController.GetGame(ctx)
-				} else if msg.Message == "IS_OWNER" {
+				} else if msg.Message == IsOwner {
 					gameController.IsOwner(ctx)
 				}
 			}
@@ -289,7 +124,6 @@ func (w CoreController) HandleWS(c *gin.Context) {
 
 	err = messageHandler(ctx, conn)
 	if err != nil {
-		log.Printf("error: %s\n", err)
 		DataReply(true, "HANDLER_ERROR", err.Error()).Send(conn)
 		return
 	}

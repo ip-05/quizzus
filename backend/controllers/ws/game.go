@@ -153,7 +153,7 @@ func (g *gameSocketController) GetGame(ctx context.Context) {
 		return
 	}
 
-	DataReply(false, GetGame, user.ActiveGame)
+	DataReply(false, GetGame, user.ActiveGame).Send(conn)
 }
 
 func (g *gameSocketController) IsOwner(ctx context.Context) {
