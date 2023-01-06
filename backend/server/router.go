@@ -1,12 +1,13 @@
 package server
 
 import (
+	"github.com/ip-05/quizzus/controllers/web"
+	"github.com/ip-05/quizzus/controllers/ws"
 	"net/http"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/ip-05/quizzus/config"
-	"github.com/ip-05/quizzus/controllers"
 	"github.com/ip-05/quizzus/middleware"
 )
 
@@ -25,9 +26,9 @@ func NewRouter() *gin.Engine {
 		AllowCredentials: true,
 	}))
 
-	auth := new(controllers.AuthController)
-	game := new(controllers.GameController)
-	ws := new(controllers.WebSocketController)
+	auth := new(web.AuthController)
+	game := new(web.GameController)
+	ws := new(ws.CoreController)
 
 	authGroup := router.Group("auth")
 
@@ -49,7 +50,7 @@ func NewRouter() *gin.Engine {
 	router.DELETE("/games", game.Delete)
 
 	router.Use(middleware.AuthMiddleware())
-	router.GET("/ws", ws.UpgradeWS)
+	router.GET("/ws", ws.HandleWS)
 
 	return router
 }

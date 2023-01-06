@@ -1,4 +1,4 @@
-package controllers
+package web
 
 import (
 	"crypto/rand"
