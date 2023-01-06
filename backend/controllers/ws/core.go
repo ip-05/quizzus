@@ -3,12 +3,12 @@ package ws
 import (
 	"context"
 	"encoding/json"
-	"github.com/gin-gonic/gin"
 	"go/types"
 	"net/http"
-	"nhooyr.io/websocket"
 	"time"
-	"fmt"
+
+	"github.com/gin-gonic/gin"
+	"nhooyr.io/websocket"
 )
 
 type CoreController struct{}
@@ -128,6 +128,8 @@ func (w CoreController) HandleWS(c *gin.Context) {
 	}
 
 	ctx = context.WithValue(ctx, "user", user)
+
+	defer gameController.CleanUser(ctx)
 
 	err = messageHandler(ctx, conn)
 	if err != nil {
