@@ -18,5 +18,6 @@ export default defineNuxtConfig({
       },
     ],
   },
+  plugins: [{ src: '~/plugins/confetti.js', mode: 'client' }],
   css: ['~/assets/css/main.css'],
 });
