@@ -304,7 +304,11 @@ func (g *gameSocketController) PlayRound(game *Game) {
 					break
 				}
 				for _, member := range game.Members {
-					DataReply(false, RoundInProgress, RoundData{Question: &question, Timer: n}).Send(member.Conn)
+					if game.Owner == member {
+						DataReply(false, RoundInProgress, game.Data.Questions[game.CurrentRound]).Send(member.Conn)
+					} else {
+						DataReply(false, RoundInProgress, RoundData{Question: &question, Timer: n}).Send(member.Conn)
+					}
 				}
 
 				n -= 1
