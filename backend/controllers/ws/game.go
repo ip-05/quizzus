@@ -3,7 +3,7 @@ package ws
 import (
 	"context"
 	"errors"
-	"fmt"
+	"github.com/jinzhu/copier"
 	"sync"
 	"time"
 
@@ -45,12 +45,14 @@ type User struct {
 }
 
 type Game struct {
-	Status      string           `json:"status"`
-	RoundStatus string           `json:"roundStatus"`
-	InviteCode  string           `json:"inviteCode"`
-	Members     map[string]*User `json:"members"`
-	Owner       *User            `json:"owner"`
-	Data        models.Game      `json:"-"`
+	Status       string             `json:"status"`
+	RoundStatus  string             `json:"roundStatus"`
+	CurrentRound int                `json:"currentRound"`
+	InviteCode   string             `json:"inviteCode"`
+	Members      map[string]*User   `json:"members"`
+	Owner        *User              `json:"owner"`
+	Leaderboard  map[string]float64 `json:"leaderboard"`
+	Data         models.Game        `json:"-"`
 }
 
 type gameSocketController struct {
@@ -129,20 +131,23 @@ func (g *gameSocketController) JoinGame(ctx context.Context, data JoinGameData) 
 
 		value.Members[user.Id] = user
 		user.ActiveGame = value
+		value.Leaderboard[user.Id] = 0
 
 		DataReply(false, JoinedGame, value).Send(conn)
 		return
 	}
 
 	newGame := Game{
-		Status:     Standby,
-		InviteCode: game.InviteCode,
-		Members:    map[string]*User{},
-		Owner:      user,
-		Data:       game,
+		Status:      Standby,
+		InviteCode:  game.InviteCode,
+		Members:     map[string]*User{},
+		Leaderboard: map[string]float64{},
+		Owner:       user,
+		Data:        game,
 	}
 
 	newGame.Members[user.Id] = user
+	newGame.Leaderboard[user.Id] = 0
 
 	g.Games[newGame.InviteCode] = &newGame
 	user.ActiveGame = g.Games[newGame.InviteCode]
@@ -222,7 +227,7 @@ func (g *gameSocketController) StartGame(ctx context.Context) {
 
 	user.ActiveGame.Status = Starting
 
-	n := 10
+	n := 1
 	for range time.Tick(time.Second * 1) {
 		if n == 0 {
 			for _, member := range user.ActiveGame.Members {
@@ -262,46 +267,80 @@ func (g *gameSocketController) ResetGame(ctx context.Context) {
 	DataReply(false, ResetGame, user.ActiveGame).Send(conn)
 }
 
+type RoundData struct {
+	Timer    int       `json:"timer"`
+	Question *Question `json:"question"`
+}
+
+type Option struct {
+	Name string `json:"name"`
+}
+
+type Question struct {
+	Name    string   `json:"name"`
+	Options []Option `json:"options"`
+}
+
 func (g *gameSocketController) PlayRound(game *Game) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
-	fmt.Println("Balls")
-
 	game.RoundStatus = RoundInProgress
 	for {
 		if game.Status == InProgress && game.RoundStatus == RoundInProgress {
-
 			n := game.Data.RoundTime
+			question := Question{}
+			copier.Copy(&question, game.Data.Questions[game.CurrentRound])
+
 			for range time.Tick(time.Second * 1) {
 				if n == 0 {
 					for _, member := range game.Members {
 						MessageReply(false, RoundWaiting).Send(member.Conn)
 					}
+
 					game.RoundStatus = RoundWaiting
+					game.CurrentRound += 1
+
 					break
 				}
 				for _, member := range game.Members {
-					DataReply(false, RoundInProgress, n).Send(member.Conn)
+					DataReply(false, RoundInProgress, RoundData{Question: &question, Timer: n}).Send(member.Conn)
 				}
 
 				n -= 1
+			}
+		} else {
+			if game.CurrentRound >= len(game.Data.Questions) {
+				break
 			}
 		}
 	}
 }
 
 type AnswerData struct {
-	QuestionId uint `json:"questionId"`
-	OptionId   uint `json:"optionId"`
+	Option uint `json:"option"`
 }
 
-type LeaderBoard map[uint]float64
-
 func (g *gameSocketController) AnswerQuestion(ctx context.Context, data AnswerData) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
 	user := ctx.Value("user").(*User)
+	conn := ctx.Value("conn").(*websocket.Conn)
+
+	if user.ActiveGame == nil {
+		MessageReply(true, NotInGame).Send(conn)
+		return
+	}
+
 	if user.ActiveGame.RoundStatus == RoundInProgress {
-		fmt.Println(data.QuestionId, data.OptionId)
+		question := user.ActiveGame.Data.Questions[user.ActiveGame.CurrentRound]
+		if question.Options[data.Option].Correct {
+			user.ActiveGame.Leaderboard[user.Id] += user.ActiveGame.Data.Points
+		}
+		return
+	} else {
+		MessageReply(true, RoundWaiting).Send(conn)
 	}
 }
 
