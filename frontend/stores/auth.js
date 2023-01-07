@@ -1,10 +1,12 @@
 import axios from 'axios';
 import { defineStore } from 'pinia';
 import { ref, onMounted } from 'vue';
-import { useRuntimeConfig } from '#imports';
+import { useRuntimeConfig, useCookie } from '#imports';
 
 export const useAuthStore = defineStore('AuthStore', () => {
   const config = useRuntimeConfig();
+
+  const tokenCookie = useCookie('token');
 
   const isAuthed = ref(false);
   const token = ref(null);
@@ -16,10 +18,10 @@ export const useAuthStore = defineStore('AuthStore', () => {
   });
 
   onMounted(async () => {
-    const localToken = localStorage.getItem('token');
-    if (localToken) {
+    // if token cookie exists
+    if (tokenCookie.value) {
       isAuthed.value = true;
-      token.value = localToken;
+      token.value = tokenCookie.value;
       await getMe();
     }
   });
@@ -45,7 +47,7 @@ export const useAuthStore = defineStore('AuthStore', () => {
   }
 
   function logout() {
-    localStorage.removeItem('token');
+    tokenCookie.value = null; // reset token cookie
     token.value = null;
     user.value = null;
     isAuthed.value = false;
@@ -54,7 +56,7 @@ export const useAuthStore = defineStore('AuthStore', () => {
   async function authenticate(jwt) {
     isAuthed.value = true;
     token.value = jwt;
-    localStorage.setItem('token', token.value);
+    tokenCookie.value = token.value; // set token cookie
     await getMe();
   }
 

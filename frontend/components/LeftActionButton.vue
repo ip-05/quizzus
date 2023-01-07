@@ -32,10 +32,7 @@ const img = computed(() => imgs[props.mode].src);
 const alt = computed(() => imgs[props.mode].alt);
 
 const handleClick = () => {
-  if (props.type === 'hamburger') {
-    return island.active();
-  }
-  console.log('profile click');
+  if (props.mode === 'hamburger') return island.active();
 };
 </script>
 
