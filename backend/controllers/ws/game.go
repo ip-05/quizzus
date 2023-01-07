@@ -3,6 +3,7 @@ package ws
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -11,13 +12,16 @@ import (
 	"nhooyr.io/websocket"
 )
 
-type GameStatus = string
-
 const (
 	Standby    = "GAME_STANDBY"
 	Starting   = "GAME_STARTING"
 	InProgress = "GAME_IN_PROGRESS"
 	Finished   = "GAME_FINISHED"
+)
+
+const (
+	RoundInProgress = "ROUND_IN_PROGRESS"
+	RoundWaiting    = "ROUND_WAITING"
 )
 
 const (
@@ -41,11 +45,12 @@ type User struct {
 }
 
 type Game struct {
-	Status     string           `json:"status"`
-	InviteCode string           `json:"inviteCode"`
-	Members    map[string]*User `json:"members"`
-	Owner      *User            `json:"owner"`
-	Data       models.Game      `json:"data"`
+	Status      string           `json:"status"`
+	RoundStatus string           `json:"roundStatus"`
+	InviteCode  string           `json:"inviteCode"`
+	Members     map[string]*User `json:"members"`
+	Owner       *User            `json:"owner"`
+	Data        models.Game      `json:"-"`
 }
 
 type gameSocketController struct {
@@ -223,6 +228,8 @@ func (g *gameSocketController) StartGame(ctx context.Context) {
 			for _, member := range user.ActiveGame.Members {
 				MessageReply(false, InProgress).Send(member.Conn)
 			}
+			user.ActiveGame.Status = InProgress
+			go g.PlayRound(user.ActiveGame)
 			return
 		}
 		for _, member := range user.ActiveGame.Members {
@@ -254,3 +261,53 @@ func (g *gameSocketController) ResetGame(ctx context.Context) {
 
 	DataReply(false, ResetGame, user.ActiveGame).Send(conn)
 }
+
+func (g *gameSocketController) PlayRound(game *Game) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
+	fmt.Println("Balls")
+
+	game.RoundStatus = RoundInProgress
+	for {
+		if game.Status == InProgress && game.RoundStatus == RoundInProgress {
+
+			n := game.Data.RoundTime
+			for range time.Tick(time.Second * 1) {
+				if n == 0 {
+					for _, member := range game.Members {
+						MessageReply(false, RoundWaiting).Send(member.Conn)
+					}
+					game.RoundStatus = RoundWaiting
+					break
+				}
+				for _, member := range game.Members {
+					DataReply(false, RoundInProgress, n).Send(member.Conn)
+				}
+
+				n -= 1
+			}
+		}
+	}
+}
+
+type AnswerData struct {
+	QuestionId uint `json:"questionId"`
+	OptionId   uint `json:"optionId"`
+}
+
+type LeaderBoard map[uint]float64
+
+func (g *gameSocketController) AnswerQuestion(ctx context.Context, data AnswerData) {
+	user := ctx.Value("user").(*User)
+	if user.ActiveGame.RoundStatus == RoundInProgress {
+		fmt.Println(data.QuestionId, data.OptionId)
+	}
+}
+
+// {
+// 	"message": "JOIN_GAME",
+// 	"data": {
+// 		"gameId": "9dbc-b4a1"
+// 	}
+// }

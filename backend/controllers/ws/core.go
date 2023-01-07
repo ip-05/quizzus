@@ -27,12 +27,13 @@ type SocketReply[D any] struct {
 }
 
 const (
-	JoinGame  = "JOIN_GAME"
-	GetGame   = "GET_GAME"
-	LeaveGame = "LEAVE_GAME"
-	IsOwner   = "IS_OWNER"
-	StartGame = "START_GAME"
-	ResetGame = "RESET_GAME"
+	JoinGame       = "JOIN_GAME"
+	GetGame        = "GET_GAME"
+	LeaveGame      = "LEAVE_GAME"
+	IsOwner        = "IS_OWNER"
+	StartGame      = "START_GAME"
+	ResetGame      = "RESET_GAME"
+	AnswerQuestion = "ANSWER_QUESTION"
 )
 
 func MessageReply[D types.Nil](error bool, message string) SocketReply[D] {
@@ -97,6 +98,15 @@ func messageHandler(ctx context.Context, conn *websocket.Conn) error {
 					gameController.StartGame(ctx)
 				} else if msg.Message == ResetGame {
 					gameController.ResetGame(ctx)
+				} else if msg.Message == AnswerQuestion {
+					var data AnswerData
+					err = json.Unmarshal(msg.Data, &data)
+					if err != nil {
+						DataReply(true, "DATA_ERROR", err.Error()).Send(conn)
+						break
+					}
+
+					gameController.AnswerQuestion(ctx, data)
 				}
 			}
 		}
