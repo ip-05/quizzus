@@ -1,33 +1,38 @@
 <template>
   <div class="main">
     <div class="content">
-      <component :is="screen" @next="handleNextScreen" @back="handleBackScreen" />
+      <component :is="screen" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useNewGameStore } from '../../stores/new';
-import { resolveComponent } from '#imports';
+import { useErrorStore } from '../../stores/error';
+import { resolveComponent, useRoute } from '#imports';
 
 const newGameStore = useNewGameStore();
+const errorStore = useErrorStore();
+const { params } = useRoute();
 
-const mode = ref('create');
+onMounted(() => {
+  newGameStore.getGame(params);
+});
+
+const mode = computed(() => {
+  if (errorStore.message) {
+    return 'error';
+  }
+  return 'create';
+});
 const screen = computed(() => {
   if (mode.value === 'create') return CreateGame;
-  if (mode.value === 'share') return ShareGame;
-  return 'ErrorCreateGameComponent';
+  return ErrorScreen;
 });
 
 const CreateGame = resolveComponent('CreateGame');
-const ShareGame = resolveComponent('ShareGame');
-
-const handleNextScreen = (game) => {
-  newGameStore.createGame(game);
-  mode.value = 'share';
-};
-const handleBackScreen = () => (mode.value = 'create');
+const ErrorScreen = resolveComponent('ErrorScreen');
 </script>
 
 <style scoped>

@@ -2,13 +2,9 @@
   <div class="wrapper">
     <div class="content">
       <div class="header">
-        <div class="title">Create new game</div>
+        <div class="title">{{ topic ? topic : 'Create new game' }}</div>
         <div class="description">
           Prepare questions, share link with your friends and start the game. Fill all fields to continue
-        </div>
-        <div class="bars">
-          <div class="bar bar--active"></div>
-          <div class="bar"></div>
         </div>
       </div>
       <div class="main">
@@ -34,13 +30,10 @@
       </div>
       <div class="footer">
         <NuxtLink to="/">
-          <regular-button @click="newGameStore.resetGame">Cancel</regular-button>
+          <regular-button @click="newGameStore.resetGame">Leave</regular-button>
         </NuxtLink>
-        <regular-button
-          active
-          :style="{ opacity: newGameStore.nextable ? '1' : '0.5' }"
-          @click="newGameStore.nextable ? $emit('next', game) : null"
-          >Next</regular-button
+        <regular-button active :style="{ opacity: newGameStore.nextable ? '1' : '0.5' }" @click="goToConsole"
+          >Create Game</regular-button
         >
       </div>
     </div>
@@ -49,12 +42,26 @@
 
 <script setup>
 import { storeToRefs } from 'pinia';
-import { ref } from 'vue';
 import { useNewGameStore } from '../stores/new';
+import { navigateTo, useRoute } from '#imports';
+
+const { params } = useRoute();
 
 const newGameStore = useNewGameStore();
 
-const { topic, time, points, questions } = storeToRefs(newGameStore);
+const { topic, time, points, questions, inviteCode } = storeToRefs(newGameStore);
+
+const goToConsole = async () => {
+  if (newGameStore.nextable) {
+    if (params.invite_code) {
+      await newGameStore.updateGame(params);
+      navigateTo(`/console/${inviteCode.value}`);
+      return;
+    }
+    await newGameStore.postGame();
+    navigateTo(`/console/${inviteCode.value}`);
+  }
+};
 </script>
 
 <style scoped>
@@ -64,6 +71,7 @@ const { topic, time, points, questions } = storeToRefs(newGameStore);
   outline-offset: -3px;
   border-radius: 30px;
   background: var(--background-main-color);
+  margin-bottom: 20px;
 }
 
 .title {
@@ -82,25 +90,8 @@ const { topic, time, points, questions } = storeToRefs(newGameStore);
   margin-bottom: 30px;
 }
 
-.bars {
-  display: flex;
-  gap: 20px;
-}
-
 .main {
   margin-bottom: 30px;
-}
-
-.bar {
-  width: 100%;
-  height: 6px;
-  background: var(--background-secondary-color);
-  border-radius: 6px;
-  margin-bottom: 30px;
-}
-
-.bar--active {
-  background: var(--green-color);
 }
 
 .about {

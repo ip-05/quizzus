@@ -1,9 +1,16 @@
+import axios from 'axios';
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { useCookie } from '#imports';
+import { useErrorStore } from './error';
+import { useRuntimeConfig, useCookie } from '#imports';
 
 export const useNewGameStore = defineStore('NewGameStore', () => {
+  const config = useRuntimeConfig();
+  const errorStore = useErrorStore();
   const tokenCookie = useCookie('token');
+
+  const gameId = ref(0);
+  const inviteCode = ref('');
 
   const topic = ref('');
   const points = ref(null);
@@ -67,7 +74,85 @@ export const useNewGameStore = defineStore('NewGameStore', () => {
     return questionsChecked && textsFilled;
   });
 
-  function postGame() {}
+  async function postGame() {
+    try {
+      const { data } = await axios.post(
+        '/games',
+        {
+          topic: topic.value,
+          roundTime: parseInt(time.value),
+          points: parseInt(points.value),
+          questions: questions.value,
+        },
+        {
+          baseURL: config.public.apiUrl,
+          headers: {
+            Authorization: 'Bearer ' + tokenCookie.value,
+          },
+        }
+      );
+      gameId.value = data.id;
+      inviteCode.value = data.inviteCode;
+      topic.value = data.topic;
+      points.value = data.points;
+      time.value = data.roundTime;
+      questions.value = data.questions;
+    } catch (error) {
+      const message = error.response.data.error;
+      errorStore.message = message;
+    }
+  }
+
+  async function getGame(query) {
+    try {
+      const { data } = await axios.get(`/games`, {
+        baseURL: config.public.apiUrl,
+        headers: {
+          Authorization: 'Bearer ' + tokenCookie.value,
+        },
+        params: query,
+      });
+      gameId.value = data.id;
+      inviteCode.value = data.inviteCode;
+      topic.value = data.topic;
+      points.value = data.points;
+      time.value = data.roundTime;
+      questions.value = data.questions;
+    } catch (error) {
+      const message = error.response.data.error;
+      errorStore.message = message;
+    }
+  }
+
+  async function updateGame(query) {
+    try {
+      const { data } = await axios.patch(
+        '/games',
+        {
+          topic: topic.value,
+          roundTime: parseInt(time.value),
+          points: parseInt(points.value),
+          questions: questions.value,
+        },
+        {
+          baseURL: config.public.apiUrl,
+          headers: {
+            Authorization: 'Bearer ' + tokenCookie.value,
+          },
+          params: query,
+        }
+      );
+      gameId.value = data.id;
+      inviteCode.value = data.inviteCode;
+      topic.value = data.topic;
+      points.value = data.points;
+      time.value = data.roundTime;
+      questions.value = data.questions;
+    } catch (error) {
+      const message = error.response.data.error;
+      errorStore.message = message;
+    }
+  }
 
   // User exits and game resets
   function resetGame() {
@@ -78,5 +163,19 @@ export const useNewGameStore = defineStore('NewGameStore', () => {
     appendQuestion();
   }
 
-  return { topic, time, points, questions, postGame, nextable, resetGame, appendQuestion, removeQuestion };
+  return {
+    gameId,
+    topic,
+    inviteCode,
+    time,
+    points,
+    questions,
+    postGame,
+    nextable,
+    resetGame,
+    appendQuestion,
+    removeQuestion,
+    getGame,
+    updateGame,
+  };
 });

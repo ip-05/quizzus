@@ -42,13 +42,12 @@
 </template>
 
 <script setup>
-import { defineEmits, nextTick, defineProps, ref, watch, computed, onMounted } from 'vue';
+import { defineProps, ref, watch, computed, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useNewGameStore } from '../stores/new';
 
 const newGameStore = useNewGameStore();
 
-const emit = defineEmits(['updateQuestions', 'remove']);
 const props = defineProps({
   generatedId: {
     type: Number,
@@ -78,9 +77,8 @@ watch(correctOption, (answer) => {
   }
 });
 
-const removeQuestion = async () => {
+const removeQuestion = () => {
   newGameStore.removeQuestion(props.generatedId);
-  await nextTick();
 };
 </script>
 
@@ -123,24 +121,24 @@ input[type='radio'] {
   margin: 0;
   width: 20px;
   height: 20px;
-  background-image: url('svg/icon-radio-unchecked.svg');
+  background-image: url('/svg/icon-radio-unchecked.svg');
   background-position: center;
 }
 
 input[id='a']:checked {
-  background-image: url('svg/icon-radio-red.svg');
+  background-image: url('/svg/icon-radio-red.svg');
 }
 
 input[id='b']:checked {
-  background-image: url('svg/icon-radio-blue.svg');
+  background-image: url('/svg/icon-radio-blue.svg');
 }
 
 input[id='c']:checked {
-  background-image: url('svg/icon-radio-green.svg');
+  background-image: url('/svg/icon-radio-green.svg');
 }
 
 input[id='d']:checked {
-  background-image: url('svg/icon-radio-yellow.svg');
+  background-image: url('/svg/icon-radio-yellow.svg');
 }
 
 .header__item {
