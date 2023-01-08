@@ -44,9 +44,9 @@
 <script setup>
 import { defineProps, ref, watch, computed, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useNewGameStore } from '../stores/new';
+import { useGameStore } from '../stores/game';
 
-const newGameStore = useNewGameStore();
+const gameStore = useGameStore();
 
 const props = defineProps({
   generatedId: {
@@ -55,7 +55,7 @@ const props = defineProps({
   },
 });
 
-const { questions } = storeToRefs(newGameStore);
+const { questions } = storeToRefs(gameStore);
 const removable = computed(() => questions.value.length <= 1);
 
 const question = computed(() => questions.value.find((q) => q.id === props.generatedId));
@@ -78,7 +78,7 @@ watch(correctOption, (answer) => {
 });
 
 const removeQuestion = () => {
-  newGameStore.removeQuestion(props.generatedId);
+  gameStore.removeQuestion(props.generatedId);
 };
 </script>
 
