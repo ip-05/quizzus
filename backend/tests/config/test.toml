@@ -5,12 +5,20 @@ base = "http://localhost:1234"
 host = "localhost"
 port = 1234
 
+[frontend]
+base = "http://localhost:4321"
+
 [google]
 client_id = "id"
 client_secret = "secret"
 
-[frontend]
-base = "http://localhost:4321"
-
 [secrets]
 jwt = "jwt"
+
+[db]
+host = "localhost"
+port = 5432
+user = "user"
+password = "password"
+name = "name"
+secure = false
