@@ -8,16 +8,16 @@
 
 <script setup>
 import { computed, onMounted } from 'vue';
-import { useNewGameStore } from '../../stores/new';
+import { useGameStore } from '../../stores/game';
 import { useErrorStore } from '../../stores/error';
 import { resolveComponent, useRoute } from '#imports';
 
-const newGameStore = useNewGameStore();
+const gameStore = useGameStore();
 const errorStore = useErrorStore();
 const { params } = useRoute();
 
 onMounted(() => {
-  newGameStore.getGame(params);
+  gameStore.getGame(params);
 });
 
 const mode = computed(() => {
