@@ -22,6 +22,8 @@ const (
 const (
 	RoundInProgress = "ROUND_IN_PROGRESS"
 	RoundWaiting    = "ROUND_WAITING"
+	RoundFinished   = "ROUND_FINISHED"
+	AnswerAccepted  = "ANSWER_ACCEPTED"
 )
 
 const (
@@ -53,6 +55,11 @@ type Game struct {
 	Owner        *User              `json:"owner"`
 	Leaderboard  map[string]float64 `json:"leaderboard"`
 	Data         models.Game        `json:"-"`
+	Rounds       map[int]*Round     `json:"-"`
+}
+
+type Round struct {
+	Answers map[string]uint
 }
 
 type gameSocketController struct {
@@ -142,6 +149,7 @@ func (g *gameSocketController) JoinGame(ctx context.Context, data JoinGameData) 
 		InviteCode:  game.InviteCode,
 		Members:     map[string]*User{},
 		Leaderboard: map[string]float64{},
+		Rounds:      map[int]*Round{},
 		Owner:       user,
 		Data:        game,
 	}
@@ -185,6 +193,9 @@ func (g *gameSocketController) LeaveGame(ctx context.Context) {
 }
 
 func (g *gameSocketController) GetGame(ctx context.Context) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
 	conn := ctx.Value("conn").(*websocket.Conn)
 
 	user := ctx.Value("user").(*User)
@@ -225,6 +236,11 @@ func (g *gameSocketController) StartGame(ctx context.Context) {
 		return
 	}
 
+	if user.ActiveGame.Status == Starting || user.ActiveGame.Status == InProgress {
+		MessageReply(true, user.ActiveGame.Status).Send(conn)
+		return
+	}
+
 	user.ActiveGame.Status = Starting
 
 	n := 1
@@ -234,7 +250,7 @@ func (g *gameSocketController) StartGame(ctx context.Context) {
 				MessageReply(false, InProgress).Send(member.Conn)
 			}
 			user.ActiveGame.Status = InProgress
-			go g.PlayRound(user.ActiveGame)
+			go g.PlayRounds(user.ActiveGame)
 			return
 		}
 		for _, member := range user.ActiveGame.Members {
@@ -281,21 +297,32 @@ type Question struct {
 	Options []Option `json:"options"`
 }
 
-func (g *gameSocketController) PlayRound(game *Game) {
-	g.mu.Lock()
-	defer g.mu.Unlock()
+type FinishedReply struct {
+	Correct     bool               `json:"correct"`
+	Options     []models.Option    `json:"options"`
+	Leaderboard map[string]float64 `json:"leaderboard"`
+}
 
+func (g *gameSocketController) PlayRounds(game *Game) {
 	game.RoundStatus = RoundInProgress
 	for {
 		if game.Status == InProgress && game.RoundStatus == RoundInProgress {
 			n := game.Data.RoundTime
 			question := Question{}
 			copier.Copy(&question, game.Data.Questions[game.CurrentRound])
+			game.Rounds[game.CurrentRound] = &Round{Answers: map[string]uint{}}
 
 			for range time.Tick(time.Second * 1) {
 				if n == 0 {
 					for _, member := range game.Members {
-						MessageReply(false, RoundWaiting).Send(member.Conn)
+						choice := game.Rounds[game.CurrentRound].Answers[member.Id]
+						correct := game.Data.Questions[game.CurrentRound].Options[choice].Correct
+
+						if correct {
+							game.Leaderboard[member.Id] += game.Data.Points
+						}
+
+						DataReply(false, RoundFinished, FinishedReply{Correct: correct, Options: game.Data.Questions[game.CurrentRound].Options, Leaderboard: game.Leaderboard}).Send(member.Conn)
 					}
 
 					game.RoundStatus = RoundWaiting
@@ -315,6 +342,7 @@ func (g *gameSocketController) PlayRound(game *Game) {
 			}
 		} else {
 			if game.CurrentRound >= len(game.Data.Questions) {
+				game.Status = Finished
 				break
 			}
 		}
@@ -326,9 +354,6 @@ type AnswerData struct {
 }
 
 func (g *gameSocketController) AnswerQuestion(ctx context.Context, data AnswerData) {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-
 	user := ctx.Value("user").(*User)
 	conn := ctx.Value("conn").(*websocket.Conn)
 
@@ -337,20 +362,42 @@ func (g *gameSocketController) AnswerQuestion(ctx context.Context, data AnswerDa
 		return
 	}
 
-	if user.ActiveGame.RoundStatus == RoundInProgress {
-		question := user.ActiveGame.Data.Questions[user.ActiveGame.CurrentRound]
-		if question.Options[data.Option].Correct {
-			user.ActiveGame.Leaderboard[user.Id] += user.ActiveGame.Data.Points
-		}
-		return
+	if user.ActiveGame.RoundStatus == RoundInProgress && user.ActiveGame.Status == InProgress {
+		user.ActiveGame.Rounds[user.ActiveGame.CurrentRound].Answers[user.Id] = data.Option
+		DataReply(false, AnswerAccepted, user.ActiveGame).Send(conn)
 	} else {
 		MessageReply(true, RoundWaiting).Send(conn)
 	}
 }
 
-// {
-// 	"message": "JOIN_GAME",
-// 	"data": {
-// 		"gameId": "9dbc-b4a1"
-// 	}
-// }
+func (g *gameSocketController) NextRound(ctx context.Context) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
+	conn := ctx.Value("conn").(*websocket.Conn)
+
+	user := ctx.Value("user").(*User)
+	if user.ActiveGame == nil {
+		MessageReply(true, NotInGame).Send(conn)
+		return
+	}
+
+	if user.ActiveGame.Owner != user {
+		MessageReply(true, NotOwner).Send(conn)
+		return
+	}
+
+	if user.ActiveGame.Status == Finished {
+		MessageReply(true, Finished).Send(conn)
+		return
+	}
+
+	if user.ActiveGame.RoundStatus != RoundWaiting {
+		MessageReply(true, InProgress).Send(conn)
+		return
+	}
+
+	user.ActiveGame.RoundStatus = RoundInProgress
+
+	DataReply(false, GetGame, user.ActiveGame).Send(conn)
+}
