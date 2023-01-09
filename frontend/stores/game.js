@@ -8,7 +8,7 @@ import { useRuntimeConfig, useCookie } from '#imports';
  * game-wait
  * game-wait-admin
  * game-in
- * game-over-client
+ * game-over
  * game-over-admin
  * game-correct
  * game-wrong
@@ -22,15 +22,16 @@ export const useGameStore = defineStore('GameStore', () => {
 
   // Game Mode
   const state = ref('game-graph-admin');
+  const active = ref(false);
 
   // Game Info
   const gameId = ref(0);
   const inviteCode = ref('');
 
-  const topic = ref('');
+  const topic = ref('' || 'Game topic');
   const totalPoints = ref(0);
-  const points = ref(null);
-  const roundTime = ref(null);
+  const points = ref(null || 10);
+  const roundTime = ref(null || 20);
   const participants = ref([]);
   const participantsNumber = computed(() => participants.value.length);
 
@@ -288,7 +289,12 @@ export const useGameStore = defineStore('GameStore', () => {
     state.value = 'game-graph-admin';
   }
 
+  function leaveGame() {
+    console.log('User left game');
+  }
+
   return {
+    active,
     state,
     topic,
     totalPoints,
@@ -324,5 +330,6 @@ export const useGameStore = defineStore('GameStore', () => {
     setGameCorrect,
     setGameWrong,
     setGameGraphAdmin,
+    leaveGame,
   };
 });
