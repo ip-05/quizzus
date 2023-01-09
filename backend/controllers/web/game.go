@@ -1,4 +1,4 @@
-package controllers
+package web
 
 import (
 	"crypto/rand"
@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/ip-05/quizzus/middleware"
 	"github.com/ip-05/quizzus/models"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -54,6 +55,11 @@ type GameController struct{}
 func (g GameController) CreateGame(c *gin.Context) {
 	var game models.Game
 	var body CreateBody
+
+	authedUser, _ := c.Get("authedUser")
+	user := authedUser.(middleware.AuthedUser)
+
+	game.Owner = user.Id
 
 	if err := c.BindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
@@ -110,6 +116,15 @@ func (g GameController) Get(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Game not found"})
 		return
 	}
+
+	authedUser, _ := c.Get("authedUser")
+	user := authedUser.(middleware.AuthedUser)
+
+	if user.Id != game.Owner {
+		c.JSON(http.StatusOK, gin.H{"message": "Game found", "topic": game.Topic})
+		return
+	}
+
 	c.JSON(http.StatusOK, game)
 }
 
@@ -131,8 +146,30 @@ func (g GameController) Update(c *gin.Context) {
 		return
 	}
 
+	authedUser, _ := c.Get("authedUser")
+	user := authedUser.(middleware.AuthedUser)
+
+	if user.Id != game.Owner {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You shall not pass! (not owner)"})
+		return
+	}
+
+	if len(body.Topic) > 128 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Too long topic name"})
+		return
+	}
 	game.Topic = body.Topic
+
+	if body.RoundTime < 10 || body.RoundTime > 60 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Round time should be over 10 or below 60 (seconds)"})
+		return
+	}
 	game.RoundTime = body.RoundTime
+
+	if body.Points <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Points should not be lower than 0"})
+		return
+	}
 	game.Points = body.Points
 
 	ids := make(map[uint]int)
@@ -153,12 +190,15 @@ func (g GameController) Update(c *gin.Context) {
 			}
 		} else {
 			question := models.Question{
-
 				Name: x.Name,
 			}
 
 			for i := 0; i < 4; i++ {
 				question.Options = append(question.Options, models.Option{Name: x.Options[i].Name, Correct: x.Options[i].Correct})
+			}
+			if len(question.Options) != 4 {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Should be 4 options"})
+				return
 			}
 
 			game.Questions = append(game.Questions, question)
@@ -192,6 +232,14 @@ func (g GameController) Delete(c *gin.Context) {
 
 	if game.Id == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Game not found"})
+		return
+	}
+
+	authedUser, _ := c.Get("authedUser")
+	user := authedUser.(middleware.AuthedUser)
+
+	if user.Id != game.Owner {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You shall not pass! (not owner)"})
 		return
 	}
 
