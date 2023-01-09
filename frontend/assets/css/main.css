@@ -6,6 +6,11 @@
   box-sizing: border-box;
 }
 
+::selection {
+  color: var(--background-main-color);
+  background-color: var(--font-primary-color);
+}
+
 :root {
   /* backgrounds */
   --background-main-color: rgb(255, 255, 255);
