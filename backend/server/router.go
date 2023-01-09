@@ -45,7 +45,7 @@ func NewRouter() *gin.Engine {
 
 	//router.GET("/game/:id", game.GetById)
 
-	authGroup.Use(middleware.AuthMiddleware())
+	router.Use(middleware.AuthMiddleware())
 	router.GET("/games", game.Get)
 	router.POST("/games", game.CreateGame)
 	router.PATCH("/games", game.Update)
