@@ -32,9 +32,7 @@
         <NuxtLink to="/">
           <regular-button @click="gameStore.resetGame">Leave</regular-button>
         </NuxtLink>
-        <regular-button active :style="{ opacity: gameStore.nextable ? '1' : '0.5' }" @click="goToConsole"
-          >Create Game</regular-button
-        >
+        <regular-button active :disabled="!gameStore.nextable" @click="goToConsole">Create Game</regular-button>
       </div>
     </div>
   </div>
@@ -58,7 +56,7 @@ const goToConsole = async () => {
       navigateTo(`/console/${inviteCode.value}`);
       return;
     }
-    await gameStore.postGame();
+    await gameStore.postGame(params);
     navigateTo(`/console/${inviteCode.value}`);
   }
 };
