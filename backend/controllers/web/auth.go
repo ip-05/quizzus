@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -16,7 +15,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 )
 
 type UserInfo struct {
@@ -27,19 +25,13 @@ type UserInfo struct {
 	GivenName     string `json:"given_name"`
 }
 
-type AuthController struct{}
+type AuthController struct {
+	Config       *config.Config
+	GoogleConfig *oauth2.Config
+}
 
-var cfg = config.GetConfig()
-
-var googleOauthConfig = &oauth2.Config{
-	RedirectURL:  fmt.Sprintf("%s/auth/google", cfg.Frontend.Base),
-	ClientID:     cfg.Google.ClientId,
-	ClientSecret: cfg.Google.ClientSecret,
-	Scopes: []string{
-		"https://www.googleapis.com/auth/userinfo.email",
-		"https://www.googleapis.com/auth/userinfo.profile",
-	},
-	Endpoint: google.Endpoint,
+func NewAuthController(cfg *config.Config, gcfg *oauth2.Config) *AuthController {
+	return &AuthController{Config: cfg, GoogleConfig: gcfg}
 }
 
 func (a AuthController) GoogleLogin(c *gin.Context) {
@@ -47,9 +39,9 @@ func (a AuthController) GoogleLogin(c *gin.Context) {
 	b := make([]byte, 16)
 	rand.Read(b)
 	oauthState := base64.URLEncoding.EncodeToString(b)
-	c.SetCookie("oauthstate", oauthState, expiration, "*", cfg.Server.Domain, cfg.Server.Secure, false)
+	c.SetCookie("oauthstate", oauthState, expiration, "*", a.Config.Server.Domain, a.Config.Server.Secure, false)
 
-	url := googleOauthConfig.AuthCodeURL(oauthState)
+	url := a.GoogleConfig.AuthCodeURL(oauthState)
 
 	c.JSON(http.StatusOK, gin.H{"redirectUrl": url})
 }
@@ -66,7 +58,7 @@ func (a AuthController) GoogleCallback(c *gin.Context) {
 		return
 	}
 
-	token, err := googleOauthConfig.Exchange(context.Background(), c.Request.FormValue("code"))
+	token, err := a.GoogleConfig.Exchange(context.Background(), c.Request.FormValue("code"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error while verifying auth token"})
 		return
@@ -94,7 +86,7 @@ func (a AuthController) GoogleCallback(c *gin.Context) {
 		return
 	}
 
-	secretKey := []byte(cfg.Secrets.Jwt)
+	secretKey := []byte(a.Config.Secrets.Jwt)
 	tokenJWT := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":             userInfo.Id,
 		"name":           userInfo.GivenName,
@@ -109,7 +101,7 @@ func (a AuthController) GoogleCallback(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("token", tokenString, 7*24*60*60, "/", cfg.Server.Domain, cfg.Server.Secure, false)
+	c.SetCookie("token", tokenString, 7*24*60*60, "/", a.Config.Server.Domain, a.Config.Server.Secure, false)
 	c.JSON(http.StatusOK, gin.H{"message": "Successfully authenticated user", "token": tokenString})
 }
 

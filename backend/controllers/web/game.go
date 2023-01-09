@@ -50,7 +50,13 @@ type UpdateBody struct {
 	Questions []UpdateQuestion `json:"questions"`
 }
 
-type GameController struct{}
+type GameController struct {
+	DB *gorm.DB
+}
+
+func NewGameController(db *gorm.DB) *GameController {
+	return &GameController{DB: db}
+}
 
 func (g GameController) CreateGame(c *gin.Context) {
 	var game models.Game
@@ -100,7 +106,7 @@ func (g GameController) CreateGame(c *gin.Context) {
 		game.Questions = append(game.Questions, question)
 	}
 
-	models.DB.Session(&gorm.Session{FullSaveAssociations: true}).Create(&game)
+	g.DB.Session(&gorm.Session{FullSaveAssociations: true}).Create(&game)
 
 	c.JSON(http.StatusOK, game)
 }
@@ -110,7 +116,7 @@ func (g GameController) Get(c *gin.Context) {
 
 	id, _ := strconv.Atoi(c.Query("id"))
 	code := c.Query("invite_code")
-	models.DB.Preload("Questions.Options").Where("invite_code = ? or id = ?", code, id).First(&game)
+	g.DB.Preload("Questions.Options").Where("invite_code = ? or id = ?", code, id).First(&game)
 
 	if game.Id == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Game not found"})
@@ -139,7 +145,7 @@ func (g GameController) Update(c *gin.Context) {
 
 	id, _ := strconv.Atoi(c.Query("id"))
 	code := c.Query("invite_code")
-	models.DB.Preload("Questions.Options").Where("invite_code = ? or id = ?", code, id).First(&game)
+	g.DB.Preload("Questions.Options").Where("invite_code = ? or id = ?", code, id).First(&game)
 
 	if game.Id == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Game not found"})
@@ -213,12 +219,12 @@ func (g GameController) Update(c *gin.Context) {
 					game.Questions = append(game.Questions[:j], game.Questions[j+1:]...)
 				}
 			}
-			models.DB.Select(clause.Associations).Unscoped().Delete(&models.Question{}, i)
-			models.DB.Exec("DELETE FROM options WHERE question_id = ?", i)
+			g.DB.Select(clause.Associations).Unscoped().Delete(&models.Question{}, i)
+			g.DB.Exec("DELETE FROM options WHERE question_id = ?", i)
 		}
 	}
 
-	models.DB.Session(&gorm.Session{FullSaveAssociations: true}).Updates(&game)
+	g.DB.Session(&gorm.Session{FullSaveAssociations: true}).Updates(&game)
 
 	c.JSON(http.StatusOK, game)
 }
@@ -228,7 +234,7 @@ func (g GameController) Delete(c *gin.Context) {
 
 	id, _ := strconv.Atoi(c.Query("id"))
 	code := c.Query("invite_code")
-	models.DB.Preload("Questions.Options").Where("invite_code = ? or id = ?", code, id).First(&game)
+	g.DB.Preload("Questions.Options").Where("invite_code = ? or id = ?", code, id).First(&game)
 
 	if game.Id == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Game not found"})
@@ -244,9 +250,9 @@ func (g GameController) Delete(c *gin.Context) {
 	}
 
 	for _, v := range game.Questions {
-		models.DB.Select(clause.Associations).Unscoped().Delete(&v)
+		g.DB.Select(clause.Associations).Unscoped().Delete(&v)
 	}
-	models.DB.Select(clause.Associations).Unscoped().Delete(&game)
+	g.DB.Select(clause.Associations).Unscoped().Delete(&game)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Successfully deleted"})
 }
