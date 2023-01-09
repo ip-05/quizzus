@@ -14,7 +14,7 @@
           <div class="about__title">Round time</div>
           <regular-input v-model="topic" placeholder="Enter the topic" img="svg/icon-pen-darker.svg" />
           <regular-input v-model="points" placeholder="From 0.1 to 100" img="svg/icon-star.svg" />
-          <regular-input v-model="time" placeholder="From 10 to 60 seconds" img="svg/icon-clock-darker.svg" />
+          <regular-input v-model="roundTime" placeholder="From 10 to 60 seconds" img="svg/icon-clock-darker.svg" />
         </div>
         <div class="questions">
           <div class="questions__title">List of questions</div>
@@ -22,7 +22,7 @@
             <question-block v-for="{ id } in questions" :key="id" :generated-id="id" class="question" />
           </TransitionGroup>
           <div class="questions__add">
-            <medium-button minimalistic src="svg/icon-add.svg" @click="newGameStore.appendQuestion()"
+            <medium-button minimalistic src="svg/icon-add.svg" @click="gameStore.appendQuestion"
               >Add question</medium-button
             >
           </div>
@@ -30,11 +30,9 @@
       </div>
       <div class="footer">
         <NuxtLink to="/">
-          <regular-button @click="newGameStore.resetGame">Leave</regular-button>
+          <regular-button @click="gameStore.resetGame">Leave</regular-button>
         </NuxtLink>
-        <regular-button active :style="{ opacity: newGameStore.nextable ? '1' : '0.5' }" @click="goToConsole"
-          >Create Game</regular-button
-        >
+        <regular-button active :disabled="!gameStore.nextable" @click="goToConsole">Create Game</regular-button>
       </div>
     </div>
   </div>
@@ -42,23 +40,23 @@
 
 <script setup>
 import { storeToRefs } from 'pinia';
-import { useNewGameStore } from '../stores/new';
+import { useGameStore } from '../stores/game';
 import { navigateTo, useRoute } from '#imports';
 
 const { params } = useRoute();
 
-const newGameStore = useNewGameStore();
+const gameStore = useGameStore();
 
-const { topic, time, points, questions, inviteCode } = storeToRefs(newGameStore);
+const { topic, roundTime, points, questions, inviteCode } = storeToRefs(gameStore);
 
 const goToConsole = async () => {
-  if (newGameStore.nextable) {
+  if (gameStore.nextable) {
     if (params.invite_code) {
-      await newGameStore.updateGame(params);
+      await gameStore.updateGame(params);
       navigateTo(`/console/${inviteCode.value}`);
       return;
     }
-    await newGameStore.postGame();
+    await gameStore.postGame(params);
     navigateTo(`/console/${inviteCode.value}`);
   }
 };

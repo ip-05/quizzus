@@ -8,9 +8,11 @@
 
 <script setup>
 import { computed, defineProps } from 'vue';
+import { useGameStore } from '../stores/game';
 import { useDynamicIslandStore } from '~/stores/dynamicIsland';
 
 const island = useDynamicIslandStore();
+const gameStore = useGameStore();
 
 const props = defineProps({
   mode: {
@@ -25,6 +27,7 @@ const props = defineProps({
 
 const imgs = {
   default: { src: 'svg/icon-default.svg', alt: 'Icon' },
+  leave: { src: 'svg/icon-leave.svg', alt: 'Leave' },
   hamburger: { src: 'svg/icon-hamburger-menu.svg', alt: 'Menu' },
   avatar: { src: 'svg/icon-login.svg', alt: 'Login' },
 };
@@ -32,7 +35,13 @@ const img = computed(() => imgs[props.mode].src);
 const alt = computed(() => imgs[props.mode].alt);
 
 const handleClick = () => {
-  if (props.mode === 'hamburger') return island.active();
+  if (props.mode === 'hamburger') {
+    if (gameStore.active) return;
+    island.active();
+  }
+  if (props.mode === 'leave') {
+    gameStore.leaveGame();
+  }
 };
 </script>
 

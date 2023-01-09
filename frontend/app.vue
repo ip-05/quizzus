@@ -2,7 +2,7 @@
   <div class="wrapper">
     <header class="header__wrapper">
       <div class="header">
-        <left-action-button mode="hamburger" class="header__first" />
+        <left-action-button :mode="gameStore.active ? 'leave' : 'hamburger'" class="header__first" />
         <dynamic-island class="header__center" />
         <profile-popup class="header__last" />
       </div>
@@ -21,7 +21,11 @@
   </div>
 </template>
 
-<script setup></script>
+<script setup>
+import { useGameStore } from './stores/game';
+
+const gameStore = useGameStore();
+</script>
 
 <style scoped>
 .wrapper {

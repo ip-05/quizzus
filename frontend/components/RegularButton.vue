@@ -1,5 +1,5 @@
 <template>
-  <button class="button" :class="{ 'button--active': active }">
+  <button class="button" :class="{ 'button--active': active, 'button--disabled': disabled }">
     <span class="text">
       <slot>Medium Button</slot>
     </span>
@@ -11,6 +11,10 @@ import { defineProps } from 'vue';
 
 const props = defineProps({
   active: {
+    type: Boolean,
+    default: false,
+  },
+  disabled: {
     type: Boolean,
     default: false,
   },
@@ -36,5 +40,9 @@ const props = defineProps({
 .button--active {
   color: white;
   background: var(--green-color);
+}
+
+.button--disabled {
+  opacity: 0.5;
 }
 </style>

@@ -4,8 +4,17 @@
       <div v-if="isOpen" class="backdrop" @click="closeIsland"></div>
     </Transition>
     <nav class="nav">
+      <div
+        v-if="gameStore.active"
+        :class="ingameStyle"
+        :style="{
+          animationDuration:
+            gameStore.state === 'game-in' || gameStore.state === 'game-graph-admin' ? `${gameStore.roundTime}s` : '1s',
+        }"
+        class="nav__ingame"
+      ></div>
       <div class="header" @click.capture="openIsland">
-        <div class="header__status">Welcome to Quizzus</div>
+        <div class="header__status">{{ gameStore.active ? gameStore.topic : 'Menu' }}</div>
         <div v-if="isOpen" class="header__icon">
           <nuxt-img style="cursor: pointer" src="svg/icon-close.svg" @click="closeIsland" />
         </div>
@@ -43,22 +52,27 @@
 
 <script setup>
 import { computed } from 'vue';
+import { useGameStore } from '../stores/game';
 import { useDynamicIslandStore } from '~/stores/dynamicIsland';
 
 const island = useDynamicIslandStore();
+const gameStore = useGameStore();
 
 // defining specific styles depended on state
 const states = {
   default: 'nav--default',
   active: 'nav--active',
-  game_on: 'nav--game_on',
-  game_waiting: 'nav--game_waiting',
 };
 const stateStyle = computed(() => states[island.state]);
-
 const isOpen = computed(() => island.state === 'active');
 
+const ingameStyle = computed(() => {
+  if (gameStore.state === 'game-in' || gameStore.state === 'game-graph-admin') return 'nav--in';
+  return 'nav--wait';
+});
+
 const openIsland = () => {
+  if (gameStore.active) return;
   if (island.state === 'default') {
     island.active();
   }
@@ -202,5 +216,50 @@ const closeIsland = () => {
 
 .body__helplink {
   color: var(--font-secondary-color);
+}
+
+.nav__ingame {
+  position: absolute;
+  border-radius: 40px;
+  top: 10px;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+}
+
+.nav--wait {
+  background: var(--background-secondary-color);
+  animation: blink 1000ms 0s infinite;
+}
+
+.nav--in {
+  background: var(--green-color);
+  animation: timeout linear;
+}
+
+@keyframes blink {
+  from {
+    background: var(--background-secondary-color);
+  }
+  50% {
+    background: var(--background-main-color);
+  }
+  to {
+    background: var(--background-secondary-color);
+  }
+}
+
+@keyframes timeout {
+  from {
+    right: 10px;
+    background: var(--green-color);
+  }
+  50% {
+    background: var(--yellow-color);
+  }
+  to {
+    right: calc(100% - 40px);
+    background: var(--red-color);
+  }
 }
 </style>
