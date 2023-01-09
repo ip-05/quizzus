@@ -21,7 +21,7 @@ export const useGameStore = defineStore('GameStore', () => {
   const tokenCookie = useCookie('token');
 
   // Game Mode
-  const state = ref('game-over-admin');
+  const state = ref('game-graph-admin');
 
   // Game Info
   const gameId = ref(0);
@@ -209,6 +209,21 @@ export const useGameStore = defineStore('GameStore', () => {
     id: 2,
   });
 
+  const submittedAnswers = ref([
+    { id: 0, answers: 8 },
+    { id: 1, answers: 6 },
+    { id: 2, answers: 15 },
+    { id: 3, answers: 0 },
+  ]);
+
+  const graphAnswers = computed(() => {
+    const answers = submittedAnswers.value.map(({ answers }) => answers);
+    const max = Math.max(...answers);
+    const min = 10; // default minimum if every number is 0
+    const percents = answers.map((n, i, arr) => (n / max) * 100 || min);
+    return percents;
+  });
+
   const leaderboardShown = ref(false);
   const leaderboard = reactive([
     {
@@ -236,12 +251,13 @@ export const useGameStore = defineStore('GameStore', () => {
   const hint = computed(() => {
     const hints = {
       'game-wait': 'Waiting game to start',
+      'game-wait-admin': 'Waiting game to start',
       'game-in': 'One correct answer',
       'game-over-client': null,
       'game-over-admin': null,
       'game-correct': 'You answer is correct',
       'game-wrong': 'Oops, you are mistaken',
-      'game-graph-admin': 'One correct answer',
+      'game-graph-admin': currentQuestion.name,
     };
     return hints[state.value];
   });
@@ -291,6 +307,8 @@ export const useGameStore = defineStore('GameStore', () => {
     leaderboard,
     leaderboardSorted,
     top3,
+    submittedAnswers,
+    graphAnswers,
     winner,
     hint,
     nextable,
