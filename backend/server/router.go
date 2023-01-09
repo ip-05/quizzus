@@ -1,9 +1,10 @@
 package server
 
 import (
+	"net/http"
+
 	"github.com/ip-05/quizzus/controllers/web"
 	"github.com/ip-05/quizzus/controllers/ws"
-	"net/http"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -44,6 +45,7 @@ func NewRouter() *gin.Engine {
 
 	//router.GET("/game/:id", game.GetById)
 
+	authGroup.Use(middleware.AuthMiddleware())
 	router.GET("/games", game.Get)
 	router.POST("/games", game.CreateGame)
 	router.PATCH("/games", game.Update)

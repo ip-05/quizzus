@@ -7,4 +7,5 @@ type Game struct {
 	RoundTime  int        `json:"roundTime"`
 	Points     float64    `json:"points"`
 	Questions  []Question `json:"questions"`
+	Owner      string     `json:"ownerId"`
 }

@@ -3,9 +3,10 @@ package ws
 import (
 	"context"
 	"errors"
-	"github.com/jinzhu/copier"
 	"sync"
 	"time"
+
+	"github.com/jinzhu/copier"
 
 	"github.com/ip-05/quizzus/middleware"
 	"github.com/ip-05/quizzus/models"
@@ -236,14 +237,14 @@ func (g *gameSocketController) StartGame(ctx context.Context) {
 		return
 	}
 
-	if user.ActiveGame.Status == Starting || user.ActiveGame.Status == InProgress {
+	if user.ActiveGame.Status != Standby {
 		MessageReply(true, user.ActiveGame.Status).Send(conn)
 		return
 	}
 
 	user.ActiveGame.Status = Starting
 
-	n := 1
+	n := 10
 	for range time.Tick(time.Second * 1) {
 		if n == 0 {
 			for _, member := range user.ActiveGame.Members {
@@ -278,14 +279,23 @@ func (g *gameSocketController) ResetGame(ctx context.Context) {
 		return
 	}
 
+	if user.ActiveGame.Status != Finished {
+		MessageReply(true, user.ActiveGame.Status).Send(conn)
+		return
+	}
+
 	user.ActiveGame.Status = Standby
+	user.ActiveGame.RoundStatus = RoundWaiting
+	user.ActiveGame.CurrentRound = 0
+	user.ActiveGame.Leaderboard = map[string]float64{}
+	user.ActiveGame.Rounds = map[int]*Round{}
 
 	DataReply(false, ResetGame, user.ActiveGame).Send(conn)
 }
 
-type RoundData struct {
-	Timer    int       `json:"timer"`
-	Question *Question `json:"question"`
+type RoundData[T models.Question | Question] struct {
+	Timer    int `json:"timer"`
+	Question *T  `json:"question"`
 }
 
 type Option struct {
@@ -332,9 +342,9 @@ func (g *gameSocketController) PlayRounds(game *Game) {
 				}
 				for _, member := range game.Members {
 					if game.Owner == member {
-						DataReply(false, RoundInProgress, game.Data.Questions[game.CurrentRound]).Send(member.Conn)
+						DataReply(false, RoundInProgress, RoundData[models.Question]{Question: &game.Data.Questions[game.CurrentRound], Timer: n}).Send(member.Conn)
 					} else {
-						DataReply(false, RoundInProgress, RoundData{Question: &question, Timer: n}).Send(member.Conn)
+						DataReply(false, RoundInProgress, RoundData[Question]{Question: &question, Timer: n}).Send(member.Conn)
 					}
 				}
 
@@ -387,6 +397,11 @@ func (g *gameSocketController) NextRound(ctx context.Context) {
 		return
 	}
 
+	if user.ActiveGame.Status == Standby {
+		MessageReply(true, Standby).Send(conn)
+		return
+	}
+
 	if user.ActiveGame.Status == Finished {
 		MessageReply(true, Finished).Send(conn)
 		return
@@ -399,5 +414,5 @@ func (g *gameSocketController) NextRound(ctx context.Context) {
 
 	user.ActiveGame.RoundStatus = RoundInProgress
 
-	DataReply(false, GetGame, user.ActiveGame).Send(conn)
+	MessageReply(false, RoundInProgress).Send(conn)
 }

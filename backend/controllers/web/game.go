@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/ip-05/quizzus/middleware"
 	"github.com/ip-05/quizzus/models"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -54,6 +55,11 @@ type GameController struct{}
 func (g GameController) CreateGame(c *gin.Context) {
 	var game models.Game
 	var body CreateBody
+
+	authedUser, _ := c.Get("authedUser")
+	user := authedUser.(middleware.AuthedUser)
+
+	game.Owner = user.Id
 
 	if err := c.BindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
@@ -110,6 +116,15 @@ func (g GameController) Get(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Game not found"})
 		return
 	}
+
+	authedUser, _ := c.Get("authedUser")
+	user := authedUser.(middleware.AuthedUser)
+
+	if user.Id != game.Owner {
+		c.JSON(http.StatusOK, gin.H{"message": "Game found", "topic": game.Topic})
+		return
+	}
+
 	c.JSON(http.StatusOK, game)
 }
 
@@ -128,6 +143,14 @@ func (g GameController) Update(c *gin.Context) {
 
 	if game.Id == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Game not found"})
+		return
+	}
+
+	authedUser, _ := c.Get("authedUser")
+	user := authedUser.(middleware.AuthedUser)
+
+	if user.Id != game.Owner {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You shall not pass! (not owner)"})
 		return
 	}
 
@@ -209,6 +232,14 @@ func (g GameController) Delete(c *gin.Context) {
 
 	if game.Id == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Game not found"})
+		return
+	}
+
+	authedUser, _ := c.Get("authedUser")
+	user := authedUser.(middleware.AuthedUser)
+
+	if user.Id != game.Owner {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You shall not pass! (not owner)"})
 		return
 	}
 
