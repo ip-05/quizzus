@@ -401,13 +401,8 @@ func (g *gameSocketController) NextRound(ctx context.Context) {
 		return
 	}
 
-	if user.ActiveGame.Status == Standby {
-		MessageReply(true, Standby).Send(conn)
-		return
-	}
-
-	if user.ActiveGame.Status == Finished {
-		MessageReply(true, Finished).Send(conn)
+	if user.ActiveGame.Status != InProgress {
+		MessageReply(true, user.ActiveGame.Status).Send(conn)
 		return
 	}
 
