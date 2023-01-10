@@ -38,7 +38,7 @@ func NewRouter() *gin.Engine {
 
 	wsGroup := router.Group("ws")
 
-	wsGroup.Use(middleware.WSMiddleware())
+	wsGroup.Use(middleware.AuthMiddleware())
 	wsGroup.GET("", ws.HandleWS)
 
 	gamesGroup := router.Group("games")
