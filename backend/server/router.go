@@ -5,19 +5,18 @@ import (
 	"github.com/ip-05/quizzus/controllers/ws"
 
 	"github.com/gin-gonic/gin"
-	"github.com/ip-05/quizzus/config"
 	"github.com/ip-05/quizzus/middleware"
 )
 
 func NewRouter() *gin.Engine {
-	cfg := config.GetConfig()
+	// cfg := config.GetConfig()
 
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
 	router.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", cfg.Frontend.Base)
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, ResponseType, accept, origin, Cache-Control, X-Requested-With")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
