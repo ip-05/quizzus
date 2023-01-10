@@ -17,9 +17,7 @@ type AuthedUser struct {
 	ProfilePicture string `json:"profilePicture"`
 }
 
-func AuthMiddleware() gin.HandlerFunc {
-	cfg := config.GetConfig()
-
+func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		header := c.GetHeader("Authorization")
 		if header == "" {
