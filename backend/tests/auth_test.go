@@ -37,7 +37,7 @@ type httpClientMock struct {
 }
 
 func (h httpClientMock) Get(url string) (resp *http.Response, err error) {
-	args := h.Called(url)
+	args := h.Called()
 
 	stringReader := strings.NewReader(args.Get(1).(string))
 	stringReadCloser := io.NopCloser(stringReader)
@@ -192,7 +192,7 @@ func TestGoogleLogin(t *testing.T) {
 		})
 		ctx.Request.Form, _ = url.ParseQuery("state=firstState&code=code")
 
-		httpMock.On("Get", "https://www.googleapis.com/oauth2/v2/userinfo?access_token=AccessToken").Return(http.StatusUnauthorized, "").Times(1)
+		httpMock.On("Get").Return(http.StatusUnauthorized, "").Times(1)
 
 		engine.ServeHTTP(w, ctx.Request)
 
@@ -213,7 +213,7 @@ func TestGoogleLogin(t *testing.T) {
 	}
 	userString, _ := json.Marshal(&userInfo)
 
-	httpMock.On("Get", "https://www.googleapis.com/oauth2/v2/userinfo?access_token=AccessToken").Return(http.StatusOK, string(userString)).Times(2)
+	httpMock.On("Get").Return(http.StatusOK, string(userString)).Times(2)
 
 	t.Run("should return jwt token", func(t *testing.T) {
 		// When
