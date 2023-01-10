@@ -48,15 +48,19 @@ type User struct {
 }
 
 type Game struct {
-	Status       string             `json:"status"`
-	RoundStatus  string             `json:"roundStatus"`
-	CurrentRound int                `json:"currentRound"`
-	InviteCode   string             `json:"inviteCode"`
-	Members      map[string]*User   `json:"members"`
-	Owner        *User              `json:"owner"`
-	Leaderboard  map[string]float64 `json:"leaderboard"`
-	Data         models.Game        `json:"-"`
-	Rounds       map[int]*Round     `json:"-"`
+	Status        string             `json:"status"`
+	RoundStatus   string             `json:"roundStatus"`
+	CurrentRound  int                `json:"currentRound"`
+	Points        float64            `json:"points"`
+	Topic         string             `json:"topic"`
+	RoundTime     int                `json:"roundTime"`
+	QuestionCount int                `json:"questionCount"`
+	InviteCode    string             `json:"inviteCode"`
+	Members       map[string]*User   `json:"members"`
+	Owner         *User              `json:"owner"`
+	Leaderboard   map[string]float64 `json:"leaderboard"`
+	Data          models.Game        `json:"-"`
+	Rounds        map[int]*Round     `json:"-"`
 }
 
 type Round struct {
@@ -146,13 +150,18 @@ func (g *gameSocketController) JoinGame(ctx context.Context, data JoinGameData) 
 	}
 
 	newGame := Game{
-		Status:      Standby,
-		InviteCode:  game.InviteCode,
-		Members:     map[string]*User{},
-		Leaderboard: map[string]float64{},
-		Rounds:      map[int]*Round{},
-		Owner:       user,
-		Data:        game,
+		Status:        Standby,
+		RoundStatus:   RoundWaiting,
+		Points:        game.Points,
+		Topic:         game.Topic,
+		QuestionCount: len(game.Questions),
+		RoundTime:     game.RoundTime,
+		InviteCode:    game.InviteCode,
+		Members:       map[string]*User{},
+		Leaderboard:   map[string]float64{},
+		Rounds:        map[int]*Round{},
+		Owner:         user,
+		Data:          game,
 	}
 
 	newGame.Members[user.Id] = user
