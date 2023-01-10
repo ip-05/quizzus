@@ -133,7 +133,7 @@ func (g *gameSocketController) JoinGame(ctx context.Context, data JoinGameData) 
 	value, ok := g.Games[game.InviteCode]
 	if ok {
 		for _, member := range value.Members {
-			DataReply(false, UserJoined, member).Send(member.Conn)
+			DataReply(false, UserJoined, user).Send(member.Conn)
 		}
 
 		value.Members[user.Id] = user
