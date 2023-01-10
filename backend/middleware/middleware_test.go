@@ -1,9 +1,8 @@
-package tests
+package middleware
 
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/ip-05/quizzus/config"
-	"github.com/ip-05/quizzus/middleware"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
@@ -24,7 +23,7 @@ func TestAuthMiddleware(t *testing.T) {
 	w := httptest.NewRecorder()
 	ctx, engine := gin.CreateTestContext(w)
 
-	engine.Use(middleware.AuthMiddleware(cfg))
+	engine.Use(AuthMiddleware(cfg))
 	engine.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "OK")
 	})
@@ -69,7 +68,7 @@ func TestWSMiddleware(t *testing.T) {
 	w := httptest.NewRecorder()
 	ctx, engine := gin.CreateTestContext(w)
 
-	engine.Use(middleware.WSMiddleware(cfg))
+	engine.Use(WSMiddleware(cfg))
 	engine.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "OK")
 	})

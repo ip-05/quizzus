@@ -1,4 +1,4 @@
-package tests
+package web
 
 import (
 	"context"
@@ -14,7 +14,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/ip-05/quizzus/config"
-	"github.com/ip-05/quizzus/controllers/web"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"golang.org/x/oauth2"
@@ -78,7 +77,7 @@ func TestGoogleLogin(t *testing.T) {
 	mock := oAuth2Mock{}
 	httpMock := httpClientMock{}
 
-	authController := web.NewAuthController(newTestConfig(), &mock, &httpMock)
+	authController := NewAuthController(newTestConfig(), &mock, &httpMock)
 
 	gin.SetMode(gin.TestMode)
 
@@ -204,7 +203,7 @@ func TestGoogleLogin(t *testing.T) {
 		assert.Contains(t, string(body), "Error while verifying auth token")
 	})
 
-	userInfo := web.UserInfo{
+	userInfo := UserInfo{
 		Id:            "123123",
 		Email:         "john@doe.com",
 		VerifiedEmail: true,
@@ -267,7 +266,7 @@ func TestGoogleLogin(t *testing.T) {
 func TestMe(t *testing.T) {
 	// Given
 	mock := oAuth2Mock{}
-	authController := web.NewAuthController(newTestConfig(), &mock, &http.Client{})
+	authController := NewAuthController(newTestConfig(), &mock, &http.Client{})
 
 	gin.SetMode(gin.TestMode)
 
