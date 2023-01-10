@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/gin-contrib/cors"
 	"github.com/ip-05/quizzus/controllers/web"
 	"github.com/ip-05/quizzus/controllers/ws"
 
@@ -15,18 +16,11 @@ func NewRouter() *gin.Engine {
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
-	router.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "*")
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
-		c.Next()
-	})
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true
+	config.AllowCredentials = true
+	config.AddAllowHeaders("Authorization")
+	router.Use(cors.New(config))
 
 	auth := new(web.AuthController)
 	game := new(web.GameController)
@@ -42,17 +36,17 @@ func NewRouter() *gin.Engine {
 
 	//router.GET("/game/:id", game.GetById)
 
-	gamesGroup := router.Group("games")
-	gamesGroup.Use(middleware.AuthMiddleware())
-	gamesGroup.GET("/", game.Get)
-	gamesGroup.POST("/", game.CreateGame)
-	gamesGroup.PATCH("/", game.Update)
-	gamesGroup.DELETE("/", game.Delete)
-
 	wsGroup := router.Group("ws")
 
 	wsGroup.Use(middleware.WSMiddleware())
-	wsGroup.GET("/", ws.HandleWS)
+	wsGroup.GET("", ws.HandleWS)
+
+	gamesGroup := router.Group("games")
+	gamesGroup.Use(middleware.AuthMiddleware())
+	gamesGroup.GET("", game.Get)
+	gamesGroup.POST("", game.CreateGame)
+	gamesGroup.PATCH("", game.Update)
+	gamesGroup.DELETE("", game.Delete)
 
 	return router
 }
