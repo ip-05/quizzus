@@ -3,12 +3,11 @@ package ws
 import (
 	"context"
 	"encoding/json"
+	"github.com/gin-gonic/gin"
 	"go/types"
 	"net/http"
-	"time"
-
-	"github.com/gin-gonic/gin"
 	"nhooyr.io/websocket"
+	"time"
 )
 
 type CoreController struct{}
@@ -117,7 +116,9 @@ func messageHandler(ctx context.Context, conn *websocket.Conn) error {
 }
 
 func (w CoreController) HandleWS(c *gin.Context) {
-	conn, err := websocket.Accept(c.Writer, c.Request, nil)
+	conn, err := websocket.Accept(c.Writer, c.Request, &websocket.AcceptOptions{
+		OriginPatterns: []string{"*"},
+	})
 	if err != nil {
 		c.String(http.StatusBadRequest, "the sky is falling")
 	}

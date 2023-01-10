@@ -1,31 +1,24 @@
 package server
 
 import (
-	"net/http"
-
+	"github.com/gin-contrib/cors"
 	"github.com/ip-05/quizzus/controllers/web"
 	"github.com/ip-05/quizzus/controllers/ws"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/ip-05/quizzus/config"
 	"github.com/ip-05/quizzus/middleware"
 )
 
 func NewRouter() *gin.Engine {
-	cfg := config.GetConfig()
-
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
-	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{cfg.Frontend.Base},
-		AllowMethods:     []string{"*"},
-		AllowHeaders:     []string{"*"},
-		ExposeHeaders:    []string{"*"},
-		AllowCredentials: true,
-	}))
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true
+	config.AllowCredentials = true
+	config.AddAllowHeaders("Authorization")
+	router.Use(cors.New(config))
 
 	auth := new(web.AuthController)
 	game := new(web.GameController)
@@ -33,27 +26,22 @@ func NewRouter() *gin.Engine {
 
 	authGroup := router.Group("auth")
 
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"data": "hello world"})
-	})
-
 	authGroup.GET("/google", auth.GoogleLogin)
 	authGroup.GET("/google/callback", auth.GoogleCallback)
 
 	authGroup.Use(middleware.AuthMiddleware())
 	authGroup.GET("/me", auth.Me)
 
-	//router.GET("/game/:id", game.GetById)
-
 	gamesGroup := router.Group("games")
 	gamesGroup.Use(middleware.AuthMiddleware())
-	gamesGroup.GET("/", game.Get)
-	gamesGroup.POST("/", game.CreateGame)
-	gamesGroup.PATCH("/", game.Update)
-	gamesGroup.DELETE("/", game.Delete)
+	gamesGroup.GET("", game.Get)
+	gamesGroup.POST("", game.CreateGame)
+	gamesGroup.PATCH("", game.Update)
+	gamesGroup.DELETE("", game.Delete)
 
-	router.Use(middleware.WSMiddleware())
-	router.GET("/ws", ws.HandleWS)
+	wsGroup := router.Group("ws")
+	wsGroup.Use(middleware.WSMiddleware())
+	wsGroup.GET("", ws.HandleWS)
 
 	return router
 }

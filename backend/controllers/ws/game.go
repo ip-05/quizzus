@@ -168,7 +168,6 @@ func (g *gameSocketController) LeaveGame(ctx context.Context) {
 	defer g.mu.Unlock()
 
 	conn := ctx.Value("conn").(*websocket.Conn)
-
 	user := ctx.Value("user").(*User)
 	if user.ActiveGame == nil {
 		MessageReply(true, NotInGame).Send(conn)
@@ -331,6 +330,11 @@ func (g *gameSocketController) PlayRounds(game *Game) {
 						if correct {
 							game.Leaderboard[member.Id] += game.Data.Points
 						}
+					}
+
+					for _, member := range game.Members {
+						choice := game.Rounds[game.CurrentRound].Answers[member.Id]
+						correct := game.Data.Questions[game.CurrentRound].Options[choice].Correct
 
 						DataReply(false, RoundFinished, FinishedReply{Correct: correct, Options: game.Data.Questions[game.CurrentRound].Options, Leaderboard: game.Leaderboard}).Send(member.Conn)
 					}

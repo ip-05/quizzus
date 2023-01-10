@@ -13,9 +13,9 @@ func WSMiddleware() gin.HandlerFunc {
 	cfg := config.GetConfig()
 
 	return func(c *gin.Context) {
-		query, found := c.GetQuery("token")
-		if !found {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Missing `token` query."})
+		query := c.Query("token")
+		if query == "" {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Missing `token` parameter."})
 			return
 		}
 
