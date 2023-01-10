@@ -144,6 +144,11 @@ func (g *gameSocketController) JoinGame(ctx context.Context, data JoinGameData) 
 		return
 	}
 
+	if game.Owner != user.Id {
+		MessageReply(true, NotOwner).Send(conn)
+		return
+	}
+
 	newGame := Game{
 		Status:        Standby,
 		RoundStatus:   RoundWaiting,
