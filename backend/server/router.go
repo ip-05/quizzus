@@ -1,8 +1,6 @@
 package server
 
 import (
-	"net/http"
-
 	"github.com/ip-05/quizzus/controllers/web"
 	"github.com/ip-05/quizzus/controllers/ws"
 
@@ -19,23 +17,20 @@ func NewRouter() *gin.Engine {
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
-	router.Use(cors.New(cors.Config{
+	cors := cors.New(cors.Config{
 		AllowOrigins:     []string{cfg.Frontend.Base},
 		AllowMethods:     []string{"*"},
 		AllowHeaders:     []string{"*"},
 		ExposeHeaders:    []string{"*"},
 		AllowCredentials: true,
-	}))
+	})
 
 	auth := new(web.AuthController)
 	game := new(web.GameController)
 	ws := new(ws.CoreController)
 
 	authGroup := router.Group("auth")
-
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"data": "hello world"})
-	})
+	authGroup.Use(cors)
 
 	authGroup.GET("/google", auth.GoogleLogin)
 	authGroup.GET("/google/callback", auth.GoogleCallback)
@@ -53,6 +48,7 @@ func NewRouter() *gin.Engine {
 	gamesGroup.DELETE("/", game.Delete)
 
 	wsGroup := router.Group("ws")
+	wsGroup.Use(cors)
 
 	wsGroup.Use(middleware.WSMiddleware())
 	wsGroup.GET("/", ws.HandleWS)
