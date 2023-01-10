@@ -4,7 +4,6 @@ import (
 	"github.com/ip-05/quizzus/controllers/web"
 	"github.com/ip-05/quizzus/controllers/ws"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/ip-05/quizzus/config"
 	"github.com/ip-05/quizzus/middleware"
@@ -17,12 +16,17 @@ func NewRouter() *gin.Engine {
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
-	cors := cors.New(cors.Config{
-		AllowOrigins:     []string{cfg.Frontend.Base},
-		AllowMethods:     []string{"*"},
-		AllowHeaders:     []string{"*"},
-		ExposeHeaders:    []string{"*"},
-		AllowCredentials: true,
+	router.Use(func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", cfg.Frontend.Base)
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, ResponseType, accept, origin, Cache-Control, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+		c.Next()
 	})
 
 	auth := new(web.AuthController)
@@ -30,7 +34,6 @@ func NewRouter() *gin.Engine {
 	ws := new(ws.CoreController)
 
 	authGroup := router.Group("auth")
-	authGroup.Use(cors)
 
 	authGroup.GET("/google", auth.GoogleLogin)
 	authGroup.GET("/google/callback", auth.GoogleCallback)
@@ -48,7 +51,6 @@ func NewRouter() *gin.Engine {
 	gamesGroup.DELETE("/", game.Delete)
 
 	wsGroup := router.Group("ws")
-	wsGroup.Use(cors)
 
 	wsGroup.Use(middleware.WSMiddleware())
 	wsGroup.GET("/", ws.HandleWS)
