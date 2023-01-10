@@ -52,8 +52,10 @@ func NewRouter() *gin.Engine {
 	gamesGroup.PATCH("/", game.Update)
 	gamesGroup.DELETE("/", game.Delete)
 
-	router.Use(middleware.WSMiddleware())
-	router.GET("/ws", ws.HandleWS)
+	wsGroup := router.Group("ws")
+
+	wsGroup.Use(middleware.WSMiddleware())
+	wsGroup.GET("/", ws.HandleWS)
 
 	return router
 }
