@@ -41,10 +41,11 @@ const (
 )
 
 type User struct {
-	Id         string          `json:"id"`
-	Name       string          `json:"name"`
-	ActiveGame *Game           `json:"-"`
-	Conn       *websocket.Conn `json:"-"`
+	Id             string          `json:"id"`
+	Name           string          `json:"name"`
+	ProfilePicture string          `json:"profilePicture"`
+	ActiveGame     *Game           `json:"-"`
+	Conn           *websocket.Conn `json:"-"`
 }
 
 type Game struct {
@@ -89,7 +90,12 @@ func (g *gameSocketController) InitUser(ctx context.Context) (*User, error) {
 		return nil, errors.New("user already exists on another socket")
 	}
 
-	g.Users[user.Id] = &User{Id: user.Id, Name: user.Name, Conn: ctx.Value("conn").(*websocket.Conn)}
+	g.Users[user.Id] = &User{
+		Id:             user.Id,
+		Name:           user.Name,
+		ProfilePicture: user.ProfilePicture,
+		Conn:           ctx.Value("conn").(*websocket.Conn),
+	}
 
 	return g.Users[user.Id], nil
 }
