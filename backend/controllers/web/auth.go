@@ -11,10 +11,10 @@ import (
 
 	"github.com/ip-05/quizzus/config"
 	"github.com/ip-05/quizzus/middleware"
+	"golang.org/x/oauth2"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
-	"golang.org/x/oauth2"
 )
 
 type UserInfo struct {
@@ -27,10 +27,15 @@ type UserInfo struct {
 
 type AuthController struct {
 	Config       *config.Config
-	GoogleConfig *oauth2.Config
+	GoogleConfig GoogleAuth
 }
 
-func NewAuthController(cfg *config.Config, gcfg *oauth2.Config) *AuthController {
+type GoogleAuth interface {
+	AuthCodeURL(state string, opts ...oauth2.AuthCodeOption) string
+	Exchange(ctx context.Context, code string, opts ...oauth2.AuthCodeOption) (*oauth2.Token, error)
+}
+
+func NewAuthController(cfg *config.Config, gcfg GoogleAuth) *AuthController {
 	return &AuthController{Config: cfg, GoogleConfig: gcfg}
 }
 
