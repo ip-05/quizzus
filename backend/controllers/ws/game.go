@@ -3,7 +3,6 @@ package ws
 import (
 	"context"
 	"errors"
-	"sync"
 	"time"
 
 	"github.com/jinzhu/copier"
@@ -33,30 +32,36 @@ const (
 	NotInGame     = "NOT_IN_GAME"
 	NotOwner      = "NOT_OWNER"
 
-	JoinedGame  = "JOINED_GAME"
-	LeftGame    = "LEFT_GAME"
-	GameDeleted = "GAME_DELETED"
-	UserLeft    = "USER_LEFT"
-	UserJoined  = "USER_JOINED"
+	JoinedGame   = "JOINED_GAME"
+	LeftGame     = "LEFT_GAME"
+	GameDeleted  = "GAME_DELETED"
+	UserLeft     = "USER_LEFT"
+	UserJoined   = "USER_JOINED"
+	UserAnswered = "USER_ANSWERED"
 )
 
 type User struct {
-	Id         string          `json:"id"`
-	Name       string          `json:"name"`
-	ActiveGame *Game           `json:"-"`
-	Conn       *websocket.Conn `json:"-"`
+	Id             string          `json:"id"`
+	Name           string          `json:"name"`
+	ProfilePicture string          `json:"profilePicture"`
+	ActiveGame     *Game           `json:"-"`
+	Conn           *websocket.Conn `json:"-"`
 }
 
 type Game struct {
-	Status       string             `json:"status"`
-	RoundStatus  string             `json:"roundStatus"`
-	CurrentRound int                `json:"currentRound"`
-	InviteCode   string             `json:"inviteCode"`
-	Members      map[string]*User   `json:"members"`
-	Owner        *User              `json:"owner"`
-	Leaderboard  map[string]float64 `json:"leaderboard"`
-	Data         models.Game        `json:"-"`
-	Rounds       map[int]*Round     `json:"-"`
+	Status        string             `json:"status"`
+	RoundStatus   string             `json:"roundStatus"`
+	CurrentRound  int                `json:"currentRound"`
+	Points        float64            `json:"points"`
+	Topic         string             `json:"topic"`
+	RoundTime     int                `json:"roundTime"`
+	QuestionCount int                `json:"questionCount"`
+	InviteCode    string             `json:"inviteCode"`
+	Members       map[string]*User   `json:"members"`
+	Owner         *User              `json:"owner"`
+	Leaderboard   map[string]float64 `json:"leaderboard"`
+	Data          models.Game        `json:"-"`
+	Rounds        map[int]*Round     `json:"-"`
 }
 
 type Round struct {
@@ -66,8 +71,6 @@ type Round struct {
 type gameSocketController struct {
 	Users map[string]*User
 	Games map[string]*Game
-
-	mu sync.Mutex
 }
 
 func NewGameSocketController() *gameSocketController {
@@ -80,9 +83,6 @@ func NewGameSocketController() *gameSocketController {
 }
 
 func (g *gameSocketController) InitUser(ctx context.Context) (*User, error) {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-
 	user := ctx.Value("authedUser").(middleware.AuthedUser)
 
 	_, found := g.Users[user.Id]
@@ -90,15 +90,17 @@ func (g *gameSocketController) InitUser(ctx context.Context) (*User, error) {
 		return nil, errors.New("user already exists on another socket")
 	}
 
-	g.Users[user.Id] = &User{Id: user.Id, Name: user.Name, Conn: ctx.Value("conn").(*websocket.Conn)}
+	g.Users[user.Id] = &User{
+		Id:             user.Id,
+		Name:           user.Name,
+		ProfilePicture: user.ProfilePicture,
+		Conn:           ctx.Value("conn").(*websocket.Conn),
+	}
 
 	return g.Users[user.Id], nil
 }
 
 func (g *gameSocketController) CleanUser(ctx context.Context) {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-
 	user := ctx.Value("user").(*User)
 	if user.ActiveGame != nil {
 		g.LeaveGame(ctx)
@@ -112,9 +114,6 @@ type JoinGameData struct {
 }
 
 func (g *gameSocketController) JoinGame(ctx context.Context, data JoinGameData) {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-
 	conn := ctx.Value("conn").(*websocket.Conn)
 
 	user := ctx.Value("user").(*User)
@@ -145,14 +144,24 @@ func (g *gameSocketController) JoinGame(ctx context.Context, data JoinGameData) 
 		return
 	}
 
+	if game.Owner != user.Id {
+		MessageReply(true, NotOwner).Send(conn)
+		return
+	}
+
 	newGame := Game{
-		Status:      Standby,
-		InviteCode:  game.InviteCode,
-		Members:     map[string]*User{},
-		Leaderboard: map[string]float64{},
-		Rounds:      map[int]*Round{},
-		Owner:       user,
-		Data:        game,
+		Status:        Standby,
+		RoundStatus:   RoundWaiting,
+		Points:        game.Points,
+		Topic:         game.Topic,
+		QuestionCount: len(game.Questions),
+		RoundTime:     game.RoundTime,
+		InviteCode:    game.InviteCode,
+		Members:       map[string]*User{},
+		Leaderboard:   map[string]float64{},
+		Rounds:        map[int]*Round{},
+		Owner:         user,
+		Data:          game,
 	}
 
 	newGame.Members[user.Id] = user
@@ -164,9 +173,6 @@ func (g *gameSocketController) JoinGame(ctx context.Context, data JoinGameData) 
 }
 
 func (g *gameSocketController) LeaveGame(ctx context.Context) {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-
 	conn := ctx.Value("conn").(*websocket.Conn)
 	user := ctx.Value("user").(*User)
 	if user.ActiveGame == nil {
@@ -193,9 +199,6 @@ func (g *gameSocketController) LeaveGame(ctx context.Context) {
 }
 
 func (g *gameSocketController) GetGame(ctx context.Context) {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-
 	conn := ctx.Value("conn").(*websocket.Conn)
 
 	user := ctx.Value("user").(*User)
@@ -220,9 +223,6 @@ func (g *gameSocketController) IsOwner(ctx context.Context) {
 }
 
 func (g *gameSocketController) StartGame(ctx context.Context) {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-
 	conn := ctx.Value("conn").(*websocket.Conn)
 
 	user := ctx.Value("user").(*User)
@@ -262,9 +262,6 @@ func (g *gameSocketController) StartGame(ctx context.Context) {
 }
 
 func (g *gameSocketController) ResetGame(ctx context.Context) {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-
 	conn := ctx.Value("conn").(*websocket.Conn)
 
 	user := ctx.Value("user").(*User)
@@ -367,6 +364,11 @@ type AnswerData struct {
 	Option uint `json:"option"`
 }
 
+type AnswerResponse struct {
+	UserId string `json:"user"`
+	Option uint   `json:"option"`
+}
+
 func (g *gameSocketController) AnswerQuestion(ctx context.Context, data AnswerData) {
 	user := ctx.Value("user").(*User)
 	conn := ctx.Value("conn").(*websocket.Conn)
@@ -379,15 +381,16 @@ func (g *gameSocketController) AnswerQuestion(ctx context.Context, data AnswerDa
 	if user.ActiveGame.RoundStatus == RoundInProgress && user.ActiveGame.Status == InProgress {
 		user.ActiveGame.Rounds[user.ActiveGame.CurrentRound].Answers[user.Id] = data.Option
 		DataReply(false, AnswerAccepted, user.ActiveGame).Send(conn)
+		DataReply(false, UserAnswered, AnswerResponse{
+			UserId: user.Id,
+			Option: data.Option,
+		}).Send(user.ActiveGame.Owner.Conn)
 	} else {
 		MessageReply(true, RoundWaiting).Send(conn)
 	}
 }
 
 func (g *gameSocketController) NextRound(ctx context.Context) {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-
 	conn := ctx.Value("conn").(*websocket.Conn)
 
 	user := ctx.Value("user").(*User)
@@ -401,13 +404,8 @@ func (g *gameSocketController) NextRound(ctx context.Context) {
 		return
 	}
 
-	if user.ActiveGame.Status == Standby {
-		MessageReply(true, Standby).Send(conn)
-		return
-	}
-
-	if user.ActiveGame.Status == Finished {
-		MessageReply(true, Finished).Send(conn)
+	if user.ActiveGame.Status != InProgress {
+		MessageReply(true, user.ActiveGame.Status).Send(conn)
 		return
 	}
 
