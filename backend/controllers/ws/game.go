@@ -3,7 +3,6 @@ package ws
 import (
 	"context"
 	"errors"
-	"sync"
 	"time"
 
 	"github.com/jinzhu/copier"
@@ -71,8 +70,6 @@ type Round struct {
 type gameSocketController struct {
 	Users map[string]*User
 	Games map[string]*Game
-
-	mu sync.Mutex
 }
 
 func NewGameSocketController() *gameSocketController {
@@ -85,9 +82,6 @@ func NewGameSocketController() *gameSocketController {
 }
 
 func (g *gameSocketController) InitUser(ctx context.Context) (*User, error) {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-
 	user := ctx.Value("authedUser").(middleware.AuthedUser)
 
 	_, found := g.Users[user.Id]
@@ -101,9 +95,6 @@ func (g *gameSocketController) InitUser(ctx context.Context) (*User, error) {
 }
 
 func (g *gameSocketController) CleanUser(ctx context.Context) {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-
 	user := ctx.Value("user").(*User)
 	if user.ActiveGame != nil {
 		g.LeaveGame(ctx)
@@ -117,9 +108,6 @@ type JoinGameData struct {
 }
 
 func (g *gameSocketController) JoinGame(ctx context.Context, data JoinGameData) {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-
 	conn := ctx.Value("conn").(*websocket.Conn)
 
 	user := ctx.Value("user").(*User)
@@ -174,9 +162,6 @@ func (g *gameSocketController) JoinGame(ctx context.Context, data JoinGameData) 
 }
 
 func (g *gameSocketController) LeaveGame(ctx context.Context) {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-
 	conn := ctx.Value("conn").(*websocket.Conn)
 	user := ctx.Value("user").(*User)
 	if user.ActiveGame == nil {
@@ -203,9 +188,6 @@ func (g *gameSocketController) LeaveGame(ctx context.Context) {
 }
 
 func (g *gameSocketController) GetGame(ctx context.Context) {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-
 	conn := ctx.Value("conn").(*websocket.Conn)
 
 	user := ctx.Value("user").(*User)
@@ -230,9 +212,6 @@ func (g *gameSocketController) IsOwner(ctx context.Context) {
 }
 
 func (g *gameSocketController) StartGame(ctx context.Context) {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-
 	conn := ctx.Value("conn").(*websocket.Conn)
 
 	user := ctx.Value("user").(*User)
@@ -272,9 +251,6 @@ func (g *gameSocketController) StartGame(ctx context.Context) {
 }
 
 func (g *gameSocketController) ResetGame(ctx context.Context) {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-
 	conn := ctx.Value("conn").(*websocket.Conn)
 
 	user := ctx.Value("user").(*User)
@@ -404,9 +380,6 @@ func (g *gameSocketController) AnswerQuestion(ctx context.Context, data AnswerDa
 }
 
 func (g *gameSocketController) NextRound(ctx context.Context) {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-
 	conn := ctx.Value("conn").(*websocket.Conn)
 
 	user := ctx.Value("user").(*User)
