@@ -33,11 +33,12 @@ const (
 	NotInGame     = "NOT_IN_GAME"
 	NotOwner      = "NOT_OWNER"
 
-	JoinedGame  = "JOINED_GAME"
-	LeftGame    = "LEFT_GAME"
-	GameDeleted = "GAME_DELETED"
-	UserLeft    = "USER_LEFT"
-	UserJoined  = "USER_JOINED"
+	JoinedGame   = "JOINED_GAME"
+	LeftGame     = "LEFT_GAME"
+	GameDeleted  = "GAME_DELETED"
+	UserLeft     = "USER_LEFT"
+	UserJoined   = "USER_JOINED"
+	UserAnswered = "USER_ANSWERED"
 )
 
 type User struct {
@@ -376,6 +377,11 @@ type AnswerData struct {
 	Option uint `json:"option"`
 }
 
+type AnswerResponse struct {
+	UserId string `json:"user"`
+	Option uint   `json:"option"`
+}
+
 func (g *gameSocketController) AnswerQuestion(ctx context.Context, data AnswerData) {
 	user := ctx.Value("user").(*User)
 	conn := ctx.Value("conn").(*websocket.Conn)
@@ -388,6 +394,10 @@ func (g *gameSocketController) AnswerQuestion(ctx context.Context, data AnswerDa
 	if user.ActiveGame.RoundStatus == RoundInProgress && user.ActiveGame.Status == InProgress {
 		user.ActiveGame.Rounds[user.ActiveGame.CurrentRound].Answers[user.Id] = data.Option
 		DataReply(false, AnswerAccepted, user.ActiveGame).Send(conn)
+		DataReply(false, UserAnswered, AnswerResponse{
+			UserId: user.Id,
+			Option: data.Option,
+		}).Send(user.ActiveGame.Owner.Conn)
 	} else {
 		MessageReply(true, RoundWaiting).Send(conn)
 	}
