@@ -48,18 +48,18 @@ func NewRouter() *gin.Engine {
 	authGroup.GET("/google", auth.GoogleLogin)
 	authGroup.GET("/google/callback", auth.GoogleCallback)
 
-	authGroup.Use(middleware.AuthMiddleware())
+	authGroup.Use(middleware.AuthMiddleware(cfg))
 	authGroup.GET("/me", auth.Me)
 
 	gamesGroup := router.Group("games")
-	gamesGroup.Use(middleware.AuthMiddleware())
+	gamesGroup.Use(middleware.AuthMiddleware(cfg))
 	gamesGroup.GET("", game.Get)
 	gamesGroup.POST("", game.CreateGame)
 	gamesGroup.PATCH("", game.Update)
 	gamesGroup.DELETE("", game.Delete)
 
 	wsGroup := router.Group("ws")
-	wsGroup.Use(middleware.WSMiddleware())
+	wsGroup.Use(middleware.WSMiddleware(cfg))
 	wsGroup.GET("", ws.HandleWS)
 
 	return router

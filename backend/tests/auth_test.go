@@ -109,6 +109,8 @@ func TestGoogleLogin(t *testing.T) {
 
 	t.Run("should error - missing cookie", func(t *testing.T) {
 		// When
+		w = httptest.NewRecorder()
+
 		ctx.Request, _ = http.NewRequest(http.MethodGet, "/auth/google/callback", nil)
 		ctx.Request.Form, _ = url.ParseQuery("state=secondState")
 
@@ -118,12 +120,14 @@ func TestGoogleLogin(t *testing.T) {
 		body, err := io.ReadAll(w.Body)
 		assert.Nil(t, err)
 
-		assert.Equal(t, w.Code, http.StatusBadRequest)
+		assert.Equal(t, http.StatusBadRequest, w.Code)
 		assert.Contains(t, string(body), "Invalid cookie")
 	})
 
 	t.Run("should error - mismatched state", func(t *testing.T) {
 		// When
+		w = httptest.NewRecorder()
+
 		ctx.Request, _ = http.NewRequest(http.MethodGet, "/auth/google/callback", nil)
 		ctx.Request.AddCookie(&http.Cookie{
 			Name:     "oauthstate",
@@ -142,12 +146,14 @@ func TestGoogleLogin(t *testing.T) {
 		body, err := io.ReadAll(w.Body)
 		assert.Nil(t, err)
 
-		assert.Equal(t, w.Code, http.StatusBadRequest)
+		assert.Equal(t, http.StatusBadRequest, w.Code)
 		assert.Contains(t, string(body), "Error while verifying auth token")
 	})
 
 	t.Run("should error - missing code", func(t *testing.T) {
 		// When
+		w = httptest.NewRecorder()
+
 		ctx.Request, _ = http.NewRequest(http.MethodGet, "/auth/google/callback", nil)
 		ctx.Request.AddCookie(&http.Cookie{
 			Name:     "oauthstate",
@@ -166,12 +172,14 @@ func TestGoogleLogin(t *testing.T) {
 		body, err := io.ReadAll(w.Body)
 		assert.Nil(t, err)
 
-		assert.Equal(t, w.Code, http.StatusBadRequest)
+		assert.Equal(t, http.StatusBadRequest, w.Code)
 		assert.Contains(t, string(body), "Missing code")
 	})
 
 	t.Run("should return error on verifying auth token", func(t *testing.T) {
 		// When
+		w = httptest.NewRecorder()
+
 		ctx.Request, _ = http.NewRequest(http.MethodGet, "/auth/google/callback", nil)
 		ctx.Request.AddCookie(&http.Cookie{
 			Name:     "oauthstate",
@@ -192,7 +200,7 @@ func TestGoogleLogin(t *testing.T) {
 		body, err := io.ReadAll(w.Body)
 		assert.Nil(t, err)
 
-		assert.Equal(t, w.Code, http.StatusBadRequest)
+		assert.Equal(t, http.StatusBadRequest, w.Code)
 		assert.Contains(t, string(body), "Error while verifying auth token")
 	})
 
@@ -209,6 +217,8 @@ func TestGoogleLogin(t *testing.T) {
 
 	t.Run("should return jwt token", func(t *testing.T) {
 		// When
+		w = httptest.NewRecorder()
+
 		ctx.Request, _ = http.NewRequest(http.MethodGet, "/auth/google/callback", nil)
 		ctx.Request.AddCookie(&http.Cookie{
 			Name:     "oauthstate",
@@ -232,6 +242,8 @@ func TestGoogleLogin(t *testing.T) {
 
 	t.Run("should set cookie", func(t *testing.T) {
 		// When
+		w = httptest.NewRecorder()
+
 		ctx.Request, _ = http.NewRequest(http.MethodGet, "/auth/google/callback", nil)
 		ctx.Request.AddCookie(&http.Cookie{
 			Name:     "oauthstate",
