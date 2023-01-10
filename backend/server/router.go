@@ -10,8 +10,6 @@ import (
 )
 
 func NewRouter() *gin.Engine {
-	// cfg := config.GetConfig()
-
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
@@ -34,19 +32,16 @@ func NewRouter() *gin.Engine {
 	authGroup.Use(middleware.AuthMiddleware())
 	authGroup.GET("/me", auth.Me)
 
-	//router.GET("/game/:id", game.GetById)
-
-	wsGroup := router.Group("ws")
-
-	wsGroup.Use(middleware.AuthMiddleware())
-	wsGroup.GET("", ws.HandleWS)
-
 	gamesGroup := router.Group("games")
 	gamesGroup.Use(middleware.AuthMiddleware())
 	gamesGroup.GET("", game.Get)
 	gamesGroup.POST("", game.CreateGame)
 	gamesGroup.PATCH("", game.Update)
 	gamesGroup.DELETE("", game.Delete)
+
+	wsGroup := router.Group("ws")
+	wsGroup.Use(middleware.WSMiddleware())
+	wsGroup.GET("", ws.HandleWS)
 
 	return router
 }
