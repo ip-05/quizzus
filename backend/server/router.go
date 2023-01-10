@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/gin-contrib/cors"
 	"github.com/ip-05/quizzus/config"
@@ -37,7 +38,8 @@ func NewRouter() *gin.Engine {
 			"https://www.googleapis.com/auth/userinfo.profile",
 		},
 		Endpoint: google.Endpoint,
-	})
+	}, &http.Client{})
+
 	game := web.NewGameController(models.DB)
 	ws := new(ws.CoreController)
 

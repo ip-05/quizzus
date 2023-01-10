@@ -28,6 +28,7 @@ type UserInfo struct {
 type AuthController struct {
 	Config       *config.Config
 	GoogleConfig GoogleAuth
+	Http         HttpClient
 }
 
 type GoogleAuth interface {
@@ -35,8 +36,12 @@ type GoogleAuth interface {
 	Exchange(ctx context.Context, code string, opts ...oauth2.AuthCodeOption) (*oauth2.Token, error)
 }
 
-func NewAuthController(cfg *config.Config, gcfg GoogleAuth) *AuthController {
-	return &AuthController{Config: cfg, GoogleConfig: gcfg}
+type HttpClient interface {
+	Get(url string) (resp *http.Response, err error)
+}
+
+func NewAuthController(cfg *config.Config, gcfg GoogleAuth, http HttpClient) *AuthController {
+	return &AuthController{Config: cfg, GoogleConfig: gcfg, Http: http}
 }
 
 func (a AuthController) GoogleLogin(c *gin.Context) {
@@ -63,13 +68,19 @@ func (a AuthController) GoogleCallback(c *gin.Context) {
 		return
 	}
 
-	token, err := a.GoogleConfig.Exchange(context.Background(), c.Request.FormValue("code"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Error while verifying auth token"})
+	code := c.Request.FormValue("code")
+	if code == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing code"})
 		return
 	}
 
-	response, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
+	token, err := a.GoogleConfig.Exchange(context.Background(), code)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Error while exchanging auth token"})
+		return
+	}
+
+	response, err := a.Http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error while verifying auth token"})
 		return
@@ -77,9 +88,14 @@ func (a AuthController) GoogleCallback(c *gin.Context) {
 
 	defer response.Body.Close()
 
+	if response.StatusCode != http.StatusOK {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Error while verifying auth token"})
+		return
+	}
+
 	contents, err := io.ReadAll(response.Body)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Error while verifying auth token"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Error while decoding token contents"})
 		return
 	}
 
