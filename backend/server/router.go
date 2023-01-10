@@ -45,13 +45,14 @@ func NewRouter() *gin.Engine {
 
 	//router.GET("/game/:id", game.GetById)
 
-	router.Use(middleware.AuthMiddleware())
-	router.GET("/games", game.Get)
-	router.POST("/games", game.CreateGame)
-	router.PATCH("/games", game.Update)
-	router.DELETE("/games", game.Delete)
+	gamesGroup := router.Group("games")
+	gamesGroup.Use(middleware.AuthMiddleware())
+	gamesGroup.GET("/", game.Get)
+	gamesGroup.POST("/", game.CreateGame)
+	gamesGroup.PATCH("/", game.Update)
+	gamesGroup.DELETE("/", game.Delete)
 
-	router.Use(middleware.AuthMiddleware())
+	router.Use(middleware.WSMiddleware())
 	router.GET("/ws", ws.HandleWS)
 
 	return router
