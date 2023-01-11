@@ -18,10 +18,6 @@ func TestGameModel(t *testing.T) {
 		NewRows([]string{"id", "invite_code", "topic", "round_time", "points", "owner"}).
 		AddRow(uint(1), "1234-4321", "My quiz", 30, float64(10), "1234432112344321")
 
-	selectById := "SELECT * FROM \"games\" WHERE id = $1 ORDER BY \"games\".\"id\" LIMIT 1"
-
-	mock.ExpectQuery(regexp.QuoteMeta(selectById)).WithArgs(1).WillReturnRows(rows)
-
 	dialector := postgres.New(postgres.Config{
 		DSN:                  "sqlmock_db_0",
 		DriverName:           "postgres",
@@ -34,7 +30,11 @@ func TestGameModel(t *testing.T) {
 		t.Errorf("Failed to open gorm db, got error: %v", err)
 	}
 
+	selectById := "SELECT * FROM \"games\" WHERE id = $1 ORDER BY \"games\".\"id\" LIMIT 1"
+
 	t.Run("should find game by id", func(t *testing.T) {
+		mock.ExpectQuery(regexp.QuoteMeta(selectById)).WithArgs(1).WillReturnRows(rows)
+
 		var game *Game
 		database.Where("id = ?", 1).First(&game)
 
