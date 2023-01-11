@@ -31,14 +31,11 @@ func (s *WSMiddlewareSuite) SetupTest() {
 	gin.SetMode(gin.TestMode)
 	s.w = httptest.NewRecorder()
 
-	ctx, engine := gin.CreateTestContext(s.w)
-	engine.Use(wsMiddleware)
-	engine.GET("/", func(c *gin.Context) {
+	s.ctx, s.engine = gin.CreateTestContext(s.w)
+	s.engine.Use(wsMiddleware)
+	s.engine.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "OK")
 	})
-
-	s.ctx = ctx
-	s.engine = engine
 }
 
 func (s *WSMiddlewareSuite) Test_Forbidden() {

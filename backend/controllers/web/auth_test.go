@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/ip-05/quizzus/middleware"
+	"github.com/stretchr/testify/suite"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -72,137 +73,142 @@ func (o oAuth2Mock) Exchange(ctx context.Context, code string, opts ...oauth2.Au
 	}, nil
 }
 
-func TestGoogleLogin(t *testing.T) {
-	// Given
-	mock := oAuth2Mock{}
-	httpMock := httpClientMock{}
+type AuthControllerSuite struct {
+	suite.Suite
+	ctx        *gin.Context
+	engine     *gin.Engine
+	w          *httptest.ResponseRecorder
+	controller *AuthController
+	httpMock   httpClientMock
+}
 
-	authController := NewAuthController(newTestConfig(), &mock, &httpMock)
+func (s *AuthControllerSuite) SetupTest() {
+	oAuthMock := oAuth2Mock{}
+	s.httpMock = httpClientMock{}
+
+	s.controller = NewAuthController(newTestConfig(), oAuthMock, &s.httpMock)
 
 	gin.SetMode(gin.TestMode)
 
-	w := httptest.NewRecorder()
-	ctx, engine := gin.CreateTestContext(w)
+	s.w = httptest.NewRecorder()
+	s.ctx, s.engine = gin.CreateTestContext(s.w)
 
-	engine.GET("/auth/me", authController.Me)
-	engine.GET("/auth/google", authController.GoogleLogin)
-	engine.GET("/auth/google/callback", authController.GoogleCallback)
+	s.engine.GET("/auth/me", s.controller.Me)
+	s.engine.GET("/auth/google", s.controller.GoogleLogin)
+	s.engine.GET("/auth/google/callback", s.controller.GoogleCallback)
+}
 
-	t.Run("should return redirect url", func(t *testing.T) {
-		// When
-		ctx.Request, _ = http.NewRequest(http.MethodGet, "/auth/google/callback", nil)
-		engine.ServeHTTP(w, ctx.Request)
+func (s *AuthControllerSuite) TestLogin_RedirectUrl() {
+	// When
+	s.ctx.Request, _ = http.NewRequest(http.MethodGet, "/auth/google/callback", nil)
+	s.engine.ServeHTTP(s.w, s.ctx.Request)
 
-		// Then
-		m := map[string]string{}
+	// Then
+	m := map[string]string{}
 
-		body, err := io.ReadAll(w.Body)
-		assert.Nil(t, err)
+	body, err := io.ReadAll(s.w.Body)
+	assert.Nil(s.T(), err)
 
-		err = json.Unmarshal(body, &m)
-		assert.Nil(t, err)
+	err = json.Unmarshal(body, &m)
+	assert.Nil(s.T(), err)
 
-		redirect := m["redirectUrl"]
-		assert.NotNil(t, redirect)
+	redirect := m["redirectUrl"]
+	assert.NotNil(s.T(), redirect)
+}
+
+func (s *AuthControllerSuite) TestLogin_MissingCookie() {
+	// When
+	s.ctx.Request, _ = http.NewRequest(http.MethodGet, "/auth/google/callback", nil)
+	s.ctx.Request.Form, _ = url.ParseQuery("state=secondState")
+
+	s.engine.ServeHTTP(s.w, s.ctx.Request)
+
+	// Then
+	body, err := io.ReadAll(s.w.Body)
+	assert.Nil(s.T(), err)
+
+	assert.Equal(s.T(), http.StatusBadRequest, s.w.Code)
+	assert.Contains(s.T(), string(body), "Invalid cookie")
+}
+
+func (s *AuthControllerSuite) TestLogin_MismatchedState() {
+	// When
+	s.ctx.Request, _ = http.NewRequest(http.MethodGet, "/auth/google/callback", nil)
+	s.ctx.Request.AddCookie(&http.Cookie{
+		Name:     "oauthstate",
+		Value:    "firstState",
+		Path:     "/",
+		Domain:   "localhost",
+		MaxAge:   60,
+		Secure:   false,
+		HttpOnly: true,
 	})
+	s.ctx.Request.Form, _ = url.ParseQuery("state=secondState")
 
-	t.Run("should error - missing cookie", func(t *testing.T) {
-		// When
-		w = httptest.NewRecorder()
+	s.engine.ServeHTTP(s.w, s.ctx.Request)
 
-		ctx.Request, _ = http.NewRequest(http.MethodGet, "/auth/google/callback", nil)
-		ctx.Request.Form, _ = url.ParseQuery("state=secondState")
+	// Then
+	body, err := io.ReadAll(s.w.Body)
+	assert.Nil(s.T(), err)
 
-		engine.ServeHTTP(w, ctx.Request)
+	assert.Equal(s.T(), http.StatusBadRequest, s.w.Code)
+	assert.Contains(s.T(), string(body), "Error while verifying auth token")
+}
 
-		// Then
-		body, err := io.ReadAll(w.Body)
-		assert.Nil(t, err)
-
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-		assert.Contains(t, string(body), "Invalid cookie")
+func (s *AuthControllerSuite) TestLogin_MissingCode() {
+	// When
+	s.ctx.Request, _ = http.NewRequest(http.MethodGet, "/auth/google/callback", nil)
+	s.ctx.Request.AddCookie(&http.Cookie{
+		Name:     "oauthstate",
+		Value:    "firstState",
+		Path:     "/",
+		Domain:   "localhost",
+		MaxAge:   60,
+		Secure:   false,
+		HttpOnly: true,
 	})
+	s.ctx.Request.Form, _ = url.ParseQuery("state=firstState")
 
-	t.Run("should error - mismatched state", func(t *testing.T) {
-		// When
-		w = httptest.NewRecorder()
+	s.engine.ServeHTTP(s.w, s.ctx.Request)
 
-		ctx.Request, _ = http.NewRequest(http.MethodGet, "/auth/google/callback", nil)
-		ctx.Request.AddCookie(&http.Cookie{
-			Name:     "oauthstate",
-			Value:    "firstState",
-			Path:     "/",
-			Domain:   "localhost",
-			MaxAge:   60,
-			Secure:   false,
-			HttpOnly: true,
-		})
-		ctx.Request.Form, _ = url.ParseQuery("state=secondState")
+	// Then
+	body, err := io.ReadAll(s.w.Body)
+	assert.Nil(s.T(), err)
 
-		engine.ServeHTTP(w, ctx.Request)
+	assert.Equal(s.T(), http.StatusBadRequest, s.w.Code)
+	assert.Contains(s.T(), string(body), "Missing code")
+}
 
-		// Then
-		body, err := io.ReadAll(w.Body)
-		assert.Nil(t, err)
+func (s *AuthControllerSuite) TestLogin_VerifyError() {
+	// When
+	s.w = httptest.NewRecorder()
 
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-		assert.Contains(t, string(body), "Error while verifying auth token")
+	s.ctx.Request, _ = http.NewRequest(http.MethodGet, "/auth/google/callback", nil)
+	s.ctx.Request.AddCookie(&http.Cookie{
+		Name:     "oauthstate",
+		Value:    "firstState",
+		Path:     "/",
+		Domain:   "localhost",
+		MaxAge:   60,
+		Secure:   false,
+		HttpOnly: true,
 	})
+	s.ctx.Request.Form, _ = url.ParseQuery("state=firstState&code=code")
 
-	t.Run("should error - missing code", func(t *testing.T) {
-		// When
-		w = httptest.NewRecorder()
+	s.httpMock.On("Get").Return(http.StatusUnauthorized, "").Times(1)
 
-		ctx.Request, _ = http.NewRequest(http.MethodGet, "/auth/google/callback", nil)
-		ctx.Request.AddCookie(&http.Cookie{
-			Name:     "oauthstate",
-			Value:    "firstState",
-			Path:     "/",
-			Domain:   "localhost",
-			MaxAge:   60,
-			Secure:   false,
-			HttpOnly: true,
-		})
-		ctx.Request.Form, _ = url.ParseQuery("state=firstState")
+	s.engine.ServeHTTP(s.w, s.ctx.Request)
 
-		engine.ServeHTTP(w, ctx.Request)
+	// Then
+	body, err := io.ReadAll(s.w.Body)
+	assert.Nil(s.T(), err)
 
-		// Then
-		body, err := io.ReadAll(w.Body)
-		assert.Nil(t, err)
+	assert.Equal(s.T(), http.StatusBadRequest, s.w.Code)
+	assert.Contains(s.T(), string(body), "Error while verifying auth token")
+}
 
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-		assert.Contains(t, string(body), "Missing code")
-	})
-
-	t.Run("should return error on verifying auth token", func(t *testing.T) {
-		// When
-		w = httptest.NewRecorder()
-
-		ctx.Request, _ = http.NewRequest(http.MethodGet, "/auth/google/callback", nil)
-		ctx.Request.AddCookie(&http.Cookie{
-			Name:     "oauthstate",
-			Value:    "firstState",
-			Path:     "/",
-			Domain:   "localhost",
-			MaxAge:   60,
-			Secure:   false,
-			HttpOnly: true,
-		})
-		ctx.Request.Form, _ = url.ParseQuery("state=firstState&code=code")
-
-		httpMock.On("Get").Return(http.StatusUnauthorized, "").Times(1)
-
-		engine.ServeHTTP(w, ctx.Request)
-
-		// Then
-		body, err := io.ReadAll(w.Body)
-		assert.Nil(t, err)
-
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-		assert.Contains(t, string(body), "Error while verifying auth token")
-	})
-
+func (s *AuthControllerSuite) TestLogin_ReturnJWT() {
+	// When
 	userInfo := UserInfo{
 		Id:            "123123",
 		Email:         "john@doe.com",
@@ -212,67 +218,63 @@ func TestGoogleLogin(t *testing.T) {
 	}
 	userString, _ := json.Marshal(&userInfo)
 
-	httpMock.On("Get").Return(http.StatusOK, string(userString)).Times(2)
+	s.httpMock.On("Get").Return(http.StatusOK, string(userString)).Times(2)
 
-	t.Run("should return jwt token", func(t *testing.T) {
-		// When
-		w = httptest.NewRecorder()
-
-		ctx.Request, _ = http.NewRequest(http.MethodGet, "/auth/google/callback", nil)
-		ctx.Request.AddCookie(&http.Cookie{
-			Name:     "oauthstate",
-			Value:    "firstState",
-			Path:     "/",
-			Domain:   "localhost",
-			MaxAge:   60,
-			Secure:   false,
-			HttpOnly: true,
-		})
-		ctx.Request.Form, _ = url.ParseQuery("state=firstState&code=code")
-
-		engine.ServeHTTP(w, ctx.Request)
-
-		// Then
-		body, err := io.ReadAll(w.Body)
-		assert.Nil(t, err)
-
-		assert.Contains(t, string(body), "Successfully authenticated user")
+	s.ctx.Request, _ = http.NewRequest(http.MethodGet, "/auth/google/callback", nil)
+	s.ctx.Request.AddCookie(&http.Cookie{
+		Name:     "oauthstate",
+		Value:    "firstState",
+		Path:     "/",
+		Domain:   "localhost",
+		MaxAge:   60,
+		Secure:   false,
+		HttpOnly: true,
 	})
+	s.ctx.Request.Form, _ = url.ParseQuery("state=firstState&code=code")
 
-	t.Run("should set cookie", func(t *testing.T) {
-		// When
-		w = httptest.NewRecorder()
+	s.engine.ServeHTTP(s.w, s.ctx.Request)
 
-		ctx.Request, _ = http.NewRequest(http.MethodGet, "/auth/google/callback", nil)
-		ctx.Request.AddCookie(&http.Cookie{
-			Name:     "oauthstate",
-			Value:    "firstState",
-			Path:     "/",
-			Domain:   "localhost",
-			MaxAge:   60,
-			Secure:   false,
-			HttpOnly: true,
-		})
-		ctx.Request.Form, _ = url.ParseQuery("state=firstState&code=code")
+	// Then
+	body, err := io.ReadAll(s.w.Body)
+	assert.Nil(s.T(), err)
 
-		engine.ServeHTTP(w, ctx.Request)
-
-		// Then
-		setCookie := w.Header().Get("Set-Cookie")
-		assert.NotEmpty(t, setCookie)
-	})
+	assert.Contains(s.T(), string(body), "Successfully authenticated user")
 }
 
-func TestMe(t *testing.T) {
+func (s *AuthControllerSuite) TestLogin_SetCookie() {
+	// When
+	userInfo := UserInfo{
+		Id:            "123123",
+		Email:         "john@doe.com",
+		VerifiedEmail: true,
+		Picture:       "https://john.doe.com/picture.png",
+		GivenName:     "John",
+	}
+	userString, _ := json.Marshal(&userInfo)
+
+	s.httpMock.On("Get").Return(http.StatusOK, string(userString)).Times(2)
+
+	s.ctx.Request, _ = http.NewRequest(http.MethodGet, "/auth/google/callback", nil)
+	s.ctx.Request.AddCookie(&http.Cookie{
+		Name:     "oauthstate",
+		Value:    "firstState",
+		Path:     "/",
+		Domain:   "localhost",
+		MaxAge:   60,
+		Secure:   false,
+		HttpOnly: true,
+	})
+	s.ctx.Request.Form, _ = url.ParseQuery("state=firstState&code=code")
+
+	s.engine.ServeHTTP(s.w, s.ctx.Request)
+
+	// Then
+	setCookie := s.w.Header().Get("Set-Cookie")
+	assert.NotEmpty(s.T(), setCookie)
+}
+
+func (s *AuthControllerSuite) TestMe() {
 	// Given
-	mock := oAuth2Mock{}
-	authController := NewAuthController(newTestConfig(), &mock, &http.Client{})
-
-	gin.SetMode(gin.TestMode)
-
-	w := httptest.NewRecorder()
-	ctx, _ := gin.CreateTestContext(w)
-
 	authedUser := middleware.AuthedUser{
 		Id:             "123",
 		Name:           "John",
@@ -280,17 +282,21 @@ func TestMe(t *testing.T) {
 		ProfilePicture: "https://doe.com/profile.png",
 	}
 
-	ctx.Set("authedUser", authedUser)
+	s.ctx.Set("authedUser", authedUser)
 
 	// When
-	authController.Me(ctx)
+	s.controller.Me(s.ctx)
 
 	// Then
-	r, err := io.ReadAll(w.Body)
-	assert.Nil(t, err)
+	r, err := io.ReadAll(s.w.Body)
+	assert.Nil(s.T(), err)
 
 	json, err := json.Marshal(authedUser)
-	assert.Nil(t, err)
+	assert.Nil(s.T(), err)
 
-	assert.Equal(t, json, r)
+	assert.Equal(s.T(), json, r)
+}
+
+func TestGoogleLogin(t *testing.T) {
+	suite.Run(t, new(AuthControllerSuite))
 }

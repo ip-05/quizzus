@@ -31,14 +31,11 @@ func (s *AuthMiddlewareSuite) SetupTest() {
 	gin.SetMode(gin.TestMode)
 	s.w = httptest.NewRecorder()
 
-	ctx, engine := gin.CreateTestContext(s.w)
-	engine.Use(authMiddleware)
-	engine.GET("/", func(c *gin.Context) {
+	s.ctx, s.engine = gin.CreateTestContext(s.w)
+	s.engine.Use(authMiddleware)
+	s.engine.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "OK")
 	})
-
-	s.ctx = ctx
-	s.engine = engine
 }
 
 func (s *AuthMiddlewareSuite) Test_Forbidden() {
