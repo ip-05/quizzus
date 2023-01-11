@@ -354,6 +354,11 @@ func (g *gameSocketController) PlayRounds(game *Game) {
 		} else {
 			if game.CurrentRound >= len(game.Data.Questions) {
 				game.Status = Finished
+
+				for _, member := range game.Members {
+					DataReply(false, Finished, game.Leaderboard).Send(member.Conn)
+				}
+
 				break
 			}
 		}
