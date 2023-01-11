@@ -1,24 +1,24 @@
 [server]
 secure = false
 domain = "localhost"
-base = "http://localhost:3000"
-host = "127.0.0.1"
-port = 3000
+base = "http://localhost:1234"
+host = "localhost"
+port = 1234
 
 [frontend]
-base = "http://localhost:3000"
+base = "http://localhost:4321"
 
 [google]
-client_id = ""
-client_secret = ""
+client_id = "id"
+client_secret = "secret"
 
 [secrets]
-jwt = ""
+jwt = "jwt"
 
 [db]
 host = "localhost"
 port = 5432
-user = "postgres"
+user = "user"
 password = "password"
-name = "quizzus"
+name = "name"
 secure = false
