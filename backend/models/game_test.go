@@ -45,10 +45,11 @@ func (s *GameModelSuite) Test_FindById() {
 
 	s.mock.ExpectQuery(regexp.QuoteMeta(selectById)).WithArgs(1).WillReturnRows(rows)
 
-	// Then
+	// When
 	var game *Game
 	s.db.First(&game, 1)
 
+	// Then
 	err := s.mock.ExpectationsWereMet()
 	assert.Nil(s.T(), err)
 
@@ -81,9 +82,10 @@ func (s *GameModelSuite) Test_Create() {
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(newId))
 	s.mock.ExpectCommit()
 
-	// Then
+	// When
 	s.db.Save(&game)
 
+	// Then
 	err := s.mock.ExpectationsWereMet()
 	assert.Nil(s.T(), err)
 
@@ -113,12 +115,11 @@ func (s *GameModelSuite) Test_Update() {
 		WillReturnResult(sqlmock.NewResult(0, 1))
 	s.mock.ExpectCommit()
 
-	// Then
-	assert.Equal(s.T(), "My quiz", game.Topic)
-
+	// When
 	game.Topic = "New quiz"
 	s.db.Save(&game)
 
+	// Then
 	err := s.mock.ExpectationsWereMet()
 	assert.Nil(s.T(), err)
 
@@ -143,9 +144,10 @@ func (s *GameModelSuite) Test_Delete() {
 	s.mock.ExpectExec(regexp.QuoteMeta(delete)).WithArgs(game.Id).WillReturnResult(sqlmock.NewResult(0, 1))
 	s.mock.ExpectCommit()
 
-	// Then
+	// When
 	s.db.Delete(&game)
 
+	// Then
 	err := s.mock.ExpectationsWereMet()
 	assert.Nil(s.T(), err)
 }
