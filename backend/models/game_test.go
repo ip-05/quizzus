@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"regexp"
 	"testing"
 )
 
@@ -17,9 +18,9 @@ func TestGameModel(t *testing.T) {
 		NewRows([]string{"id", "invite_code", "topic", "round_time", "points", "owner"}).
 		AddRow(uint(1), "1234-4321", "My quiz", 30, float64(10), "1234432112344321")
 
-	selectOne := "SELECT * FROM \"games\" WHERE id = $1 ORDER BY \"games\".\"id\" LIMIT 1"
+	selectById := "SELECT * FROM \"games\" WHERE id = $1 ORDER BY \"games\".\"id\" LIMIT 1"
 
-	mock.ExpectQuery(selectOne).WithArgs(1).WillReturnRows(rows)
+	mock.ExpectQuery(regexp.QuoteMeta(selectById)).WithArgs(1).WillReturnRows(rows)
 
 	dialector := postgres.New(postgres.Config{
 		DSN:                  "sqlmock_db_0",
@@ -28,9 +29,7 @@ func TestGameModel(t *testing.T) {
 		PreferSimpleProtocol: true,
 	})
 
-	database, err := gorm.Open(dialector, &gorm.Config{
-		PrepareStmt: true,
-	})
+	database, err := gorm.Open(dialector)
 	if err != nil {
 		t.Errorf("Failed to open gorm db, got error: %v", err)
 	}
@@ -40,5 +39,10 @@ func TestGameModel(t *testing.T) {
 		database.Where("id = ?", 1).First(&game)
 
 		assert.Equal(t, uint(1), game.Id)
+		assert.Equal(t, "1234-4321", game.InviteCode)
+		assert.Equal(t, "My quiz", game.Topic)
+		assert.Equal(t, 30, game.RoundTime)
+		assert.Equal(t, float64(10), game.Points)
+		assert.Equal(t, "1234432112344321", game.Owner)
 	})
 }
