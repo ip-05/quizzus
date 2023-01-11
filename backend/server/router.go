@@ -40,7 +40,9 @@ func NewRouter() *gin.Engine {
 		Endpoint: google.Endpoint,
 	}, &http.Client{})
 
-	game := web.NewGameController(models.DB)
+	db := models.ConnectDatabase()
+
+	game := web.NewGameController(db)
 	ws := new(ws.CoreController)
 
 	authGroup := router.Group("auth")

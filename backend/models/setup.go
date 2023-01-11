@@ -14,7 +14,7 @@ import (
 
 var DB *gorm.DB
 
-func ConnectDatabase() {
+func ConnectDatabase() *gorm.DB {
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
@@ -41,18 +41,20 @@ func ConnectDatabase() {
 
 	err = database.AutoMigrate(&Option{})
 	if err != nil {
-		return
+		return nil
 	}
 
 	err = database.AutoMigrate(&Question{})
 	if err != nil {
-		return
+		return nil
 	}
 
 	err = database.AutoMigrate(&Game{})
 	if err != nil {
-		return
+		return nil
 	}
 
 	DB = database
+
+	return database
 }
