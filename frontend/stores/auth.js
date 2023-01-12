@@ -1,12 +1,10 @@
 import axios from 'axios';
 import { defineStore } from 'pinia';
 import { ref, onMounted } from 'vue';
-import { useRuntimeConfig, useCookie } from '#imports';
+import { useRuntimeConfig } from '#imports';
 
 export const useAuthStore = defineStore('AuthStore', () => {
   const config = useRuntimeConfig();
-
-  const tokenCookie = useCookie('token');
 
   const isAuthed = ref(false);
   const token = ref(null);
@@ -17,14 +15,15 @@ export const useAuthStore = defineStore('AuthStore', () => {
     profilePicture: null,
   });
 
-  onMounted(async () => {
-    // if token cookie exists
-    if (tokenCookie.value) {
+  (async () => {
+    // if token in local storage exists
+    console.log(localStorage.getItem('token'));
+    if (localStorage.getItem('token')) {
       isAuthed.value = true;
-      token.value = tokenCookie.value;
+      token.value = localStorage.getItem('token');
       await getMe();
     }
-  });
+  })();
 
   async function signInGoogle() {
     const { data } = await axios.get('/auth/google', {
@@ -37,6 +36,7 @@ export const useAuthStore = defineStore('AuthStore', () => {
   }
 
   async function getMe() {
+    console.log(config.public.apiUrl);
     const { data } = await axios.get('/auth/me', {
       baseURL: config.public.apiUrl,
       headers: {
@@ -47,7 +47,8 @@ export const useAuthStore = defineStore('AuthStore', () => {
   }
 
   function logout() {
-    tokenCookie.value = null; // reset token cookie
+    // tokenCookie.value = null; // reset token cookie
+    localStorage.removeItem('token');
     token.value = null;
     user.value = null;
     isAuthed.value = false;
@@ -56,7 +57,8 @@ export const useAuthStore = defineStore('AuthStore', () => {
   async function authenticate(jwt) {
     isAuthed.value = true;
     token.value = jwt;
-    tokenCookie.value = token.value; // set token cookie
+    localStorage.setItem('token', jwt);
+    // tokenCookie.value = token.value; // set token cookie
     await getMe();
   }
 

@@ -1,12 +1,24 @@
 import { defineStore } from 'pinia';
+import { watch } from 'vue';
 import { useGameStore } from './game';
-import { useCookie, useRuntimeConfig } from '#imports';
+import { useAuthStore } from './auth';
+import { useCookie, useRoute, useRuntimeConfig } from '#imports';
 
 export const useSocketStore = defineStore('SocketStore', () => {
   const config = useRuntimeConfig();
-  const tokenCookie = useCookie('token');
+  // const tokenCookie = useCookie('token');
 
+  const authStore = useAuthStore();
   const gameStore = useGameStore();
+  // const route = useRoute();
+  // watch(
+  //   route,
+  //   (to) => {
+  //     console.log(to);
+  //     // showExtra.value = !!to.meta?.showExtra;??
+  //   },
+  //   { flush: 'pre', immediate: true, deep: true }
+  // );
 
   const fns = {
     JOINED_GAME: gameStore.joinedGame,
@@ -25,7 +37,7 @@ export const useSocketStore = defineStore('SocketStore', () => {
     ANSWER_ACCEPTED: () => {},
   };
 
-  const socket = new WebSocket(`${config.public.socketUrl}?token=${tokenCookie.value}`);
+  const socket = new WebSocket(`${config.public.socketUrl}?token=${localStorage.getItem('token')}`);
 
   socket.addEventListener('open', () => {
     console.log('Socket connected', gameStore.inviteCode);
@@ -35,7 +47,10 @@ export const useSocketStore = defineStore('SocketStore', () => {
   socket.addEventListener('message', (m) => {
     const { message, error, data } = JSON.parse(m.data);
     console.log('message', message, 'error', error, 'data', data);
-    fns[message](data);
+    // console.log(typeof fns[message], message, fns);
+    if (fns[message]) {
+      fns[message](data);
+    }
   });
 
   socket.addEventListener('close', () => {
@@ -69,5 +84,11 @@ export const useSocketStore = defineStore('SocketStore', () => {
     });
   }
 
-  return { send, joinGame };
+  function leaveGame() {
+    send({
+      message: 'LEAVE_GAME',
+    });
+  }
+
+  return { send, joinGame, leaveGame };
 });

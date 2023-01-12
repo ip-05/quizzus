@@ -8,6 +8,7 @@ export default defineNuxtConfig({
       socketUrl: process.env.WS_URL || 'ws://localhost:3001/ws',
     },
   },
+  ssr: false,
   app: {
     meta: [
       {

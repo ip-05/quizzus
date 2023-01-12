@@ -1,10 +1,10 @@
 import axios from 'axios';
 import { defineStore } from 'pinia';
-import { ref, reactive, computed, onMounted, watch } from 'vue';
+import { ref, reactive, computed, watch } from 'vue';
 import { useErrorStore } from './error';
 import { useAuthStore } from './auth';
 import { useSocketStore } from './socket';
-import { useRuntimeConfig, useCookie, navigateTo, useRoute } from '#imports';
+import { useRuntimeConfig, navigateTo } from '#imports';
 
 /**
  * game-wait
@@ -20,18 +20,10 @@ import { useRuntimeConfig, useCookie, navigateTo, useRoute } from '#imports';
 export const useGameStore = defineStore('GameStore', () => {
   const config = useRuntimeConfig();
   const errorStore = useErrorStore();
-  const tokenCookie = useCookie('token');
 
   const authStore = useAuthStore();
 
-  let socketStore = null;
-  onMounted(() => {
-    const { path } = useRoute();
-    if (path.startsWith('/game/') || path.startsWith('/console/')) {
-      console.log('trying to connect');
-      socketStore = useSocketStore();
-    }
-  });
+  const socketStore = useSocketStore();
 
   // Game Mode
   const state = ref('game-wait');
@@ -134,7 +126,7 @@ export const useGameStore = defineStore('GameStore', () => {
         {
           baseURL: config.public.apiUrl,
           headers: {
-            Authorization: 'Bearer ' + tokenCookie.value,
+            Authorization: 'Bearer ' + authStore.token,
           },
         }
       );
@@ -146,11 +138,12 @@ export const useGameStore = defineStore('GameStore', () => {
   }
 
   async function getGame(query) {
+    // console.log(localStorage.getItem('token'));
     try {
       const { data } = await axios.get(`/games`, {
         baseURL: config.public.apiUrl,
         headers: {
-          Authorization: 'Bearer ' + tokenCookie.value,
+          Authorization: 'Bearer ' + authStore.token,
         },
         params: query,
       });
@@ -180,7 +173,7 @@ export const useGameStore = defineStore('GameStore', () => {
         {
           baseURL: config.public.apiUrl,
           headers: {
-            Authorization: 'Bearer ' + tokenCookie.value,
+            Authorization: 'Bearer ' + authStore.token,
           },
           params: query,
         }
@@ -340,7 +333,9 @@ export const useGameStore = defineStore('GameStore', () => {
 
   // user sends event when joins the game
   function joinedGame(data) {
+    console.log('test', data);
     // for admin
+    console.log('isOwner: ', isOwner.value);
     if (isOwner.value) {
       setGameWaitAdmin();
       return;

@@ -7,8 +7,8 @@ export default defineNuxtRouteMiddleware((to) => {
   if (path === '/' || path === '/auth/google') return;
 
   // only authorized users
-  const tokenCookie = useCookie('token');
-  if (!tokenCookie.value) {
+  // const tokenCookie = useCookie('token');
+  if (!localStorage.getItem('token')) {
     return navigateTo('/');
   }
 });

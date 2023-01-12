@@ -20,8 +20,8 @@ const { hasIcon } = defineProps({ hasIcon: Boolean });
 
 const handleJoin = async () => {
   const gameAccessTo = await gameStore.getGame({ invite_code: code.value });
-  if (gameAccessTo === 'player') return navigateTo(`/game/${code.value}`);
-  if (gameAccessTo === 'admin') return navigateTo(`/console/${code.value}`);
+  if (gameAccessTo === 'player') return (window.location.pathname = `/game/${code.value}`);
+  if (gameAccessTo === 'admin') return (window.location.pathname = `/console/${code.value}`);
   console.log('error: no such game');
 };
 </script>

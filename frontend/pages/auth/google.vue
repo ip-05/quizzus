@@ -23,6 +23,7 @@ onMounted(async () => {
       withCredentials: true,
       params: query,
     });
+    localStorage.setItem('token', data.token);
     authStore.authenticate(data.token);
     navigateTo('/');
   }
