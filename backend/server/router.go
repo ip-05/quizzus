@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/gin-contrib/cors"
+	"github.com/ip-05/quizzus/config"
 	"github.com/ip-05/quizzus/controllers/web"
 	"github.com/ip-05/quizzus/controllers/ws"
 
@@ -14,8 +15,10 @@ func NewRouter() *gin.Engine {
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
+	cfg := config.GetConfig()
+
 	config := cors.DefaultConfig()
-	config.AllowAllOrigins = true
+	config.AllowOrigins = []string{cfg.Frontend.Base}
 	config.AllowCredentials = true
 	config.AddAllowHeaders("Authorization")
 	router.Use(cors.New(config))
