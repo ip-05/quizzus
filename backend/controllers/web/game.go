@@ -68,7 +68,7 @@ func (g GameController) CreateGame(c *gin.Context) {
 	game.Owner = user.Id
 
 	if err := c.BindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -91,6 +91,11 @@ func (g GameController) CreateGame(c *gin.Context) {
 		return
 	}
 	game.Points = body.Points
+
+	if len(body.Questions) < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Should be at least 1 question"})
+		return
+	}
 
 	for _, v := range body.Questions {
 		if len(v.Options) != 4 {
@@ -198,13 +203,12 @@ func (g GameController) Update(c *gin.Context) {
 			question := models.Question{
 				Name: x.Name,
 			}
-
-			for i := 0; i < 4; i++ {
-				question.Options = append(question.Options, models.Option{Name: x.Options[i].Name, Correct: x.Options[i].Correct})
-			}
 			if len(question.Options) != 4 {
 				c.JSON(http.StatusBadRequest, gin.H{"error": "Should be 4 options"})
 				return
+			}
+			for i := 0; i < 4; i++ {
+				question.Options = append(question.Options, models.Option{Name: x.Options[i].Name, Correct: x.Options[i].Correct})
 			}
 
 			game.Questions = append(game.Questions, question)
