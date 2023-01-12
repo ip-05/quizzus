@@ -41,7 +41,7 @@
 <script setup>
 import { storeToRefs } from 'pinia';
 import { useGameStore } from '../stores/game';
-import { navigateTo, useRoute } from '#imports';
+import { useRoute } from '#imports';
 
 const { params } = useRoute();
 
@@ -53,11 +53,11 @@ const goToConsole = async () => {
   if (gameStore.nextable) {
     if (params.invite_code) {
       await gameStore.updateGame(params);
-      navigateTo(`/console/${inviteCode.value}`);
+      window.location.pathname = `/console/${inviteCode.value}`;
       return;
     }
     await gameStore.postGame(params);
-    navigateTo(`/console/${inviteCode.value}`);
+    window.location.pathname = `/console/${inviteCode.value}`;
   }
 };
 </script>

@@ -17,10 +17,12 @@
           </div>
         </div>
         <div class="button__wrapper">
-          <NuxtLink :to="`/edit/${gameStore.inviteCode}`">
-            <regular-button style="width: 100%">Edit</regular-button>
+          <NuxtLink :to="gameStore.gameStarted ? false : `/edit/${gameStore.inviteCode}`">
+            <regular-button :disabled="gameStore.gameStarted" style="width: 100%">Edit</regular-button>
           </NuxtLink>
-          <regular-button active>Start Game</regular-button>
+          <regular-button active :disabled="disabled" @click="handleGame">{{
+            gameStore.gameStarted ? 'Next Question' : 'Start Game'
+          }}</regular-button>
           <span>After starting game you can not edit it</span>
         </div>
         <div class="separator"></div>
@@ -39,16 +41,37 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, computed } from 'vue';
 import { useGameStore } from '../../stores/game';
+import { useSocketStore } from '../../stores/socket';
 import { useRoute } from '#imports';
 
 const { params } = useRoute();
 const gameStore = useGameStore();
 
-onMounted(() => {
-  gameStore.getGame(params);
+const disabled = computed(() => {
+  if (!gameStore.gameStarted) return false;
+  if (gameStore.canContinue) return false;
+  return true;
 });
+
+onMounted(() => {
+  gameStore.inviteCode = params.invite_code;
+  gameStore.getGame(params);
+  const socketStore = useSocketStore();
+  socketStore.joinGame(params.invite_code);
+  // gameStore.joinGame(params.invite_code);
+});
+
+const handleGame = () => {
+  if (!gameStore.gameStarted) {
+    gameStore.startGame();
+    return;
+  }
+  if (gameStore.canContinue) {
+    gameStore.nextQuestion();
+  }
+};
 
 const saveToClipboard = () => {
   const copyText = gameStore.inviteCode;

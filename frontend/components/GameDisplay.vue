@@ -27,12 +27,12 @@
       <div class="main">
         <!-- GAME WAITING -->
         <div v-if="state === 'game-wait'" class="waiting__screen">
-          <span>{{ gameStore.topic }}</span>
+          <span>{{ gameStore.countdown ? gameStore.countdown : gameStore.topic }}</span>
         </div>
 
         <!-- GAME WAITING FOR ADMIN -->
         <div v-if="state === 'game-wait-admin'" class="waiting__screen waiting__screen-admin">
-          <span>{{ gameStore.topic }}</span>
+          <span>{{ gameStore.countdown ? gameStore.countdown : gameStore.topic }}</span>
         </div>
 
         <!-- GAME IN -->
@@ -69,18 +69,10 @@
         <div v-if="state === 'game-over'" class="over__screen">
           <div class="totalpoints">{{ gameStore.totalPoints }}</div>
           <div class="pluspoints">your points</div>
-          <div class="top3">
-            <div class="top3__item silver">
-              <nuxt-img src="svg/icon-silver.svg" alt="Silver Medal" />
-              <span>{{ silver }}</span>
-            </div>
-            <div class="top3__item gold">
-              <nuxt-img src="svg/icon-gold.svg" alt="Gold Medal" />
-              <span>{{ gold }}</span>
-            </div>
-            <div class="top3__item bronze">
-              <nuxt-img src="svg/icon-bronze.svg" alt="Bronze Medal" />
-              <span>{{ bronze }}</span>
+          <div v-if="gameStore.top3" class="top3">
+            <div v-for="(place, id) in gameStore.top3" :key="id" class="top3__item" :class="places[id].class">
+              <nuxt-img :src="places[id].src" />
+              <span>{{ place.participant }}</span>
             </div>
           </div>
         </div>
@@ -88,18 +80,10 @@
         <!-- GAME OVER FOR ADMIN -->
         <div v-if="state === 'game-over-admin'" class="over__screen over__screen-admin">
           <div class="topic">{{ gameStore.topic }}</div>
-          <div class="top3">
-            <div class="top3__item silver">
-              <nuxt-img src="svg/icon-silver.svg" alt="Silver Medal" />
-              <span>{{ silver }}</span>
-            </div>
-            <div class="top3__item gold">
-              <nuxt-img src="svg/icon-gold.svg" alt="Gold Medal" />
-              <span>{{ gold }}</span>
-            </div>
-            <div class="top3__item bronze">
-              <nuxt-img src="svg/icon-bronze.svg" alt="Bronze Medal" />
-              <span>{{ bronze }}</span>
+          <div v-if="gameStore.top3" class="top3">
+            <div v-for="(place, id) in gameStore.top3" :key="id" class="top3__item" :class="places[id].class">
+              <nuxt-img :src="places[id].src" />
+              <span>{{ place.participant }}</span>
             </div>
           </div>
         </div>
@@ -179,9 +163,15 @@ const correctColor = computed(() => {
   return colors[0];
 });
 
-const gold = computed(() => gameStore.top3[0].participant);
-const silver = computed(() => gameStore.top3[1].participant);
-const bronze = computed(() => gameStore.top3[2].participant);
+// const gold = computed(() => gameStore.top3[0].participant);
+// const silver = computed(() => gameStore.top3[1].participant);
+// const bronze = computed(() => gameStore.top3[2].participant);
+
+const places = [
+  { src: 'svg/icon-gold.svg', class: 'gold' },
+  { src: 'svg/icon-silver.svg', class: 'silver' },
+  { src: 'svg/icon-bronze.svg', class: 'bronze' },
+];
 
 const openLeaderboard = () => {
   gameStore.leaderboardShown = !gameStore.leaderboardShown;
@@ -356,6 +346,8 @@ const openLeaderboard = () => {
 }
 
 .gold {
+  justify-self: center;
+  align-self: center;
   padding-bottom: 20px;
 }
 

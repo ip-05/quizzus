@@ -23,8 +23,11 @@
 
 <script setup>
 import { useGameStore } from './stores/game';
+import { useSocketStore } from './stores/socket';
 
 const gameStore = useGameStore();
+
+const socketStore = useSocketStore();
 </script>
 
 <style scoped>

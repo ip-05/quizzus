@@ -21,11 +21,11 @@ func NewRouter() *gin.Engine {
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
-	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowAllOrigins = true
-	corsConfig.AllowCredentials = true
-	corsConfig.AddAllowHeaders("Authorization")
-	router.Use(cors.New(corsConfig))
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{cfg.Frontend.Base}
+	config.AllowCredentials = true
+	config.AddAllowHeaders("Authorization")
+	router.Use(cors.New(config))
 
 	cfg := config.GetConfig()
 
