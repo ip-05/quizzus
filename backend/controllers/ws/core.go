@@ -7,7 +7,6 @@ import (
 	"go/types"
 	"net/http"
 	"nhooyr.io/websocket"
-	"time"
 )
 
 type CoreController struct{}
@@ -131,8 +130,7 @@ func (w CoreController) HandleWS(c *gin.Context) {
 
 	authedUser, _ := c.Get("authedUser")
 
-	ctx, _ := context.WithTimeout(context.Background(), 300*time.Second)
-	ctx = context.WithValue(ctx, "authedUser", authedUser)
+	ctx := context.WithValue(context.Background(), "authedUser", authedUser)
 	ctx = context.WithValue(ctx, "conn", conn)
 
 	user, err := gameController.InitUser(ctx)
