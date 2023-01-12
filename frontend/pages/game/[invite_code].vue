@@ -2,23 +2,24 @@
   <div class="main">
     <div class="content">
       <game-display style="margin-bottom: 20px" />
-      <game-table v-if="gameStore.leaderboardShown">Participants</game-table>
+      <game-table v-if="gameStore.leaderboardShown" mode="leaderboard">Participants</game-table>
       <div v-if="gameStore.state === 'game-in'" class="options">
         <form class="form" action="">
+          <!-- TODO: refactor for using v-for -->
           <p class="option">
-            <input id="a" type="radio" name="option" value="a" />
+            <input v-model="gameStore.selectedOption" id="a" type="radio" name="option" :value="0" />
             <label class="label" for="a">{{ options.a }}</label>
           </p>
           <p class="option">
-            <input id="b" type="radio" name="option" value="b" />
+            <input v-model="gameStore.selectedOption" id="b" type="radio" name="option" :value="1" />
             <label class="label" for="b"> {{ options.b }}</label>
           </p>
           <p class="option">
-            <input id="c" type="radio" name="option" value="c" />
+            <input v-model="gameStore.selectedOption" id="c" type="radio" name="option" :value="2" />
             <label class="label" for="c"> {{ options.c }}</label>
           </p>
           <p class="option">
-            <input id="d" type="radio" name="option" value="d" />
+            <input v-model="gameStore.selectedOption" id="d" type="radio" name="option" :value="3" />
             <label class="label" for="d"> {{ options.d }}</label>
           </p>
         </form>
@@ -28,10 +29,21 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import { useGameStore } from '../stores/game';
+import { computed, onMounted } from 'vue';
+import { useGameStore } from '../../stores/game';
+import { useSocketStore } from '../../stores/socket';
+import { useRoute } from '#imports';
 
 const gameStore = useGameStore();
+const { params } = useRoute();
+
+onMounted(() => {
+  console.log('mounted');
+  gameStore.inviteCode = params.invite_code;
+  const socketStore = useSocketStore();
+  socketStore.joinGame(params.invite_code);
+});
+
 const options = computed(() => ({
   a: gameStore.currentQuestion.options[0].name,
   b: gameStore.currentQuestion.options[1].name,
@@ -137,11 +149,11 @@ input[type='radio'] {
 }
 
 input[type='radio'][id='a'] {
-  background-image: url('svg/icon-triangle.svg');
+  background-image: url('/svg/icon-triangle.svg');
 }
 
 input[type='radio'][id='a']:checked {
-  background-image: url('svg/icon-triangle-active.svg');
+  background-image: url('/svg/icon-triangle-active.svg');
 }
 
 input[type='radio'][id='a']:checked + .label {
@@ -151,11 +163,11 @@ input[type='radio'][id='a']:checked + .label {
 }
 
 input[type='radio'][id='b'] {
-  background-image: url('svg/icon-circle.svg');
+  background-image: url('/svg/icon-circle.svg');
 }
 
 input[type='radio'][id='b']:checked {
-  background-image: url('svg/icon-circle-active.svg');
+  background-image: url('/svg/icon-circle-active.svg');
 }
 
 input[type='radio'][id='b']:checked + .label {
@@ -165,11 +177,11 @@ input[type='radio'][id='b']:checked + .label {
 }
 
 input[type='radio'][id='c'] {
-  background-image: url('svg/icon-square.svg');
+  background-image: url('/svg/icon-square.svg');
 }
 
 input[type='radio'][id='c']:checked {
-  background-image: url('svg/icon-square-active.svg');
+  background-image: url('/svg/icon-square-active.svg');
 }
 
 input[type='radio'][id='c']:checked + .label {
@@ -179,11 +191,11 @@ input[type='radio'][id='c']:checked + .label {
 }
 
 input[type='radio'][id='d'] {
-  background-image: url('svg/icon-diamond.svg');
+  background-image: url('/svg/icon-diamond.svg');
 }
 
 input[type='radio'][id='d']:checked {
-  background-image: url('svg/icon-diamond-active.svg');
+  background-image: url('/svg/icon-diamond-active.svg');
 }
 
 input[type='radio'][id='d']:checked + .label {

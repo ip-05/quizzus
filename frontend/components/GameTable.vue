@@ -15,15 +15,16 @@
           :points="points"
         />
       </tbody>
-      <tbody v-if="mode === 'questions'" class="main">
+      <tbody v-if="mode === 'questions' && gameStore.questions" class="main">
         <table-item
-          v-for="({ name }, id) in gameStore.questions"
+          v-for="(q, id) in gameStore.questions"
           :key="id"
           :place="id + 1"
-          :name="name"
+          :name="q.name"
           :points="gameStore.points"
         />
       </tbody>
+      <tbody v-else></tbody>
     </table>
   </div>
 </template>
@@ -33,7 +34,6 @@ import { defineProps, computed } from 'vue';
 import { useGameStore } from '../stores/game';
 
 const gameStore = useGameStore();
-
 const props = defineProps({
   mode: {
     type: String,
@@ -45,12 +45,6 @@ const tableName = computed(() => {
   const word = props.mode;
   return word.charAt(0).toUpperCase() + word.slice(1);
 });
-
-// const tableData = computed(() => {
-//   for (const iterator of ) {
-
-//   }
-// });
 </script>
 
 <style scoped>

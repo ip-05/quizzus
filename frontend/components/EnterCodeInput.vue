@@ -9,22 +9,20 @@
 
 <script setup>
 import { ref, defineProps } from 'vue';
+import { useGameStore } from '../stores/game';
+import { navigateTo } from '#imports';
 
 const code = ref(null);
 
+const gameStore = useGameStore();
+
 const { hasIcon } = defineProps({ hasIcon: Boolean });
 
-const handleJoin = () => {
-  /**
-   * TODO:
-   *
-   * check if the submitted code is valid
-   * navigate to /game
-   * update dymanic island's state to waiting
-   *
-   */
-
-  console.log('Handling submitted code: ', code.value);
+const handleJoin = async () => {
+  const gameAccessTo = await gameStore.getGame({ invite_code: code.value });
+  if (gameAccessTo === 'player') return navigateTo(`/game/${code.value}`);
+  if (gameAccessTo === 'admin') return navigateTo(`/console/${code.value}`);
+  console.log('error: no such game');
 };
 </script>
 
