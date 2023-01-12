@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
 import { useGameStore } from './game';
-import { useCookie } from '#imports';
+import { useCookie, useRuntimeConfig } from '#imports';
 
 export const useSocketStore = defineStore('SocketStore', () => {
+  const config = useRuntimeConfig();
   const tokenCookie = useCookie('token');
 
   const gameStore = useGameStore();
@@ -25,7 +25,7 @@ export const useSocketStore = defineStore('SocketStore', () => {
     ANSWER_ACCEPTED: () => {},
   };
 
-  const socket = new WebSocket(`ws://localhost:3001/ws?token=${tokenCookie.value}`);
+  const socket = new WebSocket(`${config.public.socketUrl}?token=${tokenCookie.value}`);
 
   socket.addEventListener('open', () => {
     console.log('Socket connected', gameStore.inviteCode);
