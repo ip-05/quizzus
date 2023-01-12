@@ -33,6 +33,8 @@ const (
 	ResetGame      = "RESET_GAME"
 	AnswerQuestion = "ANSWER_QUESTION"
 	NextRound      = "NEXT_ROUND"
+	Ping           = "PING"
+	Pong           = "PONG"
 )
 
 func MessageReply[D types.Nil](error bool, message string) SocketReply[D] {
@@ -108,6 +110,8 @@ func messageHandler(ctx context.Context, conn *websocket.Conn) error {
 					gameController.AnswerQuestion(ctx, data)
 				} else if msg.Message == NextRound {
 					gameController.NextRound(ctx)
+				} else if msg.Message == Ping {
+					MessageReply(false, Pong).Send(conn)
 				}
 			}
 		}
