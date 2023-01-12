@@ -41,7 +41,9 @@ export const useSocketStore = defineStore('SocketStore', () => {
 
   socket.addEventListener('open', () => {
     console.log('Socket connected', gameStore.inviteCode);
-    // joinGame(gameStore.inviteCode);
+    setInterval(() => {
+      socket.send(JSON.stringify({ message: 'PING' }));
+    }, 15000);
   });
 
   socket.addEventListener('message', (m) => {
