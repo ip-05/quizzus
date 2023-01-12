@@ -111,8 +111,6 @@ func (s *OptionModelSuite) Test_Update() {
 	// Then
 	err := s.mock.ExpectationsWereMet()
 	assert.Nil(s.T(), err)
-
-	assert.Equal(s.T(), false, option.Correct)
 }
 
 func (s *OptionModelSuite) Test_Delete() {

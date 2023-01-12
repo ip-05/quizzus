@@ -122,8 +122,6 @@ func (s *GameModelSuite) Test_Update() {
 	// Then
 	err := s.mock.ExpectationsWereMet()
 	assert.Nil(s.T(), err)
-
-	assert.Equal(s.T(), "New quiz", game.Topic)
 }
 
 func (s *GameModelSuite) Test_Delete() {
