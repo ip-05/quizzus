@@ -18,7 +18,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 	"nhooyr.io/websocket"
 )
 
@@ -59,9 +58,7 @@ func (w *WebSocketSuite) SetupTest() {
 		PreferSimpleProtocol: true,
 	})
 
-	database, err := gorm.Open(dialector, &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Error),
-	})
+	database, err := gorm.Open(dialector)
 	assert.Nil(w.T(), err)
 
 	gin.SetMode(gin.TestMode)

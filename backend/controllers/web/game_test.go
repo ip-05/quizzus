@@ -17,7 +17,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 )
 
 type GameSuite struct {
@@ -41,9 +40,7 @@ func (gs *GameSuite) SetupTest() {
 		PreferSimpleProtocol: true,
 	})
 
-	database, err := gorm.Open(dialector, &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Error),
-	})
+	database, err := gorm.Open(dialector)
 	assert.Nil(gs.T(), err)
 	gs.controller = NewGameController(database)
 

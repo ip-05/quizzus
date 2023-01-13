@@ -2,8 +2,9 @@ package server
 
 import (
 	"fmt"
-	"github.com/ip-05/quizzus/config"
 	"net/http"
+
+	"github.com/ip-05/quizzus/config"
 
 	"github.com/gin-contrib/cors"
 	"github.com/ip-05/quizzus/controllers/web"
@@ -18,7 +19,6 @@ import (
 
 func NewRouter() *gin.Engine {
 	router := gin.New()
-	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
 	cfg := config.GetConfig()
