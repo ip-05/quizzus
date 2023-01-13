@@ -105,6 +105,60 @@ func (w *WebSocketSuite) TestGetGame_None() {
 	assert.Contains(w.T(), string(message), "NOT_IN_GAME")
 }
 
+func (w *WebSocketSuite) TestLeaveGame_None() {
+	// When
+	MessageReply(false, "LEAVE_GAME").Send(w.conn)
+
+	// Then
+	_, message, _ := w.conn.Read(context.Background())
+	assert.Contains(w.T(), string(message), "NOT_IN_GAME")
+}
+
+func (w *WebSocketSuite) TestIsOwner_None() {
+	// When
+	MessageReply(false, "IS_OWNER").Send(w.conn)
+
+	// Then
+	_, message, _ := w.conn.Read(context.Background())
+	assert.Contains(w.T(), string(message), "NOT_IN_GAME")
+}
+
+func (w *WebSocketSuite) TestStartGame_None() {
+	// When
+	MessageReply(false, "START_GAME").Send(w.conn)
+
+	// Then
+	_, message, _ := w.conn.Read(context.Background())
+	assert.Contains(w.T(), string(message), "NOT_IN_GAME")
+}
+
+func (w *WebSocketSuite) TestResetGame_None() {
+	// When
+	MessageReply(false, "RESET_GAME").Send(w.conn)
+
+	// Then
+	_, message, _ := w.conn.Read(context.Background())
+	assert.Contains(w.T(), string(message), "NOT_IN_GAME")
+}
+
+func (w *WebSocketSuite) TestAnswerQuestion_None() {
+	// When
+	MessageReply(false, "ANSWER_QUESTION").Send(w.conn)
+
+	// Then
+	_, message, _ := w.conn.Read(context.Background())
+	assert.Contains(w.T(), string(message), "NOT_IN_GAME")
+}
+
+func (w *WebSocketSuite) TestNextRound_None() {
+	// When
+	MessageReply(false, "NEXT_ROUND").Send(w.conn)
+
+	// Then
+	_, message, _ := w.conn.Read(context.Background())
+	assert.Contains(w.T(), string(message), "NOT_IN_GAME")
+}
+
 func (w *WebSocketSuite) TestJoinGame_NotFound() {
 	// Given
 	selectQuery := `SELECT * FROM "games" WHERE invite_code = $1 ORDER BY "games"."id" LIMIT 1`
@@ -117,6 +171,54 @@ func (w *WebSocketSuite) TestJoinGame_NotFound() {
 	// Then
 	_, message, _ := w.conn.Read(context.Background())
 	assert.Contains(w.T(), string(message), "GAME_NOT_FOUND")
+}
+
+func (w *WebSocketSuite) TestJoinGame() {
+
+}
+
+func (w *WebSocketSuite) TestGetGame() {
+
+}
+
+func (w *WebSocketSuite) TestLeaveGame() {
+
+}
+
+func (w *WebSocketSuite) TestStartGame() {
+
+}
+
+func (w *WebSocketSuite) TestIsOwner_True() {
+
+}
+
+func (w *WebSocketSuite) TestIsOwner_False() {
+
+}
+
+func (w *WebSocketSuite) TestAnswerQuestion_Standby() {
+
+}
+
+func (w *WebSocketSuite) TestAnswerQuestion_Success() {
+
+}
+
+func (w *WebSocketSuite) TestNextRound_InProgress() {
+
+}
+
+func (w *WebSocketSuite) TestNextRound_Success() {
+
+}
+
+func (w *WebSocketSuite) TestResetGame_InProgress() {
+
+}
+
+func (w *WebSocketSuite) TestResetGame_Success() {
+
 }
 
 func TestWebSocket(t *testing.T) {
