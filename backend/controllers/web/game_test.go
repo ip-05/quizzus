@@ -64,7 +64,6 @@ func (gs *GameSuite) SetupTest() {
 }
 
 func (gs *GameSuite) TearDownTest() {
-	gs.T().Log(">>>>>> single test tear down")
 	gs.db.Close()
 }
 

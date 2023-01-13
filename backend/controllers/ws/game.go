@@ -3,6 +3,7 @@ package ws
 import (
 	"context"
 	"errors"
+	"gorm.io/gorm"
 	"time"
 
 	"github.com/jinzhu/copier"
@@ -68,21 +69,23 @@ type Round struct {
 	Answers map[string]uint
 }
 
-type gameSocketController struct {
+type GameSocketController struct {
 	Users map[string]*User
 	Games map[string]*Game
+	DB    *gorm.DB
 }
 
-func NewGameSocketController() *gameSocketController {
-	c := new(gameSocketController)
+func NewGameSocketController(db *gorm.DB) *GameSocketController {
+	c := new(GameSocketController)
 
 	c.Users = make(map[string]*User)
 	c.Games = make(map[string]*Game)
+	c.DB = db
 
 	return c
 }
 
-func (g *gameSocketController) InitUser(ctx context.Context) (*User, error) {
+func (g *GameSocketController) InitUser(ctx context.Context) (*User, error) {
 	user := ctx.Value("authedUser").(middleware.AuthedUser)
 
 	_, found := g.Users[user.Id]
@@ -100,7 +103,7 @@ func (g *gameSocketController) InitUser(ctx context.Context) (*User, error) {
 	return g.Users[user.Id], nil
 }
 
-func (g *gameSocketController) CleanUser(ctx context.Context) {
+func (g *GameSocketController) CleanUser(ctx context.Context) {
 	user := ctx.Value("user").(*User)
 	if user.ActiveGame != nil {
 		g.LeaveGame(ctx)
@@ -113,7 +116,7 @@ type JoinGameData struct {
 	GameId string `json:"gameId"`
 }
 
-func (g *gameSocketController) JoinGame(ctx context.Context, data JoinGameData) {
+func (g *GameSocketController) JoinGame(ctx context.Context, data JoinGameData) {
 	conn := ctx.Value("conn").(*websocket.Conn)
 
 	user := ctx.Value("user").(*User)
@@ -123,7 +126,7 @@ func (g *gameSocketController) JoinGame(ctx context.Context, data JoinGameData) 
 	}
 
 	var game models.Game
-	models.DB.Preload("Questions.Options").Where("invite_code = ?", data.GameId).First(&game)
+	g.DB.Preload("Questions.Options").Where("invite_code = ?", data.GameId).First(&game)
 
 	if game.Id == 0 {
 		MessageReply(true, GameNotFound).Send(conn)
@@ -172,7 +175,7 @@ func (g *gameSocketController) JoinGame(ctx context.Context, data JoinGameData) 
 	DataReply(false, JoinedGame, newGame).Send(conn)
 }
 
-func (g *gameSocketController) LeaveGame(ctx context.Context) {
+func (g *GameSocketController) LeaveGame(ctx context.Context) {
 	conn := ctx.Value("conn").(*websocket.Conn)
 	user := ctx.Value("user").(*User)
 	if user.ActiveGame == nil {
@@ -198,7 +201,7 @@ func (g *gameSocketController) LeaveGame(ctx context.Context) {
 	}
 }
 
-func (g *gameSocketController) GetGame(ctx context.Context) {
+func (g *GameSocketController) GetGame(ctx context.Context) {
 	conn := ctx.Value("conn").(*websocket.Conn)
 
 	user := ctx.Value("user").(*User)
@@ -210,7 +213,7 @@ func (g *gameSocketController) GetGame(ctx context.Context) {
 	DataReply(false, GetGame, user.ActiveGame).Send(conn)
 }
 
-func (g *gameSocketController) IsOwner(ctx context.Context) {
+func (g *GameSocketController) IsOwner(ctx context.Context) {
 	conn := ctx.Value("conn").(*websocket.Conn)
 
 	user := ctx.Value("user").(*User)
@@ -222,7 +225,7 @@ func (g *gameSocketController) IsOwner(ctx context.Context) {
 	DataReply(false, IsOwner, user.ActiveGame.Owner == user).Send(conn)
 }
 
-func (g *gameSocketController) StartGame(ctx context.Context) {
+func (g *GameSocketController) StartGame(ctx context.Context) {
 	conn := ctx.Value("conn").(*websocket.Conn)
 
 	user := ctx.Value("user").(*User)
@@ -261,7 +264,7 @@ func (g *gameSocketController) StartGame(ctx context.Context) {
 	}
 }
 
-func (g *gameSocketController) ResetGame(ctx context.Context) {
+func (g *GameSocketController) ResetGame(ctx context.Context) {
 	conn := ctx.Value("conn").(*websocket.Conn)
 
 	user := ctx.Value("user").(*User)
@@ -309,7 +312,7 @@ type FinishedReply struct {
 	Leaderboard map[string]float64 `json:"leaderboard"`
 }
 
-func (g *gameSocketController) PlayRounds(game *Game) {
+func (g *GameSocketController) PlayRounds(game *Game) {
 	game.RoundStatus = RoundInProgress
 	for {
 		if game.Status == InProgress && game.RoundStatus == RoundInProgress {
@@ -374,7 +377,7 @@ type AnswerResponse struct {
 	Option uint   `json:"option"`
 }
 
-func (g *gameSocketController) AnswerQuestion(ctx context.Context, data AnswerData) {
+func (g *GameSocketController) AnswerQuestion(ctx context.Context, data AnswerData) {
 	user := ctx.Value("user").(*User)
 	conn := ctx.Value("conn").(*websocket.Conn)
 
@@ -395,7 +398,7 @@ func (g *gameSocketController) AnswerQuestion(ctx context.Context, data AnswerDa
 	}
 }
 
-func (g *gameSocketController) NextRound(ctx context.Context) {
+func (g *GameSocketController) NextRound(ctx context.Context) {
 	conn := ctx.Value("conn").(*websocket.Conn)
 
 	user := ctx.Value("user").(*User)

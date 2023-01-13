@@ -43,7 +43,7 @@ func NewRouter() *gin.Engine {
 	db := models.ConnectDatabase()
 
 	game := web.NewGameController(db)
-	ws := new(ws.CoreController)
+	ws := ws.NewCoreController(db)
 
 	authGroup := router.Group("auth")
 
