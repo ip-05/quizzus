@@ -4,6 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/http/httptest"
+	"regexp"
+	"testing"
+	"time"
+
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
@@ -14,11 +19,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"net/http/httptest"
 	"nhooyr.io/websocket"
-	"regexp"
-	"testing"
-	"time"
 )
 
 type WebSocketSuite struct {
@@ -174,11 +175,76 @@ func (w *WebSocketSuite) TestJoinGame_NotFound() {
 }
 
 func (w *WebSocketSuite) TestJoinGame() {
+	// Given
+	rowsGame := sqlmock.
+		NewRows([]string{"id", "invite_code", "topic", "round_time", "points", "owner"}).
+		AddRow(uint(1), "1234-4321", "Topic", 30, float64(50), "123123123123")
+
+	rowsQuestion := sqlmock.
+		NewRows([]string{"id", "name", "game_id"}).
+		AddRow(uint(1), "My question", uint(1))
+
+	rowsOption := sqlmock.
+		NewRows([]string{"id", "name", "correct", "question_id"}).
+		AddRow(uint(1), "option1", false, uint(1)).
+		AddRow(uint(2), "option2", false, uint(1)).
+		AddRow(uint(3), "option3", true, uint(1)).
+		AddRow(uint(4), "option4", false, uint(1))
+
+	selectGame := `SELECT * FROM "games" WHERE invite_code = $1 ORDER BY "games"."id" LIMIT 1`
+	selectQuestion := `SELECT * FROM "questions" WHERE "questions"."game_id" = $1`
+	selectOption := `SELECT * FROM "options" WHERE "options"."question_id" = $1`
+
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321").WillReturnRows(rowsGame)
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
+
+	// When
+	DataReply(false, "JOIN_GAME", JoinGameData{GameId: "1234-4321"}).Send(w.conn)
+
+	// Then
+	_, message, _ := w.conn.Read(context.Background())
+	assert.Contains(w.T(), string(message), "JOINED_GAME")
+}
+
+func (w *WebSocketSuite) TestJoinGame_AlreadyInGame() {
 
 }
 
 func (w *WebSocketSuite) TestGetGame() {
+	// Given
+	rowsGame := sqlmock.
+		NewRows([]string{"id", "invite_code", "topic", "round_time", "points", "owner"}).
+		AddRow(uint(1), "1234-4321", "Topic", 30, float64(50), "123123123123")
 
+	rowsQuestion := sqlmock.
+		NewRows([]string{"id", "name", "game_id"}).
+		AddRow(uint(1), "My question", uint(1))
+
+	rowsOption := sqlmock.
+		NewRows([]string{"id", "name", "correct", "question_id"}).
+		AddRow(uint(1), "option1", false, uint(1)).
+		AddRow(uint(2), "option2", false, uint(1)).
+		AddRow(uint(3), "option3", true, uint(1)).
+		AddRow(uint(4), "option4", false, uint(1))
+
+	selectGame := `SELECT * FROM "games" WHERE invite_code = $1 ORDER BY "games"."id" LIMIT 1`
+	selectQuestion := `SELECT * FROM "questions" WHERE "questions"."game_id" = $1`
+	selectOption := `SELECT * FROM "options" WHERE "options"."question_id" = $1`
+
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321").WillReturnRows(rowsGame)
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
+	DataReply(false, "JOIN_GAME", JoinGameData{GameId: "1234-4321"}).Send(w.conn)
+	_, message, _ := w.conn.Read(context.Background())
+	assert.Contains(w.T(), string(message), "JOINED_GAME")
+
+	// When
+	DataReply(false, "GET_GAME", JoinGameData{GameId: "1234-4321"}).Send(w.conn)
+
+	// Then
+	_, message, _ = w.conn.Read(context.Background())
+	assert.Contains(w.T(), string(message), "GET_GAME")
 }
 
 func (w *WebSocketSuite) TestLeaveGame() {

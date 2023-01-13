@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gin-contrib/cors"
-	"github.com/ip-05/quizzus/config"
 	"github.com/ip-05/quizzus/controllers/web"
 	"github.com/ip-05/quizzus/controllers/ws"
 	"github.com/ip-05/quizzus/models"
