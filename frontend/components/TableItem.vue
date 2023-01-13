@@ -1,8 +1,8 @@
 <template>
   <tr class="row">
-    <td class="cell">{{ place }}</td>
-    <td class="cell">{{ points }}</td>
-    <td class="cell">{{ name }}</td>
+    <td class="cell place">{{ place }}</td>
+    <td class="cell points">{{ points }}</td>
+    <td class="cell name">{{ name }}</td>
   </tr>
 </template>
 
