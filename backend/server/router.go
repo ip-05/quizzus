@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"github.com/ip-05/quizzus/config"
 	"net/http"
 
 	"github.com/gin-contrib/cors"
@@ -20,13 +21,13 @@ func NewRouter() *gin.Engine {
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
+	cfg := config.GetConfig()
+
 	config := cors.DefaultConfig()
 	config.AllowOrigins = []string{cfg.Frontend.Base}
 	config.AllowCredentials = true
 	config.AddAllowHeaders("Authorization")
 	router.Use(cors.New(config))
-
-	cfg := config.GetConfig()
 
 	auth := web.NewAuthController(cfg, &oauth2.Config{
 		RedirectURL:  fmt.Sprintf("%s/auth/google", cfg.Frontend.Base),
