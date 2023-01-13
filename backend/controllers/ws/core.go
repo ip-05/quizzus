@@ -9,7 +9,6 @@ import (
 	"gorm.io/gorm"
 	"net/http"
 	"nhooyr.io/websocket"
-	"time"
 )
 
 type CoreController struct {
@@ -36,6 +35,8 @@ const (
 	ResetGame      = "RESET_GAME"
 	AnswerQuestion = "ANSWER_QUESTION"
 	NextRound      = "NEXT_ROUND"
+	Ping           = "PING"
+	Pong           = "PONG"
 )
 
 func MessageReply[D types.Nil](error bool, message string) SocketReply[D] {
@@ -113,6 +114,8 @@ func (w CoreController) messageHandler(ctx context.Context, conn *websocket.Conn
 					w.gameController.AnswerQuestion(ctx, data)
 				} else if msg.Message == NextRound {
 					w.gameController.NextRound(ctx)
+				} else if msg.Message == Ping {
+					MessageReply(false, Pong).Send(conn)
 				}
 			}
 		}
@@ -141,8 +144,7 @@ func (w CoreController) HandleWS(c *gin.Context) {
 
 	authedUser, _ := c.Get("authedUser")
 
-	ctx, _ := context.WithTimeout(context.Background(), 300*time.Second)
-	ctx = context.WithValue(ctx, "authedUser", authedUser)
+	ctx := context.WithValue(context.Background(), "authedUser", authedUser)
 	ctx = context.WithValue(ctx, "conn", conn)
 
 	user, err := w.gameController.InitUser(ctx)

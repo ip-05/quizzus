@@ -5,8 +5,10 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiUrl: process.env.API_URL || 'http://localhost:3001',
+      socketUrl: process.env.WS_URL || 'ws://localhost:3001/ws',
     },
   },
+  ssr: false,
   app: {
     meta: [
       {
