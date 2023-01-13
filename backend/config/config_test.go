@@ -1,14 +1,13 @@
-package tests
+package config
 
 import (
 	"testing"
 
-	"github.com/ip-05/quizzus/config"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestInitConfig(t *testing.T) {
-	cfg := config.InitConfig("test")
+	cfg := InitConfig("../config.example")
 
 	t.Run("TestConfigServer", func(t *testing.T) {
 		assert.Equal(t, false, cfg.Server.Secure, "should be equal")
@@ -42,7 +41,7 @@ func TestInitConfig(t *testing.T) {
 
 	t.Run("TestConfigInvalid", func(t *testing.T) {
 		assert.Panics(t, func() {
-			config.InitConfig("test_panic")
+			InitConfig("test_panic")
 		}, "should panic")
 	})
 }

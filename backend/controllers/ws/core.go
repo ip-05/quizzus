@@ -3,15 +3,17 @@ package ws
 import (
 	"context"
 	"encoding/json"
-	"github.com/gin-gonic/gin"
 	"go/types"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 	"nhooyr.io/websocket"
 )
 
-type CoreController struct{}
-
-var gameController = NewGameSocketController()
+type CoreController struct {
+	gameController *GameSocketController
+}
 
 type SocketMessage struct {
 	Message string          `json:"message"`
@@ -59,7 +61,7 @@ func (s SocketReply[D]) Send(conn *websocket.Conn) {
 	conn.Write(context.Background(), websocket.MessageText, bytes)
 }
 
-func messageHandler(ctx context.Context, conn *websocket.Conn) error {
+func (w CoreController) messageHandler(ctx context.Context, conn *websocket.Conn) error {
 	for {
 		select {
 		case <-ctx.Done():
@@ -88,17 +90,17 @@ func messageHandler(ctx context.Context, conn *websocket.Conn) error {
 						break
 					}
 
-					gameController.JoinGame(ctx, data)
+					w.gameController.JoinGame(ctx, data)
 				} else if msg.Message == LeaveGame {
-					gameController.LeaveGame(ctx)
+					w.gameController.LeaveGame(ctx)
 				} else if msg.Message == GetGame {
-					gameController.GetGame(ctx)
+					w.gameController.GetGame(ctx)
 				} else if msg.Message == IsOwner {
-					gameController.IsOwner(ctx)
+					w.gameController.IsOwner(ctx)
 				} else if msg.Message == StartGame {
-					gameController.StartGame(ctx)
+					w.gameController.StartGame(ctx)
 				} else if msg.Message == ResetGame {
-					gameController.ResetGame(ctx)
+					w.gameController.ResetGame(ctx)
 				} else if msg.Message == AnswerQuestion {
 					var data AnswerData
 					err = json.Unmarshal(msg.Data, &data)
@@ -107,14 +109,20 @@ func messageHandler(ctx context.Context, conn *websocket.Conn) error {
 						break
 					}
 
-					gameController.AnswerQuestion(ctx, data)
+					w.gameController.AnswerQuestion(ctx, data)
 				} else if msg.Message == NextRound {
-					gameController.NextRound(ctx)
+					w.gameController.NextRound(ctx)
 				} else if msg.Message == Ping {
 					MessageReply(false, Pong).Send(conn)
 				}
 			}
 		}
+	}
+}
+
+func NewCoreController(db *gorm.DB) *CoreController {
+	return &CoreController{
+		gameController: NewGameSocketController(db),
 	}
 }
 
@@ -137,7 +145,7 @@ func (w CoreController) HandleWS(c *gin.Context) {
 	ctx := context.WithValue(context.Background(), "authedUser", authedUser)
 	ctx = context.WithValue(ctx, "conn", conn)
 
-	user, err := gameController.InitUser(ctx)
+	user, err := w.gameController.InitUser(ctx)
 	if err != nil {
 		DataReply(true, "INIT_ERROR", err.Error()).Send(conn)
 		return
@@ -145,9 +153,9 @@ func (w CoreController) HandleWS(c *gin.Context) {
 
 	ctx = context.WithValue(ctx, "user", user)
 
-	defer gameController.CleanUser(ctx)
+	defer w.gameController.CleanUser(ctx)
 
-	err = messageHandler(ctx, conn)
+	err = w.messageHandler(ctx, conn)
 	if err != nil {
 		DataReply(true, "HANDLER_ERROR", err.Error()).Send(conn)
 		return

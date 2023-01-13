@@ -2,29 +2,15 @@ package models
 
 import (
 	"fmt"
-	"log"
-	"os"
-	"time"
 
 	"github.com/ip-05/quizzus/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 )
 
 var DB *gorm.DB
 
-func ConnectDatabase() {
-	newLogger := logger.New(
-		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
-		logger.Config{
-			SlowThreshold:             time.Second, // Slow SQL threshold
-			LogLevel:                  logger.Info, // Log level
-			IgnoreRecordNotFoundError: false,       // Ignore ErrRecordNotFound error for logger
-			Colorful:                  false,       // Disable color
-		},
-	)
-
+func ConnectDatabase() *gorm.DB {
 	cfg := config.GetConfig()
 
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
@@ -32,27 +18,27 @@ func ConnectDatabase() {
 		cfg.Database.Host, cfg.Database.Port, cfg.Database.User,
 		cfg.Database.Password, cfg.Database.DbName)
 
-	database, err := gorm.Open(postgres.Open(psqlInfo), &gorm.Config{
-		Logger: newLogger,
-	})
+	database, err := gorm.Open(postgres.Open(psqlInfo))
 	if err != nil {
 		panic("Failed to connect to database!")
 	}
 
 	err = database.AutoMigrate(&Option{})
 	if err != nil {
-		return
+		return nil
 	}
 
 	err = database.AutoMigrate(&Question{})
 	if err != nil {
-		return
+		return nil
 	}
 
 	err = database.AutoMigrate(&Game{})
 	if err != nil {
-		return
+		return nil
 	}
 
 	DB = database
+
+	return database
 }

@@ -5,18 +5,16 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"time"
 
 	"github.com/ip-05/quizzus/config"
 	"github.com/ip-05/quizzus/middleware"
+	"golang.org/x/oauth2"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 )
 
 type UserInfo struct {
@@ -27,19 +25,23 @@ type UserInfo struct {
 	GivenName     string `json:"given_name"`
 }
 
-type AuthController struct{}
+type AuthController struct {
+	Config       *config.Config
+	GoogleConfig GoogleAuth
+	Http         HttpClient
+}
 
-var cfg = config.GetConfig()
+type GoogleAuth interface {
+	AuthCodeURL(state string, opts ...oauth2.AuthCodeOption) string
+	Exchange(ctx context.Context, code string, opts ...oauth2.AuthCodeOption) (*oauth2.Token, error)
+}
 
-var googleOauthConfig = &oauth2.Config{
-	RedirectURL:  fmt.Sprintf("%s/auth/google", cfg.Frontend.Base),
-	ClientID:     cfg.Google.ClientId,
-	ClientSecret: cfg.Google.ClientSecret,
-	Scopes: []string{
-		"https://www.googleapis.com/auth/userinfo.email",
-		"https://www.googleapis.com/auth/userinfo.profile",
-	},
-	Endpoint: google.Endpoint,
+type HttpClient interface {
+	Get(url string) (resp *http.Response, err error)
+}
+
+func NewAuthController(cfg *config.Config, gcfg GoogleAuth, http HttpClient) *AuthController {
+	return &AuthController{Config: cfg, GoogleConfig: gcfg, Http: http}
 }
 
 func (a AuthController) GoogleLogin(c *gin.Context) {
@@ -47,9 +49,9 @@ func (a AuthController) GoogleLogin(c *gin.Context) {
 	b := make([]byte, 16)
 	rand.Read(b)
 	oauthState := base64.URLEncoding.EncodeToString(b)
-	c.SetCookie("oauthstate", oauthState, expiration, "*", cfg.Server.Domain, cfg.Server.Secure, false)
+	c.SetCookie("oauthstate", oauthState, expiration, "*", a.Config.Server.Domain, a.Config.Server.Secure, false)
 
-	url := googleOauthConfig.AuthCodeURL(oauthState)
+	url := a.GoogleConfig.AuthCodeURL(oauthState)
 
 	c.JSON(http.StatusOK, gin.H{"redirectUrl": url})
 }
@@ -66,13 +68,19 @@ func (a AuthController) GoogleCallback(c *gin.Context) {
 		return
 	}
 
-	token, err := googleOauthConfig.Exchange(context.Background(), c.Request.FormValue("code"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Error while verifying auth token"})
+	code := c.Request.FormValue("code")
+	if code == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing code"})
 		return
 	}
 
-	response, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
+	token, err := a.GoogleConfig.Exchange(context.Background(), code)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Error while exchanging auth token"})
+		return
+	}
+
+	response, err := a.Http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error while verifying auth token"})
 		return
@@ -80,9 +88,14 @@ func (a AuthController) GoogleCallback(c *gin.Context) {
 
 	defer response.Body.Close()
 
+	if response.StatusCode != http.StatusOK {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Error while verifying auth token"})
+		return
+	}
+
 	contents, err := io.ReadAll(response.Body)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Error while verifying auth token"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Error while decoding token contents"})
 		return
 	}
 
@@ -94,7 +107,7 @@ func (a AuthController) GoogleCallback(c *gin.Context) {
 		return
 	}
 
-	secretKey := []byte(cfg.Secrets.Jwt)
+	secretKey := []byte(a.Config.Secrets.Jwt)
 	tokenJWT := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":             userInfo.Id,
 		"name":           userInfo.GivenName,
@@ -109,7 +122,7 @@ func (a AuthController) GoogleCallback(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("token", tokenString, 7*24*60*60, "/", cfg.Server.Domain, cfg.Server.Secure, false)
+	c.SetCookie("token", tokenString, 7*24*60*60, "/", a.Config.Server.Domain, a.Config.Server.Secure, false)
 	c.JSON(http.StatusOK, gin.H{"message": "Successfully authenticated user", "token": tokenString})
 }
 

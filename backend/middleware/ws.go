@@ -9,9 +9,7 @@ import (
 	"time"
 )
 
-func WSMiddleware() gin.HandlerFunc {
-	cfg := config.GetConfig()
-
+func WSMiddleware(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		query := c.Query("token")
 		if query == "" {
