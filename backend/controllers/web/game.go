@@ -191,7 +191,6 @@ func (g GameController) Update(c *gin.Context) {
 	for i, x := range body.Questions {
 		ids[x.Id] += 1
 
-		fmt.Println(ids[x.Id])
 		if ids[x.Id] == 2 {
 			game.Questions[i].Name = x.Name
 

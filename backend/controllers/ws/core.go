@@ -3,11 +3,11 @@ package ws
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"github.com/gin-gonic/gin"
 	"go/types"
-	"gorm.io/gorm"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 	"nhooyr.io/websocket"
 )
 
@@ -81,8 +81,6 @@ func (w CoreController) messageHandler(ctx context.Context, conn *websocket.Conn
 					DataReply(true, "MESSAGE_ERROR", err.Error()).Send(conn)
 					break
 				}
-
-				fmt.Println(msg.Message)
 
 				if msg.Message == JoinGame {
 					var data JoinGameData

@@ -3,8 +3,9 @@ package ws
 import (
 	"context"
 	"errors"
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 
 	"github.com/jinzhu/copier"
 
@@ -70,9 +71,10 @@ type Round struct {
 }
 
 type GameSocketController struct {
-	Users map[string]*User
-	Games map[string]*Game
-	DB    *gorm.DB
+	Users    map[string]*User
+	Games    map[string]*Game
+	DB       *gorm.DB
+	GameTime int
 }
 
 func NewGameSocketController(db *gorm.DB) *GameSocketController {
@@ -81,6 +83,7 @@ func NewGameSocketController(db *gorm.DB) *GameSocketController {
 	c.Users = make(map[string]*User)
 	c.Games = make(map[string]*Game)
 	c.DB = db
+	c.GameTime = 10
 
 	return c
 }
@@ -246,15 +249,10 @@ func (g *GameSocketController) StartGame(ctx context.Context) {
 
 	user.ActiveGame.Status = Starting
 
-	n := 10
+	n := g.GameTime
 	for range time.Tick(time.Second * 1) {
 		if n == 0 {
-			for _, member := range user.ActiveGame.Members {
-				MessageReply(false, InProgress).Send(member.Conn)
-			}
-			user.ActiveGame.Status = InProgress
-			go g.PlayRounds(user.ActiveGame)
-			return
+			break
 		}
 		for _, member := range user.ActiveGame.Members {
 			DataReply(false, Starting, n).Send(member.Conn)
@@ -262,6 +260,12 @@ func (g *GameSocketController) StartGame(ctx context.Context) {
 
 		n -= 1
 	}
+	for _, member := range user.ActiveGame.Members {
+		MessageReply(false, InProgress).Send(member.Conn)
+	}
+	user.ActiveGame.Status = InProgress
+	go g.PlayRounds(user.ActiveGame)
+
 }
 
 func (g *GameSocketController) ResetGame(ctx context.Context) {
