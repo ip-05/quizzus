@@ -16,6 +16,7 @@ import (
 	"gorm.io/gorm/logger"
 	"net/http/httptest"
 	"nhooyr.io/websocket"
+	"regexp"
 	"testing"
 	"time"
 )
@@ -62,6 +63,8 @@ func (w *WebSocketSuite) SetupTest() {
 	})
 	assert.Nil(w.T(), err)
 
+	gin.SetMode(gin.TestMode)
+
 	controller := NewCoreController(database)
 	ctx, engine := gin.CreateTestContext(httptest.NewRecorder())
 	w.ctx = ctx
@@ -85,10 +88,35 @@ func (w *WebSocketSuite) TearDownTest() {
 }
 
 func (w *WebSocketSuite) TestPing() {
+	// When
 	MessageReply(false, "PING").Send(w.conn)
 
+	// Then
 	_, message, _ := w.conn.Read(context.Background())
-	fmt.Println(string(message))
+	assert.Contains(w.T(), string(message), "PONG")
+}
+
+func (w *WebSocketSuite) TestGetGame_None() {
+	// When
+	MessageReply(false, "GET_GAME").Send(w.conn)
+
+	// Then
+	_, message, _ := w.conn.Read(context.Background())
+	assert.Contains(w.T(), string(message), "NOT_IN_GAME")
+}
+
+func (w *WebSocketSuite) TestJoinGame_NotFound() {
+	// Given
+	selectQuery := `SELECT * FROM "games" WHERE invite_code = $1 ORDER BY "games"."id" LIMIT 1`
+
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuery)).WithArgs("1234-4321").WillReturnRows(sqlmock.NewRows(nil))
+
+	// When
+	DataReply(false, "JOIN_GAME", JoinGameData{GameId: "1234-4321"}).Send(w.conn)
+
+	// Then
+	_, message, _ := w.conn.Read(context.Background())
+	assert.Contains(w.T(), string(message), "GAME_NOT_FOUND")
 }
 
 func TestWebSocket(t *testing.T) {
