@@ -1,7 +1,7 @@
 <template>
   <button class="button" :class="{ 'button--active': active, 'button--disabled': disabled }">
     <span class="text">
-      <slot>Medium Button</slot>
+      <slot>Regular Button</slot>
     </span>
   </button>
 </template>
