@@ -2,11 +2,12 @@ package middleware
 
 import (
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/ip-05/quizzus/config"
-	"net/http"
-	"time"
 )
 
 func WSMiddleware(cfg *config.Config) gin.HandlerFunc {
@@ -27,7 +28,7 @@ func WSMiddleware(cfg *config.Config) gin.HandlerFunc {
 		})
 
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid token."})
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
