@@ -19,6 +19,17 @@ import (
 	"gorm.io/gorm"
 )
 
+var insertGame = `INSERT INTO "games" ("invite_code","topic","round_time","points","owner") VALUES ($1,$2,$3,$4,$5) RETURNING "id"`
+var insertQuestion = `INSERT INTO "questions" ("name","game_id") VALUES ($1,$2) ON CONFLICT ("id") DO UPDATE SET "name"="excluded"."name","game_id"="excluded"."game_id" RETURNING "id"`
+var insertOptions = `INSERT INTO "options" ("name","correct","question_id") VALUES ($1,$2,$3),($4,$5,$6),($7,$8,$9),($10,$11,$12) ON CONFLICT ("id") DO UPDATE SET "name"="excluded"."name","correct"="excluded"."correct","question_id"="excluded"."question_id" RETURNING "id"`
+
+var selectGame = `SELECT * FROM "games" WHERE invite_code = $1 or id = $2 ORDER BY "games"."id" LIMIT 1`
+var selectQuestion = `SELECT * FROM "questions" WHERE "questions"."game_id" = $1`
+var selectOption = `SELECT * FROM "options" WHERE "options"."question_id" = $1`
+
+var updateById = `UPDATE "games" SET "invite_code"=$1,"topic"=$2,"round_time"=$3,"points"=$4,"owner"=$5 WHERE "id" = $6`
+var deleteById = `DELETE FROM "games" WHERE "games"."id" = $1`
+
 type GameSuite struct {
 	suite.Suite
 	ctx        *gin.Context
@@ -75,10 +86,8 @@ func (gs *GameSuite) TestCreateGame_QuestionMin() {
 
 	wantOwner := "123"
 
-	insert := `INSERT INTO "games" ("invite_code","topic","round_time","points","owner") VALUES ($1,$2,$3,$4,$5) RETURNING "id"`
-
 	gs.mock.ExpectBegin()
-	gs.mock.ExpectQuery(regexp.QuoteMeta(insert)).
+	gs.mock.ExpectQuery(regexp.QuoteMeta(insertGame)).
 		WithArgs(sqlmock.AnyArg(), createBody.Topic, createBody.RoundTime, createBody.Points, wantOwner).
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(uint(1)))
 	gs.mock.ExpectCommit()
@@ -114,10 +123,8 @@ func (gs *GameSuite) TestCreateGame_OptionMin() {
 
 	wantOwner := "123"
 
-	insert := `INSERT INTO "games" ("invite_code","topic","round_time","points","owner") VALUES ($1,$2,$3,$4,$5) RETURNING "id"`
-
 	gs.mock.ExpectBegin()
-	gs.mock.ExpectQuery(regexp.QuoteMeta(insert)).
+	gs.mock.ExpectQuery(regexp.QuoteMeta(insertGame)).
 		WithArgs(sqlmock.AnyArg(), createBody.Topic, createBody.RoundTime, createBody.Points, wantOwner).
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(uint(1)))
 	gs.mock.ExpectCommit()
@@ -173,10 +180,6 @@ func (gs *GameSuite) TestCreateGame_OK() {
 
 	wantOwner := "123"
 
-	insertGame := `INSERT INTO "games" ("invite_code","topic","round_time","points","owner") VALUES ($1,$2,$3,$4,$5) RETURNING "id"`
-	insertQuestion := `INSERT INTO "questions" ("name","game_id") VALUES ($1,$2) ON CONFLICT ("id") DO UPDATE SET "name"="excluded"."name","game_id"="excluded"."game_id" RETURNING "id"`
-	insertOptions := `INSERT INTO "options" ("name","correct","question_id") VALUES ($1,$2,$3),($4,$5,$6),($7,$8,$9),($10,$11,$12) ON CONFLICT ("id") DO UPDATE SET "name"="excluded"."name","correct"="excluded"."correct","question_id"="excluded"."question_id" RETURNING "id"`
-
 	gs.mock.ExpectBegin()
 	gs.mock.ExpectQuery(regexp.QuoteMeta(insertGame)).
 		WithArgs(sqlmock.AnyArg(), createBody.Topic, createBody.RoundTime, createBody.Points, wantOwner).
@@ -228,10 +231,8 @@ func (gs *GameSuite) TestCreateGame_TopicMax() {
 
 	wantOwner := "123"
 
-	insert := `INSERT INTO "games" ("invite_code","topic","round_time","points","owner") VALUES ($1,$2,$3,$4,$5) RETURNING "id"`
-
 	gs.mock.ExpectBegin()
-	gs.mock.ExpectQuery(regexp.QuoteMeta(insert)).
+	gs.mock.ExpectQuery(regexp.QuoteMeta(insertGame)).
 		WithArgs(sqlmock.AnyArg(), createBody.Topic, createBody.RoundTime, createBody.Points, wantOwner).
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(uint(1)))
 	gs.mock.ExpectCommit()
@@ -262,10 +263,8 @@ func (gs *GameSuite) TestCreateGame_RoundMinMax() {
 
 	wantOwner := "123"
 
-	insert := `INSERT INTO "games" ("invite_code","topic","round_time","points","owner") VALUES ($1,$2,$3,$4,$5) RETURNING "id"`
-
 	gs.mock.ExpectBegin()
-	gs.mock.ExpectQuery(regexp.QuoteMeta(insert)).
+	gs.mock.ExpectQuery(regexp.QuoteMeta(insertGame)).
 		WithArgs(sqlmock.AnyArg(), createBody.Topic, createBody.RoundTime, createBody.Points, wantOwner).
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(uint(1)))
 	gs.mock.ExpectCommit()
@@ -296,10 +295,8 @@ func (gs *GameSuite) TestCreateGame_PointsMin() {
 
 	wantOwner := "123"
 
-	insert := `INSERT INTO "games" ("invite_code","topic","round_time","points","owner") VALUES ($1,$2,$3,$4,$5) RETURNING "id"`
-
 	gs.mock.ExpectBegin()
-	gs.mock.ExpectQuery(regexp.QuoteMeta(insert)).
+	gs.mock.ExpectQuery(regexp.QuoteMeta(insertGame)).
 		WithArgs(sqlmock.AnyArg(), createBody.Topic, createBody.RoundTime, createBody.Points, wantOwner).
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(uint(1)))
 	gs.mock.ExpectCommit()
@@ -324,9 +321,7 @@ func (gs *GameSuite) TestGet_NotFound() {
 	rows := sqlmock.
 		NewRows([]string{"id", "invite_code", "topic", "round_time", "points", "owner"})
 
-	selectById := `SELECT * FROM "games" WHERE invite_code = $1 or id = $2 ORDER BY "games"."id" LIMIT 1`
-
-	gs.mock.ExpectQuery(regexp.QuoteMeta(selectById)).WithArgs("", 1).WillReturnRows(rows)
+	gs.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("", 1).WillReturnRows(rows)
 
 	gs.ctx.Request = httptest.NewRequest("GET", "/games?id=1", nil)
 
@@ -358,10 +353,6 @@ func (gs *GameSuite) TestGet_NotOwner() {
 		AddRow(uint(2), "option2", false, uint(1)).
 		AddRow(uint(3), "option3", true, uint(1)).
 		AddRow(uint(4), "option4", false, uint(1))
-
-	selectGame := `SELECT * FROM "games" WHERE invite_code = $1 or id = $2 ORDER BY "games"."id" LIMIT 1`
-	selectQuestion := `SELECT * FROM "questions" WHERE "questions"."game_id" = $1`
-	selectOption := `SELECT * FROM "options" WHERE "options"."question_id" = $1`
 
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("", 1).WillReturnRows(rowsGame)
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
@@ -398,10 +389,6 @@ func (gs *GameSuite) TestGet_Ok() {
 		AddRow(uint(2), "option2", false, uint(1)).
 		AddRow(uint(3), "option3", true, uint(1)).
 		AddRow(uint(4), "option4", false, uint(1))
-
-	selectGame := `SELECT * FROM "games" WHERE invite_code = $1 or id = $2 ORDER BY "games"."id" LIMIT 1`
-	selectQuestion := `SELECT * FROM "questions" WHERE "questions"."game_id" = $1`
-	selectOption := `SELECT * FROM "options" WHERE "options"."question_id" = $1`
 
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("", 1).WillReturnRows(rowsGame)
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
@@ -469,8 +456,6 @@ func (gs *GameSuite) TestUpdate_NotFound() {
 
 	rowsGame := sqlmock.
 		NewRows([]string{"id", "invite_code", "topic", "round_time", "points", "owner"})
-
-	selectGame := `SELECT * FROM "games" WHERE invite_code = $1 or id = $2 ORDER BY "games"."id" LIMIT 1`
 
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("", 2).WillReturnRows(rowsGame)
 
@@ -543,11 +528,6 @@ func (gs *GameSuite) TestUpdate_NotOwner() {
 		AddRow(uint(2), "option2", false, uint(1)).
 		AddRow(uint(3), "option3", true, uint(1)).
 		AddRow(uint(4), "option4", false, uint(1))
-
-	selectGame := `SELECT * FROM "games" WHERE invite_code = $1 or id = $2 ORDER BY "games"."id" LIMIT 1`
-	selectQuestion := `SELECT * FROM "questions" WHERE "questions"."game_id" = $1`
-	selectOption := `SELECT * FROM "options" WHERE "options"."question_id" = $1`
-	updateById := `UPDATE "games" SET "invite_code"=$1,"topic"=$2,"round_time"=$3,"points"=$4,"owner"=$5 WHERE "id" = $6`
 
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("", 1).WillReturnRows(rowsGame)
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
@@ -624,11 +604,6 @@ func (gs *GameSuite) TestUpdate_TopicMax() {
 		AddRow(uint(3), "option3", true, uint(1)).
 		AddRow(uint(4), "option4", false, uint(1))
 
-	selectGame := `SELECT * FROM "games" WHERE invite_code = $1 or id = $2 ORDER BY "games"."id" LIMIT 1`
-	selectQuestion := `SELECT * FROM "questions" WHERE "questions"."game_id" = $1`
-	selectOption := `SELECT * FROM "options" WHERE "options"."question_id" = $1`
-	updateById := `UPDATE "games" SET "invite_code"=$1,"topic"=$2,"round_time"=$3,"points"=$4,"owner"=$5 WHERE "id" = $6`
-
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("", 1).WillReturnRows(rowsGame)
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
@@ -703,11 +678,6 @@ func (gs *GameSuite) TestUpdate_TimeMinMax() {
 		AddRow(uint(2), "option2", false, uint(1)).
 		AddRow(uint(3), "option3", true, uint(1)).
 		AddRow(uint(4), "option4", false, uint(1))
-
-	selectGame := `SELECT * FROM "games" WHERE invite_code = $1 or id = $2 ORDER BY "games"."id" LIMIT 1`
-	selectQuestion := `SELECT * FROM "questions" WHERE "questions"."game_id" = $1`
-	selectOption := `SELECT * FROM "options" WHERE "options"."question_id" = $1`
-	updateById := `UPDATE "games" SET "invite_code"=$1,"topic"=$2,"round_time"=$3,"points"=$4,"owner"=$5 WHERE "id" = $6`
 
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("", 1).WillReturnRows(rowsGame)
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
@@ -784,11 +754,6 @@ func (gs *GameSuite) TestUpdate_PointsMin() {
 		AddRow(uint(3), "option3", true, uint(1)).
 		AddRow(uint(4), "option4", false, uint(1))
 
-	selectGame := `SELECT * FROM "games" WHERE invite_code = $1 or id = $2 ORDER BY "games"."id" LIMIT 1`
-	selectQuestion := `SELECT * FROM "questions" WHERE "questions"."game_id" = $1`
-	selectOption := `SELECT * FROM "options" WHERE "options"."question_id" = $1`
-	updateById := `UPDATE "games" SET "invite_code"=$1,"topic"=$2,"round_time"=$3,"points"=$4,"owner"=$5 WHERE "id" = $6`
-
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("", 1).WillReturnRows(rowsGame)
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
@@ -845,10 +810,6 @@ func (gs *GameSuite) TestUpdate_OptionsMin() {
 
 	rowsQuestion := sqlmock.
 		NewRows([]string{"id", "name", "game_id"})
-
-	selectGame := `SELECT * FROM "games" WHERE invite_code = $1 or id = $2 ORDER BY "games"."id" LIMIT 1`
-	selectQuestion := `SELECT * FROM "questions" WHERE "questions"."game_id" = $1`
-	updateById := `UPDATE "games" SET "invite_code"=$1,"topic"=$2,"round_time"=$3,"points"=$4,"owner"=$5 WHERE "id" = $6`
 
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("", 1).WillReturnRows(rowsGame)
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
@@ -924,11 +885,6 @@ func (gs *GameSuite) TestUpdate_Ok() {
 		AddRow(uint(3), "option3", true, uint(1)).
 		AddRow(uint(4), "option4", false, uint(1))
 
-	selectGame := `SELECT * FROM "games" WHERE invite_code = $1 or id = $2 ORDER BY "games"."id" LIMIT 1`
-	selectQuestion := `SELECT * FROM "questions" WHERE "questions"."game_id" = $1`
-	selectOption := `SELECT * FROM "options" WHERE "options"."question_id" = $1`
-	updateById := `UPDATE "games" SET "invite_code"=$1,"topic"=$2,"round_time"=$3,"points"=$4,"owner"=$5 WHERE "id" = $6`
-
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("", 1).WillReturnRows(rowsGame)
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
@@ -957,8 +913,6 @@ func (gs *GameSuite) TestDelete_NotFound() {
 	// Given
 	rowsGame := sqlmock.
 		NewRows([]string{"id", "invite_code", "topic", "round_time", "points", "owner"})
-
-	selectGame := `SELECT * FROM "games" WHERE invite_code = $1 or id = $2 ORDER BY "games"."id" LIMIT 1`
 
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("", 2).WillReturnRows(rowsGame)
 
@@ -992,11 +946,6 @@ func (gs *GameSuite) TestDelete_NotOwner() {
 		AddRow(uint(2), "option2", false, uint(1)).
 		AddRow(uint(3), "option3", true, uint(1)).
 		AddRow(uint(4), "option4", false, uint(1))
-
-	selectGame := `SELECT * FROM "games" WHERE invite_code = $1 or id = $2 ORDER BY "games"."id" LIMIT 1`
-	selectQuestion := `SELECT * FROM "questions" WHERE "questions"."game_id" = $1`
-	selectOption := `SELECT * FROM "options" WHERE "options"."question_id" = $1`
-	deleteById := `DELETE FROM "games" WHERE "games"."id" = $1`
 
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("", 1).WillReturnRows(rowsGame)
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
@@ -1033,11 +982,6 @@ func (gs *GameSuite) TestDelete_Ok() {
 		AddRow(uint(2), "option2", false, uint(1)).
 		AddRow(uint(3), "option3", true, uint(1)).
 		AddRow(uint(4), "option4", false, uint(1))
-
-	selectGame := `SELECT * FROM "games" WHERE invite_code = $1 or id = $2 ORDER BY "games"."id" LIMIT 1`
-	selectQuestion := `SELECT * FROM "questions" WHERE "questions"."game_id" = $1`
-	selectOption := `SELECT * FROM "options" WHERE "options"."question_id" = $1`
-	deleteById := `DELETE FROM "games" WHERE "games"."id" = $1`
 
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("", 1).WillReturnRows(rowsGame)
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
