@@ -2,6 +2,7 @@ package ws
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -119,8 +120,15 @@ type JoinGameData struct {
 	GameId string `json:"gameId"`
 }
 
-func (g *GameSocketController) JoinGame(ctx context.Context, data JoinGameData) {
+func (g *GameSocketController) JoinGame(ctx context.Context, msgData json.RawMessage) {
 	conn := ctx.Value("conn").(*websocket.Conn)
+
+	var data JoinGameData
+	err := json.Unmarshal(msgData, &data)
+	if err != nil {
+		DataReply(true, "DATA_ERROR", err.Error()).Send(conn)
+		return
+	}
 
 	user := ctx.Value("user").(*User)
 	if user.ActiveGame != nil {
@@ -381,9 +389,16 @@ type AnswerResponse struct {
 	Option uint   `json:"option"`
 }
 
-func (g *GameSocketController) AnswerQuestion(ctx context.Context, data AnswerData) {
+func (g *GameSocketController) AnswerQuestion(ctx context.Context, msgData json.RawMessage) {
 	user := ctx.Value("user").(*User)
 	conn := ctx.Value("conn").(*websocket.Conn)
+
+	var data AnswerData
+	err := json.Unmarshal(msgData, &data)
+	if err != nil {
+		DataReply(true, "DATA_ERROR", err.Error()).Send(conn)
+		return
+	}
 
 	if user.ActiveGame == nil {
 		MessageReply(true, NotInGame).Send(conn)

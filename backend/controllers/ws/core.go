@@ -39,11 +39,10 @@ const (
 	Pong           = "PONG"
 )
 
-func MessageReply[D types.Nil](error bool, message string) SocketReply[D] {
-	return SocketReply[D]{
+func MessageReply(error bool, message string) SocketReply[types.Nil] {
+	return SocketReply[types.Nil]{
 		Error:   error,
 		Message: message,
-		Data:    nil,
 	}
 }
 
@@ -82,37 +81,24 @@ func (w CoreController) messageHandler(ctx context.Context, conn *websocket.Conn
 					break
 				}
 
-				if msg.Message == JoinGame {
-					var data JoinGameData
-					err = json.Unmarshal(msg.Data, &data)
-					if err != nil {
-						DataReply(true, "DATA_ERROR", err.Error()).Send(conn)
-						break
-					}
-
-					w.gameController.JoinGame(ctx, data)
-				} else if msg.Message == LeaveGame {
+				switch msg.Message {
+				case JoinGame:
+					w.gameController.JoinGame(ctx, msg.Data)
+				case LeaveGame:
 					w.gameController.LeaveGame(ctx)
-				} else if msg.Message == GetGame {
+				case GetGame:
 					w.gameController.GetGame(ctx)
-				} else if msg.Message == IsOwner {
+				case IsOwner:
 					w.gameController.IsOwner(ctx)
-				} else if msg.Message == StartGame {
+				case StartGame:
 					w.gameController.StartGame(ctx)
-				} else if msg.Message == ResetGame {
+				case ResetGame:
 					w.gameController.ResetGame(ctx)
-				} else if msg.Message == AnswerQuestion {
-					var data AnswerData
-					err = json.Unmarshal(msg.Data, &data)
-					if err != nil {
-						DataReply(true, "DATA_ERROR", err.Error()).Send(conn)
-						break
-					}
-
-					w.gameController.AnswerQuestion(ctx, data)
-				} else if msg.Message == NextRound {
+				case AnswerQuestion:
+					w.gameController.AnswerQuestion(ctx, msg.Data)
+				case NextRound:
 					w.gameController.NextRound(ctx)
-				} else if msg.Message == Ping {
+				case Ping:
 					MessageReply(false, Pong).Send(conn)
 				}
 			}
