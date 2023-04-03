@@ -10,8 +10,7 @@ import (
 
 var DB *gorm.DB
 
-func ConnectDatabase() *gorm.DB {
-	cfg := config.GetConfig()
+func ConnectDatabase(cfg *config.Config) *gorm.DB {
 
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
