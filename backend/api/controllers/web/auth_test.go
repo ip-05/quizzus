@@ -3,8 +3,6 @@ package web
 import (
 	"context"
 	"encoding/json"
-	"github.com/ip-05/quizzus/middleware"
-	"github.com/stretchr/testify/suite"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -12,6 +10,9 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ip-05/quizzus/api/middleware"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ip-05/quizzus/config"

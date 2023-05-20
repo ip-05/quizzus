@@ -6,10 +6,10 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/ip-05/quizzus/api/controllers/web"
+	"github.com/ip-05/quizzus/api/controllers/ws"
+	"github.com/ip-05/quizzus/api/middleware"
 	"github.com/ip-05/quizzus/config"
-	"github.com/ip-05/quizzus/controllers/web"
-	"github.com/ip-05/quizzus/controllers/ws"
-	"github.com/ip-05/quizzus/middleware"
 	"github.com/ip-05/quizzus/models"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"

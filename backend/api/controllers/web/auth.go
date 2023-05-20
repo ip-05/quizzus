@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ip-05/quizzus/api/middleware"
 	"github.com/ip-05/quizzus/config"
-	"github.com/ip-05/quizzus/middleware"
 	"golang.org/x/oauth2"
 
 	"github.com/gin-gonic/gin"
