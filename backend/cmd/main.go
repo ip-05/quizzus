@@ -9,8 +9,9 @@ import (
 	"github.com/ip-05/quizzus/api/controllers/web"
 	"github.com/ip-05/quizzus/api/controllers/ws"
 	"github.com/ip-05/quizzus/api/middleware"
+	"github.com/ip-05/quizzus/app/game"
 	"github.com/ip-05/quizzus/config"
-	"github.com/ip-05/quizzus/models"
+	"github.com/ip-05/quizzus/repo"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -38,29 +39,46 @@ func NewRouter() *gin.Engine {
 		Endpoint: google.Endpoint,
 	}, &http.Client{})
 
-	db := models.ConnectDatabase(cfg)
+	// Repository layer
+	db := repo.New(cfg)
+
+	gameRepo := repo.NewGameStore(cfg, db)
+	questionRepo := repo.NewQuestionStore(cfg, db)
+	optionRepo := repo.NewOptionStore(cfg, db)
+
+	// Business logic layer
+	gameService := game.NewGameService(gameRepo, questionRepo, optionRepo)
+
+	// TODO: Presentation layer
+	// apiWeb := InitWeb(gameService) ?
+	// apiWs := InitWs(gameService) ?
 
 	game := web.NewGameController(db)
 	ws := ws.NewCoreController(db)
 
 	authGroup := router.Group("auth")
+	{
+		authGroup.GET("/google", auth.GoogleLogin)
+		authGroup.GET("/google/callback", auth.GoogleCallback)
 
-	authGroup.GET("/google", auth.GoogleLogin)
-	authGroup.GET("/google/callback", auth.GoogleCallback)
-
-	authGroup.Use(middleware.AuthMiddleware(cfg))
-	authGroup.GET("/me", auth.Me)
+		authGroup.Use(middleware.AuthMiddleware(cfg))
+		authGroup.GET("/me", auth.Me)
+	}
 
 	gamesGroup := router.Group("games")
-	gamesGroup.Use(middleware.AuthMiddleware(cfg))
-	gamesGroup.GET("", game.Get)
-	gamesGroup.POST("", game.CreateGame)
-	gamesGroup.PATCH("", game.Update)
-	gamesGroup.DELETE("", game.Delete)
+	{
+		gamesGroup.Use(middleware.AuthMiddleware(cfg))
+		gamesGroup.GET("", game.Get)
+		gamesGroup.POST("", game.CreateGame)
+		gamesGroup.PATCH("", game.Update)
+		gamesGroup.DELETE("", game.Delete)
+	}
 
 	wsGroup := router.Group("ws")
-	wsGroup.Use(middleware.WSMiddleware(cfg))
-	wsGroup.GET("", ws.HandleWS)
+	{
+		wsGroup.Use(middleware.WSMiddleware(cfg))
+		wsGroup.GET("", ws.HandleWS)
+	}
 
 	return router
 }

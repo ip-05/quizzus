@@ -1,4 +1,4 @@
-package db
+package repo
 
 import (
 	"fmt"
@@ -9,37 +9,30 @@ import (
 	"gorm.io/gorm"
 )
 
-type store struct {
-	DB *gorm.DB
-}
-
-func New(cfg *config.Config) *store {
+func New(cfg *config.Config) *gorm.DB {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		cfg.Database.Host, cfg.Database.Port, cfg.Database.User,
 		cfg.Database.Password, cfg.Database.DbName)
 
-	db, err := gorm.Open(postgres.Open(psqlInfo))
+	database, err := gorm.Open(postgres.Open(psqlInfo))
 	if err != nil {
 		panic("Failed to connect to database!")
 	}
 
-	err = db.AutoMigrate(&entity.Option{})
+	err = database.AutoMigrate(&entity.Option{})
 	if err != nil {
 		return nil
 	}
 
-	err = db.AutoMigrate(&entity.Question{})
+	err = database.AutoMigrate(&entity.Question{})
 	if err != nil {
 		return nil
 	}
 
-	err = db.AutoMigrate(&entity.Game{})
+	err = database.AutoMigrate(&entity.Game{})
 	if err != nil {
 		return nil
 	}
-
-	return &store{
-		DB: db,
-	}
+	return database
 }

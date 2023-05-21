@@ -17,3 +17,8 @@ type UpdateOption struct {
 	Name    string `json:"name"`
 	Correct bool   `json:"correct"`
 }
+
+func NewOption() (*Option, error) {
+	option := &Option{}
+	return option, nil
+}

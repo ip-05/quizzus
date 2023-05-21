@@ -17,3 +17,8 @@ type UpdateQuestion struct {
 	Name    string         `json:"name"`
 	Options []UpdateOption `json:"options"`
 }
+
+func NewQuestion() (*Question, error) {
+	question := &Question{}
+	return question, nil
+}
