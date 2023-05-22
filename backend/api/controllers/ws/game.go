@@ -6,11 +6,10 @@ import (
 	"errors"
 	"time"
 
-	"gorm.io/gorm"
-
 	"github.com/jinzhu/copier"
 
 	"github.com/ip-05/quizzus/api/middleware"
+	"github.com/ip-05/quizzus/app/game"
 	"github.com/ip-05/quizzus/models"
 	"nhooyr.io/websocket"
 )
@@ -74,16 +73,16 @@ type Round struct {
 type GameSocketController struct {
 	Users    map[string]*User
 	Games    map[string]*Game
-	DB       *gorm.DB
+	Game     game.IService
 	GameTime int
 }
 
-func NewGameSocketController(db *gorm.DB) *GameSocketController {
+func NewGameSocketController(game game.IService) *GameSocketController {
 	c := new(GameSocketController)
 
 	c.Users = make(map[string]*User)
 	c.Games = make(map[string]*Game)
-	c.DB = db
+	c.Game = game
 	c.GameTime = 10
 
 	return c

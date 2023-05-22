@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
+	"github.com/ip-05/quizzus/app/game"
 	"nhooyr.io/websocket"
 )
 
@@ -106,9 +106,9 @@ func (w CoreController) messageHandler(ctx context.Context, conn *websocket.Conn
 	}
 }
 
-func NewCoreController(db *gorm.DB) *CoreController {
+func NewCoreController(game game.IService) *CoreController {
 	return &CoreController{
-		gameController: NewGameSocketController(db),
+		gameController: NewGameSocketController(game),
 	}
 }
 

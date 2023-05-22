@@ -18,7 +18,12 @@ type UpdateOption struct {
 	Correct bool   `json:"correct"`
 }
 
-func NewOption() (*Option, error) {
-	option := &Option{}
+func NewOption(o CreateOption, questionId uint) (*Option, error) {
+	option := &Option{
+		Name:       o.Name,
+		Correct:    o.Correct,
+		QuestionID: questionId,
+	}
+
 	return option, nil
 }
