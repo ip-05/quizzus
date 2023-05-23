@@ -19,10 +19,7 @@ func main() {
 	// Business logic layer
 	gameService := game.NewGameService(gameRepo)
 
-	// TODO: Presentation layer
-	// apiWeb := NewAuthController(gameService) ?
-	// apiWs := s(gameService) ?
-
+	// Presentation layer
 	r := api.InitWeb(cfg, db, gameService)
 
 	r.Run(fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port))

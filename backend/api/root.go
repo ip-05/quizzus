@@ -26,7 +26,6 @@ func InitWeb(cfg *config.Config, db *gorm.DB, gameService game.IService) *gin.En
 	corsConfig.AddAllowHeaders("Authorization")
 	router.Use(cors.New(corsConfig))
 
-	// move to main. from here-
 	auth := web.NewAuthController(cfg, &oauth2.Config{
 		RedirectURL:  fmt.Sprintf("%s/auth/google", cfg.Frontend.Base),
 		ClientID:     cfg.Google.ClientId,
@@ -40,7 +39,6 @@ func InitWeb(cfg *config.Config, db *gorm.DB, gameService game.IService) *gin.En
 
 	game := web.NewGameController(gameService)
 	ws := ws.NewCoreController(gameService)
-	// -to here.
 
 	authGroup := router.Group("auth")
 	{

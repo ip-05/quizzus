@@ -10,7 +10,7 @@ import (
 
 	"github.com/ip-05/quizzus/api/middleware"
 	"github.com/ip-05/quizzus/app/game"
-	"github.com/ip-05/quizzus/models"
+	"github.com/ip-05/quizzus/entity"
 	"nhooyr.io/websocket"
 )
 
@@ -62,7 +62,7 @@ type Game struct {
 	Members       map[string]*User   `json:"members"`
 	Owner         *User              `json:"owner"`
 	Leaderboard   map[string]float64 `json:"leaderboard"`
-	Data          models.Game        `json:"-"`
+	Data          *entity.Game       `json:"-"`
 	Rounds        map[int]*Round     `json:"-"`
 }
 
@@ -135,8 +135,13 @@ func (g *GameSocketController) JoinGame(ctx context.Context, msgData json.RawMes
 		return
 	}
 
-	var game models.Game
-	g.DB.Preload("Questions.Options").Where("invite_code = ?", data.GameId).First(&game)
+	// var game entity.Game
+	// g.DB.Preload("Questions.Options").Where("invite_code = ?", data.GameId).First(&game)
+	game, err := g.Game.GetGame(0, data.GameId)
+	if err != nil {
+		DataReply(true, "DATA_ERROR", err.Error()).Send(conn)
+		return
+	}
 
 	if game.Id == 0 {
 		MessageReply(true, GameNotFound).Send(conn)
@@ -303,7 +308,7 @@ func (g *GameSocketController) ResetGame(ctx context.Context) {
 	DataReply(false, ResetGame, user.ActiveGame).Send(conn)
 }
 
-type RoundData[T models.Question | Question] struct {
+type RoundData[T entity.Question | Question] struct {
 	Timer    int `json:"timer"`
 	Question *T  `json:"question"`
 }
@@ -319,7 +324,7 @@ type Question struct {
 
 type FinishedReply struct {
 	Correct     bool               `json:"correct"`
-	Options     []models.Option    `json:"options"`
+	Options     []*entity.Option   `json:"options"`
 	Leaderboard map[string]float64 `json:"leaderboard"`
 }
 
@@ -357,7 +362,7 @@ func (g *GameSocketController) PlayRounds(game *Game) {
 				}
 				for _, member := range game.Members {
 					if game.Owner == member {
-						DataReply(false, RoundInProgress, RoundData[models.Question]{Question: &game.Data.Questions[game.CurrentRound], Timer: n}).Send(member.Conn)
+						DataReply(false, RoundInProgress, RoundData[entity.Question]{Question: game.Data.Questions[game.CurrentRound], Timer: n}).Send(member.Conn)
 					} else {
 						DataReply(false, RoundInProgress, RoundData[Question]{Question: &question, Timer: n}).Send(member.Conn)
 					}
