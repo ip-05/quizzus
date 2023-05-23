@@ -1,18 +1,15 @@
-package models
+package repo
 
 import (
 	"fmt"
 
 	"github.com/ip-05/quizzus/config"
+	"github.com/ip-05/quizzus/entity"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-var DB *gorm.DB
-
-func ConnectDatabase() *gorm.DB {
-	cfg := config.GetConfig()
-
+func New(cfg *config.Config) *gorm.DB {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		cfg.Database.Host, cfg.Database.Port, cfg.Database.User,
@@ -23,22 +20,19 @@ func ConnectDatabase() *gorm.DB {
 		panic("Failed to connect to database!")
 	}
 
-	err = database.AutoMigrate(&Option{})
+	err = database.AutoMigrate(&entity.Option{})
 	if err != nil {
 		return nil
 	}
 
-	err = database.AutoMigrate(&Question{})
+	err = database.AutoMigrate(&entity.Question{})
 	if err != nil {
 		return nil
 	}
 
-	err = database.AutoMigrate(&Game{})
+	err = database.AutoMigrate(&entity.Game{})
 	if err != nil {
 		return nil
 	}
-
-	DB = database
-
 	return database
 }
