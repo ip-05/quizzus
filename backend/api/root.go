@@ -9,14 +9,13 @@ import (
 	"github.com/ip-05/quizzus/api/controllers/web"
 	"github.com/ip-05/quizzus/api/controllers/ws"
 	"github.com/ip-05/quizzus/api/middleware"
-	"github.com/ip-05/quizzus/app/game"
 	"github.com/ip-05/quizzus/config"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"gorm.io/gorm"
 )
 
-func InitWeb(cfg *config.Config, db *gorm.DB, gameService game.IService) *gin.Engine {
+func InitWeb(cfg *config.Config, db *gorm.DB, gameService web.IGameService) *gin.Engine {
 	router := gin.New()
 	router.Use(gin.Recovery())
 

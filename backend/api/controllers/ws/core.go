@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/ip-05/quizzus/app/game"
+	"github.com/ip-05/quizzus/api/controllers/web"
 	"nhooyr.io/websocket"
 )
 
@@ -106,7 +106,7 @@ func (w CoreController) messageHandler(ctx context.Context, conn *websocket.Conn
 	}
 }
 
-func NewCoreController(game game.IService) *CoreController {
+func NewCoreController(game web.IGameService) *CoreController {
 	return &CoreController{
 		gameController: NewGameSocketController(game),
 	}

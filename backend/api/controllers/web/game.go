@@ -6,15 +6,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/ip-05/quizzus/api/middleware"
-	"github.com/ip-05/quizzus/app/game"
 	"github.com/ip-05/quizzus/entity"
 )
 
 type GameController struct {
-	game game.IService
+	game IGameService
 }
 
-func NewGameController(game game.IService) *GameController {
+func NewGameController(game IGameService) *GameController {
 	return &GameController{game: game}
 }
 

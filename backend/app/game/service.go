@@ -7,10 +7,10 @@ import (
 )
 
 type GameService struct {
-	gameRepo IGame
+	gameRepo IGameRepo
 }
 
-func NewGameService(gameR IGame) *GameService {
+func NewGameService(gameR IGameRepo) *GameService {
 	return &GameService{
 		gameRepo: gameR,
 	}

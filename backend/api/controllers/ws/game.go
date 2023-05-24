@@ -8,8 +8,8 @@ import (
 
 	"github.com/jinzhu/copier"
 
+	"github.com/ip-05/quizzus/api/controllers/web"
 	"github.com/ip-05/quizzus/api/middleware"
-	"github.com/ip-05/quizzus/app/game"
 	"github.com/ip-05/quizzus/entity"
 	"nhooyr.io/websocket"
 )
@@ -73,11 +73,11 @@ type Round struct {
 type GameSocketController struct {
 	Users    map[string]*User
 	Games    map[string]*Game
-	Game     game.IService
+	Game     web.IGameService
 	GameTime int
 }
 
-func NewGameSocketController(game game.IService) *GameSocketController {
+func NewGameSocketController(game web.IGameService) *GameSocketController {
 	c := new(GameSocketController)
 
 	c.Users = make(map[string]*User)
