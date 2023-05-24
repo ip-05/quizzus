@@ -14,7 +14,7 @@ func main() {
 
 	// Repository layer
 	db := repo.New(cfg)
-	gameRepo := repo.NewGameStore(cfg, db)
+	gameRepo := repo.NewGameStore(db)
 
 	// Business logic layer
 	gameService := game.NewGameService(gameRepo)

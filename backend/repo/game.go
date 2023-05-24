@@ -3,7 +3,6 @@ package repo
 import (
 	"errors"
 
-	"github.com/ip-05/quizzus/config"
 	"github.com/ip-05/quizzus/entity"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -13,7 +12,7 @@ type GameStore struct {
 	DB *gorm.DB
 }
 
-func NewGameStore(cfg *config.Config, db *gorm.DB) *GameStore {
+func NewGameStore(db *gorm.DB) *GameStore {
 	return &GameStore{
 		DB: db,
 	}
