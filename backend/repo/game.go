@@ -21,7 +21,7 @@ func NewGameStore(db *gorm.DB) *GameStore {
 func (db *GameStore) Get(id int, code string) (*entity.Game, error) {
 	var game entity.Game
 
-	db.DB.Where("id = ? or invite_code = ?", id, code).First(&game)
+	db.DB.Preload("Questions.Options").Where("id = ? or invite_code = ?", id, code).First(&game)
 
 	if game.Id == 0 {
 		return nil, errors.New("game not found")

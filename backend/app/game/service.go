@@ -40,11 +40,6 @@ func (gs *GameService) UpdateGame(body entity.UpdateBody, id int, code, ownerId 
 	game.RoundTime = body.RoundTime
 	game.Points = body.Points
 
-	err = game.Validate()
-	if err != nil {
-		return nil, err
-	}
-
 	ids := make(map[uint]int)
 	// assign each question id from existing game a 1
 	for _, y := range game.Questions {
@@ -69,13 +64,13 @@ func (gs *GameService) UpdateGame(body entity.UpdateBody, id int, code, ownerId 
 				Name: x.Name,
 			}
 
+			for i := 0; i < 4; i++ {
+				question.Options = append(question.Options, &entity.Option{Name: x.Options[i].Name, Correct: x.Options[i].Correct})
+			}
+
 			err = question.Validate()
 			if err != nil {
 				return nil, err
-			}
-
-			for i := 0; i < 4; i++ {
-				question.Options = append(question.Options, &entity.Option{Name: x.Options[i].Name, Correct: x.Options[i].Correct})
 			}
 
 			game.Questions = append(game.Questions, &question)
@@ -93,6 +88,11 @@ func (gs *GameService) UpdateGame(body entity.UpdateBody, id int, code, ownerId 
 			}
 			gs.gameRepo.DeleteQuestion(int(i))
 		}
+	}
+
+	err = game.Validate()
+	if err != nil {
+		return nil, err
 	}
 
 	e, err := gs.gameRepo.Update(id, code, game)
