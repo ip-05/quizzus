@@ -21,7 +21,7 @@ func NewGameStore(db *gorm.DB) *GameStore {
 func (db *GameStore) Get(id int, code string) (*entity.Game, error) {
 	var game entity.Game
 
-	db.DB.Preload("Questions.Options").Where("id = ? or invite_code = ?", id, code).First(&game)
+	db.DB.Preload("Questions.Options").Where("invite_code = ? or id = ?", code, id).First(&game)
 
 	if game.Id == 0 {
 		return nil, errors.New("game not found")
@@ -44,7 +44,7 @@ func (db *GameStore) Update(id int, code string, e *entity.Game) (*entity.Game, 
 		return nil, errors.New("game not found")
 	}
 
-	db.DB.Session(&gorm.Session{FullSaveAssociations: true}).Where("id = ? or invite_code = ?", id, code).Updates(&e)
+	db.DB.Session(&gorm.Session{FullSaveAssociations: true}).Where("invite_code = ? or id = ?", code, id).Updates(&e)
 
 	return e, nil
 }
