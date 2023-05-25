@@ -10,10 +10,6 @@ import (
 	"testing"
 )
 
-type Table struct {
-	Name string `db:"TABLE_NAME"`
-}
-
 func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
