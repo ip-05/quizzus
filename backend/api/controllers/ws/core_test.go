@@ -1,6 +1,5 @@
 package ws
 
-/*
 import (
 	"context"
 	"database/sql"
@@ -14,8 +13,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/ip-05/quizzus/api/middleware"
+	"github.com/ip-05/quizzus/app/game"
 	"github.com/ip-05/quizzus/config"
-	"github.com/ip-05/quizzus/models"
+	"github.com/ip-05/quizzus/entity"
+	"github.com/ip-05/quizzus/repo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/driver/postgres"
@@ -23,7 +24,7 @@ import (
 	"nhooyr.io/websocket"
 )
 
-var selectGame = `SELECT * FROM "games" WHERE invite_code = $1 ORDER BY "games"."id" LIMIT 1`
+var selectGame = `SELECT * FROM "games" WHERE invite_code = $1 or id = $2 ORDER BY "games"."id" LIMIT 1`
 var selectQuestion = `SELECT * FROM "questions" WHERE "questions"."game_id" = $1`
 var selectOption = `SELECT * FROM "options" WHERE "options"."question_id" = $1`
 var selectOption2 = `SELECT * FROM "options" WHERE "options"."question_id" IN ($1,$2)`
@@ -33,7 +34,7 @@ type WebSocketSuite struct {
 	ctx     *gin.Context
 	mock    sqlmock.Sqlmock
 	db      *sql.DB
-	newGame models.Game
+	newGame entity.Game
 	serv    *httptest.Server
 	conn    *websocket.Conn
 }
@@ -51,7 +52,7 @@ func createToken(secret string, id string, name string, email string, pfp string
 	return tokenJWT.SignedString(secretKey)
 }
 
-func createRows(game models.Game, two bool) (*sqlmock.Rows, *sqlmock.Rows, *sqlmock.Rows) {
+func createRows(game entity.Game, two bool) (*sqlmock.Rows, *sqlmock.Rows, *sqlmock.Rows) {
 	rowsGame := sqlmock.
 		NewRows([]string{"id", "invite_code", "topic", "round_time", "points", "owner"}).
 		AddRow(game.Id, game.InviteCode, game.Topic, game.RoundTime, game.Points, game.Owner)
@@ -80,7 +81,7 @@ func createRows(game models.Game, two bool) (*sqlmock.Rows, *sqlmock.Rows, *sqlm
 }
 
 func (w *WebSocketSuite) SetupTest() {
-	w.newGame = models.Game{
+	w.newGame = entity.Game{
 		Id:         uint(1),
 		InviteCode: "1234-4321",
 		Topic:      "Topic",
@@ -102,11 +103,11 @@ func (w *WebSocketSuite) SetupTest() {
 	})
 
 	database, err := gorm.Open(dialector)
+	repository := repo.NewGameStore(database)
+	svc := game.NewGameService(repository)
 	assert.Nil(w.T(), err)
 
-	gin.SetMode(gin.TestMode)
-
-	controller := NewCoreController(gameService)
+	controller := NewCoreController(svc)
 	controller.gameController.GameTime = 0
 
 	ctx, engine := gin.CreateTestContext(httptest.NewRecorder())
@@ -204,21 +205,21 @@ func (w *WebSocketSuite) TestNextRound_None() {
 
 func (w *WebSocketSuite) TestJoinGame_NotFound() {
 	// Given
-	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321").WillReturnRows(sqlmock.NewRows(nil))
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321", 0).WillReturnRows(sqlmock.NewRows(nil))
 
 	// When
 	DataReply(false, "JOIN_GAME", JoinGameData{GameId: "1234-4321"}).Send(w.conn)
 
 	// Then
 	_, message, _ := w.conn.Read(context.Background())
-	assert.Contains(w.T(), string(message), "GAME_NOT_FOUND")
+	assert.Contains(w.T(), string(message), "game not found")
 }
 
 func (w *WebSocketSuite) TestJoinGame_Owner() {
 	// Given
 	rowsGame, rowsQuestion, rowsOption := createRows(w.newGame, false)
 
-	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321").WillReturnRows(rowsGame)
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321", 0).WillReturnRows(rowsGame)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
 
@@ -237,7 +238,7 @@ func (w *WebSocketSuite) TestJoinGame_NotOwner() {
 	w.newGame.Owner = "321"
 	rowsGame, rowsQuestion, rowsOption := createRows(w.newGame, false)
 
-	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321").WillReturnRows(rowsGame)
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321", 0).WillReturnRows(rowsGame)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
 
@@ -253,13 +254,13 @@ func (w *WebSocketSuite) TestUserJoined() {
 	// Given
 	rowsGame, rowsQuestion, rowsOption := createRows(w.newGame, false)
 
-	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321").WillReturnRows(rowsGame)
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321", 0).WillReturnRows(rowsGame)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
 
 	rowsGame2, rowsQuestion2, rowsOption2 := createRows(w.newGame, false)
 
-	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321").WillReturnRows(rowsGame2)
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321", 0).WillReturnRows(rowsGame2)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion2)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption2)
 
@@ -287,7 +288,7 @@ func (w *WebSocketSuite) TestJoinGame_AlreadyInGame() {
 	// Given
 	rowsGame, rowsQuestion, rowsOption := createRows(w.newGame, false)
 
-	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321").WillReturnRows(rowsGame)
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321", 0).WillReturnRows(rowsGame)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
 
@@ -307,7 +308,7 @@ func (w *WebSocketSuite) TestGetGame() {
 	// Given
 	rowsGame, rowsQuestion, rowsOption := createRows(w.newGame, false)
 
-	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321").WillReturnRows(rowsGame)
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321", 0).WillReturnRows(rowsGame)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
 
@@ -327,7 +328,7 @@ func (w *WebSocketSuite) TestLeaveGame_Owner() {
 	// Given
 	rowsGame, rowsQuestion, rowsOption := createRows(w.newGame, false)
 
-	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321").WillReturnRows(rowsGame)
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321", 0).WillReturnRows(rowsGame)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
 	DataReply(false, "JOIN_GAME", JoinGameData{GameId: "1234-4321"}).Send(w.conn)
@@ -346,13 +347,13 @@ func (w *WebSocketSuite) TestLeaveGame_Player() {
 	// Given
 	rowsGame, rowsQuestion, rowsOption := createRows(w.newGame, false)
 
-	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321").WillReturnRows(rowsGame)
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321", 0).WillReturnRows(rowsGame)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
 
 	rowsGame2, rowsQuestion2, rowsOption2 := createRows(w.newGame, false)
 
-	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321").WillReturnRows(rowsGame2)
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321", 0).WillReturnRows(rowsGame2)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion2)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption2)
 
@@ -387,7 +388,7 @@ func (w *WebSocketSuite) TestStartGame_InProgress() {
 	// Given
 	rowsGame, rowsQuestion, rowsOption := createRows(w.newGame, false)
 
-	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321").WillReturnRows(rowsGame)
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321", 0).WillReturnRows(rowsGame)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
 
@@ -407,7 +408,7 @@ func (w *WebSocketSuite) TestIsOwner_True() {
 	// Given
 	rowsGame, rowsQuestion, rowsOption := createRows(w.newGame, false)
 
-	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321").WillReturnRows(rowsGame)
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321", 0).WillReturnRows(rowsGame)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
 
@@ -426,14 +427,14 @@ func (w *WebSocketSuite) TestIsOwner_False() {
 	// Given
 	rowsGame, rowsQuestion, rowsOption := createRows(w.newGame, false)
 
-	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321").WillReturnRows(rowsGame)
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321", 0).WillReturnRows(rowsGame)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
 
 	w.newGame.Owner = "321"
 	rowsGame2, rowsQuestion2, rowsOption2 := createRows(w.newGame, false)
 
-	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321").WillReturnRows(rowsGame2)
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321", 0).WillReturnRows(rowsGame2)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion2)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption2)
 
@@ -467,7 +468,7 @@ func (w *WebSocketSuite) TestPlayRounds() {
 	w.newGame.RoundTime = 0
 	rowsGame, rowsQuestion, rowsOption := createRows(w.newGame, false)
 
-	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321").WillReturnRows(rowsGame)
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321", 0).WillReturnRows(rowsGame)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
 
@@ -494,7 +495,7 @@ func (w *WebSocketSuite) TestAnswerQuestion_Standby() {
 	w.newGame.RoundTime = 0
 	rowsGame, rowsQuestion, rowsOption := createRows(w.newGame, false)
 
-	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321").WillReturnRows(rowsGame)
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321", 0).WillReturnRows(rowsGame)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
 
@@ -515,7 +516,7 @@ func (w *WebSocketSuite) TestAnswerQuestion_Success() {
 	w.newGame.RoundTime = 1
 	rowsGame, rowsQuestion, rowsOption := createRows(w.newGame, false)
 
-	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321").WillReturnRows(rowsGame)
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321", 0).WillReturnRows(rowsGame)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
 
@@ -551,7 +552,7 @@ func (w *WebSocketSuite) TestNextRound_InProgress() {
 	w.newGame.RoundTime = 1
 	rowsGame, rowsQuestion, rowsOption := createRows(w.newGame, true)
 
-	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321").WillReturnRows(rowsGame)
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321", 0).WillReturnRows(rowsGame)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption2)).WithArgs(1, 2).WillReturnRows(rowsOption)
 
@@ -578,7 +579,7 @@ func (w *WebSocketSuite) TestNextRound_Success() {
 	w.newGame.RoundTime = 1
 	rowsGame, rowsQuestion, rowsOption := createRows(w.newGame, true)
 
-	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321").WillReturnRows(rowsGame)
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321", 0).WillReturnRows(rowsGame)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption2)).WithArgs(1, 2).WillReturnRows(rowsOption)
 
@@ -608,7 +609,7 @@ func (w *WebSocketSuite) TestResetGame_InProgress() {
 	w.newGame.RoundTime = 1
 	rowsGame, rowsQuestion, rowsOption := createRows(w.newGame, false)
 
-	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321").WillReturnRows(rowsGame)
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321", 0).WillReturnRows(rowsGame)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
 
@@ -635,7 +636,7 @@ func (w *WebSocketSuite) TestResetGame_Success() {
 	w.newGame.RoundTime = 1
 	rowsGame, rowsQuestion, rowsOption := createRows(w.newGame, false)
 
-	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321").WillReturnRows(rowsGame)
+	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321", 0).WillReturnRows(rowsGame)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
 
@@ -664,4 +665,3 @@ func (w *WebSocketSuite) TestResetGame_Success() {
 func TestWebSocket(t *testing.T) {
 	suite.Run(t, new(WebSocketSuite))
 }
-*/
