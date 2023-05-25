@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	cfg := config.GetConfig("config")
+	cfg := config.GetConfig()
 
 	// Repository layer
 	db := repo.New(cfg)

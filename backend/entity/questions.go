@@ -28,7 +28,7 @@ func NewQuestion(q CreateQuestion) (*Question, error) {
 	}
 
 	for _, o := range q.Options {
-		option, err := NewOption(o, question.Id)
+		option, err := NewOption(o)
 		if err != nil {
 			return nil, err
 		}
