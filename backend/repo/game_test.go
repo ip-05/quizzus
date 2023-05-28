@@ -68,7 +68,7 @@ func TestRepo_DeleteGame(t *testing.T) {
 	repo.Delete(game)
 
 	gotGame := repo.Get(1, "")
-	assert.Nil(t, gotGame)
+	assert.Equal(t, uint(0), gotGame.Id)
 }
 
 func TestRepo_UpdateGame(t *testing.T) {
