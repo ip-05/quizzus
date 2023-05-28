@@ -53,7 +53,6 @@ func NewGame(body CreateBody, ownerId string) (*Game, error) {
 		return nil, err
 	}
 
-	// some checks ?
 	return game, nil
 }
 

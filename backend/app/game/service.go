@@ -6,6 +6,14 @@ import (
 	"github.com/ip-05/quizzus/entity"
 )
 
+type IGameRepo interface {
+	Get(id int, code string) *entity.Game
+	Create(e *entity.Game) *entity.Game
+	Update(id int, code string, e *entity.Game) *entity.Game
+	Delete(e *entity.Game)
+	DeleteQuestion(id int)
+}
+
 type GameService struct {
 	gameRepo IGameRepo
 }
@@ -27,7 +35,7 @@ func (gs *GameService) CreateGame(body entity.CreateBody, ownerId string) (*enti
 }
 
 func (gs *GameService) UpdateGame(body entity.UpdateBody, id int, code, ownerId string) (*entity.Game, error) {
-	game, err := gs.gameRepo.Get(id, code)
+	game, err := gs.GetGame(id, code)
 	if err != nil {
 		return nil, err
 	}
@@ -95,25 +103,30 @@ func (gs *GameService) UpdateGame(body entity.UpdateBody, id int, code, ownerId 
 		return nil, err
 	}
 
-	e, err := gs.gameRepo.Update(id, code, game)
-	if err != nil {
-		return nil, err
-	}
+	e := gs.gameRepo.Update(id, code, game)
 	return e, nil
 }
 
 func (gs *GameService) DeleteGame(id int, code, userId string) error {
-	err := gs.gameRepo.Delete(id, code, userId)
+	game, err := gs.GetGame(id, code)
 	if err != nil {
 		return err
 	}
+
+	if userId != game.Owner {
+		return errors.New("you shall not pass! (not owner)")
+	}
+
+	gs.gameRepo.Delete(game)
 	return nil
 }
 
 func (gs *GameService) GetGame(id int, code string) (*entity.Game, error) {
-	e, err := gs.gameRepo.Get(id, code)
-	if err != nil {
-		return nil, err
+	e := gs.gameRepo.Get(id, code)
+
+	if e.Id == 0 {
+		return nil, errors.New("game not found")
 	}
+
 	return e, nil
 }
