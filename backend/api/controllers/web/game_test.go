@@ -233,7 +233,6 @@ func (gs *GameSuite) TestGet_Ok() {
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("", 1).WillReturnRows(rowsGame)
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
-	gs.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
 
 	// When
 	gs.ctx.Request = httptest.NewRequest("GET", "/games?id=1", nil)
@@ -255,218 +254,218 @@ func (gs *GameSuite) TestGet_Ok() {
 	// assert.Nil(gs.T(), err)
 }
 
-//func (gs *GameSuite) TestUpdate_NotFound() {
-//	// Given
-//	option1 := entity.UpdateOption{
-//		Id:      1,
-//		Name:    "blue",
-//		Correct: false,
-//	}
-//
-//	option2 := entity.UpdateOption{
-//		Id:      1,
-//		Name:    "brown",
-//		Correct: false,
-//	}
-//
-//	option3 := entity.UpdateOption{
-//		Id:      1,
-//		Name:    "red",
-//		Correct: true,
-//	}
-//
-//	option4 := entity.UpdateOption{
-//		Id:      1,
-//		Name:    "black",
-//		Correct: false,
-//	}
-//
-//	updateQuestion := entity.UpdateQuestion{
-//		Id:      1,
-//		Name:    "What color is a tomato?",
-//		Options: []entity.UpdateOption{option1, option2, option3, option4},
-//	}
-//
-//	updateBody := entity.UpdateBody{
-//		Topic:     "Update Topic",
-//		RoundTime: 10,
-//		Points:    10,
-//		Questions: []entity.UpdateQuestion{updateQuestion},
-//	}
-//
-//	rowsGame := sqlmock.
-//		NewRows([]string{"id", "invite_code", "topic", "round_time", "points", "owner"})
-//
-//	gs.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("", 2).WillReturnRows(rowsGame)
-//
-//	bodyString, _ := json.Marshal(&updateBody)
-//	reader := strings.NewReader(string(bodyString))
-//	gs.ctx.Request = httptest.NewRequest("PATCH", "/games?id=2", reader)
-//
-//	// When
-//	gs.controller.Update(gs.ctx)
-//
-//	// Then
-//	bodyBytes, _ := io.ReadAll(gs.w.Body)
-//	assert.Equal(gs.T(), http.StatusNotFound, gs.w.Code)
-//	assert.Contains(gs.T(), string(bodyBytes), "game not found")
-//
-//	err := gs.mock.ExpectationsWereMet()
-//	assert.Nil(gs.T(), err)
-//}
+func (gs *GameSuite) TestUpdate_NotFound() {
+	// Given
+	option1 := entity.UpdateOption{
+		Id:      1,
+		Name:    "blue",
+		Correct: false,
+	}
 
-//func (gs *GameSuite) TestUpdate_NotOwner() {
-//	// Given
-//	option1 := entity.UpdateOption{
-//		Id:      1,
-//		Name:    "blue",
-//		Correct: false,
-//	}
-//
-//	option2 := entity.UpdateOption{
-//		Id:      1,
-//		Name:    "brown",
-//		Correct: false,
-//	}
-//
-//	option3 := entity.UpdateOption{
-//		Id:      1,
-//		Name:    "red",
-//		Correct: true,
-//	}
-//
-//	option4 := entity.UpdateOption{
-//		Id:      1,
-//		Name:    "black",
-//		Correct: false,
-//	}
-//
-//	updateQuestion := entity.UpdateQuestion{
-//		Id:      1,
-//		Name:    "What color is a tomato?",
-//		Options: []entity.UpdateOption{option1, option2, option3, option4},
-//	}
-//
-//	updateBody := entity.UpdateBody{
-//		Topic:     "Update Topic",
-//		RoundTime: 10,
-//		Points:    10,
-//		Questions: []entity.UpdateQuestion{updateQuestion},
-//	}
-//
-//	rowsGame := sqlmock.
-//		NewRows([]string{"id", "invite_code", "topic", "round_time", "points", "owner"}).
-//		AddRow(uint(1), "1234-4321", "Topic", 30, float64(50), "321")
-//
-//	rowsQuestion := sqlmock.
-//		NewRows([]string{"id", "name", "game_id"}).
-//		AddRow(uint(1), "My question", uint(1))
-//
-//	rowsOption := sqlmock.
-//		NewRows([]string{"id", "name", "correct", "question_id"}).
-//		AddRow(uint(1), "option1", false, uint(1)).
-//		AddRow(uint(2), "option2", false, uint(1)).
-//		AddRow(uint(3), "option3", true, uint(1)).
-//		AddRow(uint(4), "option4", false, uint(1))
-//
-//	gs.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("", 1).WillReturnRows(rowsGame)
-//	gs.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
-//	gs.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
-//	gs.mock.ExpectExec(regexp.QuoteMeta(updateById)).WithArgs("1234-4321", updateBody.Topic, updateBody.RoundTime, updateBody.Points, "321", uint(1)).WillReturnResult(sqlmock.NewResult(0, 1))
-//
-//	bodyString, _ := json.Marshal(&updateBody)
-//	reader := strings.NewReader(string(bodyString))
-//	gs.ctx.Request = httptest.NewRequest("PATCH", "/games?id=1", reader)
-//
-//	// When
-//	gs.controller.Update(gs.ctx)
-//
-//	// Then
-//	bodyBytes, _ := io.ReadAll(gs.w.Body)
-//	assert.Equal(gs.T(), http.StatusForbidden, gs.w.Code)
-//	assert.Contains(gs.T(), string(bodyBytes), "not owner")
-//
-//	// err := gs.mock.ExpectationsWereMet()
-//	// assert.Nil(gs.T(), err)
-//}
+	option2 := entity.UpdateOption{
+		Id:      1,
+		Name:    "brown",
+		Correct: false,
+	}
 
-//func (gs *GameSuite) TestUpdate_Ok() {
-//	// Given
-//	option1 := entity.UpdateOption{
-//		Id:      1,
-//		Name:    "blue",
-//		Correct: false,
-//	}
-//
-//	option2 := entity.UpdateOption{
-//		Id:      1,
-//		Name:    "brown",
-//		Correct: false,
-//	}
-//
-//	option3 := entity.UpdateOption{
-//		Id:      1,
-//		Name:    "red",
-//		Correct: true,
-//	}
-//
-//	option4 := entity.UpdateOption{
-//		Id:      1,
-//		Name:    "black",
-//		Correct: false,
-//	}
-//
-//	updateQuestion := entity.UpdateQuestion{
-//		Id:      1,
-//		Name:    "What color is a tomato?",
-//		Options: []entity.UpdateOption{option1, option2, option3, option4},
-//	}
-//
-//	updateBody := entity.UpdateBody{
-//		Topic:     "Update Topic",
-//		RoundTime: 10,
-//		Points:    10,
-//		Questions: []entity.UpdateQuestion{updateQuestion},
-//	}
-//
-//	rowsGame := sqlmock.
-//		NewRows([]string{"id", "invite_code", "topic", "round_time", "points", "owner"}).
-//		AddRow(uint(1), "1234-4321", "Topic", 30, float64(50), "123")
-//
-//	rowsQuestion := sqlmock.
-//		NewRows([]string{"id", "name", "game_id"}).
-//		AddRow(uint(1), "My question", uint(1))
-//
-//	rowsOption := sqlmock.
-//		NewRows([]string{"id", "name", "correct", "question_id"}).
-//		AddRow(uint(1), "option1", false, uint(1)).
-//		AddRow(uint(2), "option2", false, uint(1)).
-//		AddRow(uint(3), "option3", true, uint(1)).
-//		AddRow(uint(4), "option4", false, uint(1))
-//
-//	gs.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("", 1).WillReturnRows(rowsGame)
-//	gs.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
-//	gs.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
-//	gs.mock.ExpectExec(regexp.QuoteMeta(updateById)).WithArgs("1234-4321", updateBody.Topic, updateBody.RoundTime, updateBody.Points, "123", uint(1)).WillReturnResult(sqlmock.NewResult(0, 1))
-//
-//	bodyString, _ := json.Marshal(&updateBody)
-//	reader := strings.NewReader(string(bodyString))
-//	gs.ctx.Request = httptest.NewRequest("PATCH", "/games?id=1", reader)
-//
-//	// When
-//	gs.controller.Update(gs.ctx)
-//
-//	// Then
-//	bodyBytes, _ := io.ReadAll(gs.w.Body)
-//	assert.Equal(gs.T(), http.StatusOK, gs.w.Code)
-//	assert.Contains(gs.T(), string(bodyBytes), updateBody.Topic)
-//	assert.Contains(gs.T(), string(bodyBytes), updateQuestion.Name)
-//	assert.Contains(gs.T(), string(bodyBytes), option1.Name)
-//	assert.Contains(gs.T(), string(bodyBytes), option4.Name)
-//
-//	// err := gs.mock.ExpectationsWereMet()
-//	// assert.Nil(gs.T(), err)
-//}
+	option3 := entity.UpdateOption{
+		Id:      1,
+		Name:    "red",
+		Correct: true,
+	}
+
+	option4 := entity.UpdateOption{
+		Id:      1,
+		Name:    "black",
+		Correct: false,
+	}
+
+	updateQuestion := entity.UpdateQuestion{
+		Id:      1,
+		Name:    "What color is a tomato?",
+		Options: []entity.UpdateOption{option1, option2, option3, option4},
+	}
+
+	updateBody := entity.UpdateBody{
+		Topic:     "Update Topic",
+		RoundTime: 10,
+		Points:    10,
+		Questions: []entity.UpdateQuestion{updateQuestion},
+	}
+
+	rowsGame := sqlmock.
+		NewRows([]string{"id", "invite_code", "topic", "round_time", "points", "owner"})
+
+	gs.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("", 2).WillReturnRows(rowsGame)
+
+	bodyString, _ := json.Marshal(&updateBody)
+	reader := strings.NewReader(string(bodyString))
+	gs.ctx.Request = httptest.NewRequest("PATCH", "/games?id=2", reader)
+
+	// When
+	gs.controller.Update(gs.ctx)
+
+	// Then
+	bodyBytes, _ := io.ReadAll(gs.w.Body)
+	assert.Equal(gs.T(), http.StatusBadRequest, gs.w.Code)
+	assert.Contains(gs.T(), string(bodyBytes), "game not found")
+
+	err := gs.mock.ExpectationsWereMet()
+	assert.Nil(gs.T(), err)
+}
+
+func (gs *GameSuite) TestUpdate_NotOwner() {
+	// Given
+	option1 := entity.UpdateOption{
+		Id:      1,
+		Name:    "blue",
+		Correct: false,
+	}
+
+	option2 := entity.UpdateOption{
+		Id:      1,
+		Name:    "brown",
+		Correct: false,
+	}
+
+	option3 := entity.UpdateOption{
+		Id:      1,
+		Name:    "red",
+		Correct: true,
+	}
+
+	option4 := entity.UpdateOption{
+		Id:      1,
+		Name:    "black",
+		Correct: false,
+	}
+
+	updateQuestion := entity.UpdateQuestion{
+		Id:      1,
+		Name:    "What color is a tomato?",
+		Options: []entity.UpdateOption{option1, option2, option3, option4},
+	}
+
+	updateBody := entity.UpdateBody{
+		Topic:     "Update Topic",
+		RoundTime: 10,
+		Points:    10,
+		Questions: []entity.UpdateQuestion{updateQuestion},
+	}
+
+	rowsGame := sqlmock.
+		NewRows([]string{"id", "invite_code", "topic", "round_time", "points", "owner"}).
+		AddRow(uint(1), "1234-4321", "Topic", 30, float64(50), "321")
+
+	rowsQuestion := sqlmock.
+		NewRows([]string{"id", "name", "game_id"}).
+		AddRow(uint(1), "My question", uint(1))
+
+	rowsOption := sqlmock.
+		NewRows([]string{"id", "name", "correct", "question_id"}).
+		AddRow(uint(1), "option1", false, uint(1)).
+		AddRow(uint(2), "option2", false, uint(1)).
+		AddRow(uint(3), "option3", true, uint(1)).
+		AddRow(uint(4), "option4", false, uint(1))
+
+	gs.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("", 1).WillReturnRows(rowsGame)
+	gs.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
+	gs.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
+	gs.mock.ExpectExec(regexp.QuoteMeta(updateById)).WithArgs("1234-4321", updateBody.Topic, updateBody.RoundTime, updateBody.Points, "321", uint(1)).WillReturnResult(sqlmock.NewResult(0, 1))
+
+	bodyString, _ := json.Marshal(&updateBody)
+	reader := strings.NewReader(string(bodyString))
+	gs.ctx.Request = httptest.NewRequest("PATCH", "/games?id=1", reader)
+
+	// When
+	gs.controller.Update(gs.ctx)
+
+	// Then
+	bodyBytes, _ := io.ReadAll(gs.w.Body)
+	assert.Equal(gs.T(), http.StatusBadRequest, gs.w.Code)
+	assert.Contains(gs.T(), string(bodyBytes), "not owner")
+
+	// err := gs.mock.ExpectationsWereMet()
+	// assert.Nil(gs.T(), err)
+}
+
+func (gs *GameSuite) TestUpdate_Ok() {
+	// Given
+	option1 := entity.UpdateOption{
+		Id:      1,
+		Name:    "blue",
+		Correct: false,
+	}
+
+	option2 := entity.UpdateOption{
+		Id:      1,
+		Name:    "brown",
+		Correct: false,
+	}
+
+	option3 := entity.UpdateOption{
+		Id:      1,
+		Name:    "red",
+		Correct: true,
+	}
+
+	option4 := entity.UpdateOption{
+		Id:      1,
+		Name:    "black",
+		Correct: false,
+	}
+
+	updateQuestion := entity.UpdateQuestion{
+		Id:      1,
+		Name:    "What color is a tomato?",
+		Options: []entity.UpdateOption{option1, option2, option3, option4},
+	}
+
+	updateBody := entity.UpdateBody{
+		Topic:     "Update Topic",
+		RoundTime: 10,
+		Points:    10,
+		Questions: []entity.UpdateQuestion{updateQuestion},
+	}
+
+	rowsGame := sqlmock.
+		NewRows([]string{"id", "invite_code", "topic", "round_time", "points", "owner"}).
+		AddRow(uint(1), "1234-4321", "Topic", 30, float64(50), "123")
+
+	rowsQuestion := sqlmock.
+		NewRows([]string{"id", "name", "game_id"}).
+		AddRow(uint(1), "My question", uint(1))
+
+	rowsOption := sqlmock.
+		NewRows([]string{"id", "name", "correct", "question_id"}).
+		AddRow(uint(1), "option1", false, uint(1)).
+		AddRow(uint(2), "option2", false, uint(1)).
+		AddRow(uint(3), "option3", true, uint(1)).
+		AddRow(uint(4), "option4", false, uint(1))
+
+	gs.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("", 1).WillReturnRows(rowsGame)
+	gs.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
+	gs.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
+	gs.mock.ExpectExec(regexp.QuoteMeta(updateById)).WithArgs("1234-4321", updateBody.Topic, updateBody.RoundTime, updateBody.Points, "123", uint(1)).WillReturnResult(sqlmock.NewResult(0, 1))
+
+	bodyString, _ := json.Marshal(&updateBody)
+	reader := strings.NewReader(string(bodyString))
+	gs.ctx.Request = httptest.NewRequest("PATCH", "/games?id=1", reader)
+
+	// When
+	gs.controller.Update(gs.ctx)
+
+	// Then
+	bodyBytes, _ := io.ReadAll(gs.w.Body)
+	assert.Equal(gs.T(), http.StatusOK, gs.w.Code)
+	assert.Contains(gs.T(), string(bodyBytes), updateBody.Topic)
+	assert.Contains(gs.T(), string(bodyBytes), updateQuestion.Name)
+	assert.Contains(gs.T(), string(bodyBytes), option1.Name)
+	assert.Contains(gs.T(), string(bodyBytes), option4.Name)
+
+	// err := gs.mock.ExpectationsWereMet()
+	// assert.Nil(gs.T(), err)
+}
 
 func (gs *GameSuite) TestDelete_NotFound() {
 	// Given

@@ -20,7 +20,6 @@ func NewGameStore(db *gorm.DB) *GameStore {
 
 func (db *GameStore) Get(id int, code string) (*entity.Game, error) {
 	var game entity.Game
-
 	db.DB.Preload("Questions.Options").Where("invite_code = ? or id = ?", code, id).First(&game)
 
 	if game.Id == 0 {
@@ -35,26 +34,15 @@ func (db *GameStore) Create(e *entity.Game) *entity.Game {
 	return e
 }
 
-func (db *GameStore) Update(id int, code string, e *entity.Game) (*entity.Game, error) {
-	game := &entity.Game{}
-
-	db.DB.Preload("Questions.Options").Where("invite_code = ? or id = ?", code, id).First(&game)
-
-	if game.Id == 0 {
-		return nil, errors.New("game not found")
-	}
-
+func (db *GameStore) Update(id int, code string, e *entity.Game) *entity.Game {
 	db.DB.Session(&gorm.Session{FullSaveAssociations: true}).Where("invite_code = ? or id = ?", code, id).Updates(&e)
-
-	return e, nil
+	return e
 }
 
 func (db *GameStore) Delete(id int, code string, userId string) error {
-	game := &entity.Game{}
-
-	db.DB.Preload("Questions.Options").Where("invite_code = ? or id = ?", code, id).First(&game)
-	if game.Id == 0 {
-		return errors.New("game not found")
+	game, err := db.Get(id, code)
+	if err != nil {
+		return err
 	}
 
 	if userId != game.Owner {
@@ -72,5 +60,4 @@ func (db *GameStore) Delete(id int, code string, userId string) error {
 func (db *GameStore) DeleteQuestion(id int) {
 	db.DB.Select(clause.Associations).Unscoped().Delete(&entity.Question{}, id)
 	db.DB.Exec("DELETE FROM options WHERE question_id = ?", id)
-	return
 }

@@ -9,7 +9,7 @@ import (
 type IGameRepo interface {
 	Get(id int, code string) (*entity.Game, error)
 	Create(e *entity.Game) *entity.Game
-	Update(id int, code string, e *entity.Game) (*entity.Game, error)
+	Update(id int, code string, e *entity.Game) *entity.Game
 	Delete(id int, code, userId string) error
 	DeleteQuestion(id int)
 }
@@ -103,10 +103,7 @@ func (gs *GameService) UpdateGame(body entity.UpdateBody, id int, code, ownerId 
 		return nil, err
 	}
 
-	e, err := gs.gameRepo.Update(id, code, game)
-	if err != nil {
-		return nil, err
-	}
+	e := gs.gameRepo.Update(id, code, game)
 	return e, nil
 }
 

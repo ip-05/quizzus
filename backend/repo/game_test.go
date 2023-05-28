@@ -1,9 +1,10 @@
 package repo
 
 import (
+	"testing"
+
 	"github.com/ip-05/quizzus/entity"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 var testGameBody = entity.CreateBody{
@@ -82,7 +83,6 @@ func TestRepo_UpdateGame(t *testing.T) {
 	assert.Greater(t, game.Id, uint(0))
 
 	game.Topic = "Updated topic"
-	updatedGame, err := repo.Update(int(game.Id), game.InviteCode, game)
-	assert.Nil(t, err)
+	updatedGame := repo.Update(int(game.Id), game.InviteCode, game)
 	assert.Equal(t, updatedGame.Topic, "Updated topic")
 }
