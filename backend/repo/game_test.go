@@ -49,8 +49,7 @@ func TestRepo_GetGame(t *testing.T) {
 	game := repo.Create(newGame)
 	assert.Greater(t, game.Id, uint(0))
 
-	gotGame, err := repo.Get(int(game.Id), game.InviteCode)
-	assert.Nil(t, err)
+	gotGame := repo.Get(int(game.Id), game.InviteCode)
 	assert.Equal(t, gotGame.Topic, newGame.Topic)
 }
 
@@ -66,8 +65,10 @@ func TestRepo_DeleteGame(t *testing.T) {
 	game := repo.Create(newGame)
 	assert.Greater(t, game.Id, uint(0))
 
-	err = repo.Delete(int(game.Id), game.InviteCode, "1")
-	assert.Nil(t, err)
+	repo.Delete(game)
+
+	gotGame := repo.Get(1, "")
+	assert.Nil(t, gotGame)
 }
 
 func TestRepo_UpdateGame(t *testing.T) {
