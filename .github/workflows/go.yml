@@ -27,5 +27,11 @@ jobs:
     - name: Build
       run: go build -v ./...
 
-    - name: Test
-      run: go test -v ./...
+    - name: Test-API
+      run: go test -v ./api/...
+      
+    - name: Test-Config
+      run: go test -v ./config
+      
+    - name: Test-Entity
+      run: go test -v ./entity
