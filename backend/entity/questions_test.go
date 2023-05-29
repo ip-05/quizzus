@@ -26,6 +26,22 @@ func TestNewQuestion(t *testing.T) {
 	assert.Equal(t, body.Options[3].Correct, actual.Options[3].Correct)
 }
 
+func BenchmarkNewQuestion(b *testing.B) {
+	body := CreateQuestion{
+		Name: "What color is tomato?",
+		Options: []CreateOption{
+			{Name: "Red", Correct: true},
+			{Name: "Green", Correct: false},
+			{Name: "Blue", Correct: false},
+			{Name: "Orange", Correct: false},
+		},
+	}
+
+	for i := 0; i < b.N; i++ {
+		NewQuestion(body)
+	}
+}
+
 func TestValidateQuestion(t *testing.T) {
 	body := CreateQuestion{
 		Name: "What color is tomato?",

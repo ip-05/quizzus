@@ -47,6 +47,28 @@ func TestNewGame(t *testing.T) {
 	})
 }
 
+func BenchmarkNewGame(b *testing.B) {
+	createBody := CreateBody{
+		Topic:     "My game",
+		RoundTime: 10,
+		Points:    3,
+		Questions: []CreateQuestion{
+			{
+				Name: "What color is tomato?",
+				Options: []CreateOption{
+					{Name: "Red", Correct: true},
+					{Name: "Green", Correct: false},
+					{Name: "Blue", Correct: false},
+					{Name: "Orange", Correct: false},
+				},
+			},
+		},
+	}
+	for i := 0; i < b.N; i++ {
+		NewGame(createBody, "123")
+	}
+}
+
 func TestValidateGame(t *testing.T) {
 	createBody := CreateBody{
 		Topic:     "My game",
