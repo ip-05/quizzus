@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/ip-05/quizzus/api/middleware"
+	"github.com/ip-05/quizzus/entity"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/gin-gonic/gin"
@@ -210,7 +211,7 @@ func (s *AuthControllerSuite) TestLogin_VerifyError() {
 
 func (s *AuthControllerSuite) TestLogin_ReturnJWT() {
 	// When
-	userInfo := UserInfo{
+	userInfo := entity.GoogleUser{
 		Id:            "123123",
 		Email:         "john@doe.com",
 		VerifiedEmail: true,
@@ -244,7 +245,7 @@ func (s *AuthControllerSuite) TestLogin_ReturnJWT() {
 
 func (s *AuthControllerSuite) TestLogin_SetCookie() {
 	// When
-	userInfo := UserInfo{
+	userInfo := entity.GoogleUser{
 		Id:            "123123",
 		Email:         "john@doe.com",
 		VerifiedEmail: true,

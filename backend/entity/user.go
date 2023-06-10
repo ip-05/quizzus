@@ -1,6 +1,14 @@
 package entity
 
-type UserInfo struct {
+type User struct {
+	Id          string   `json:"id"`
+	Picture     string   `json:"picture"`
+	GivenName   string   `json:"given_name"`
+	SavedGames  []string `json:"saved_games"`
+	PlayedGames []string `json:"played_games"`
+}
+
+type GoogleUser struct {
 	Id            string `json:"id"`
 	Email         string `json:"email"`
 	VerifiedEmail bool   `json:"verified_email"`
@@ -8,8 +16,14 @@ type UserInfo struct {
 	GivenName     string `json:"given_name"`
 }
 
-func NewUser() (*UserInfo, error) {
-	user := &UserInfo{}
+type DiscordUser struct {
+}
+
+type TelegramUser struct {
+}
+
+func NewUser() (*User, error) {
+	user := &User{}
 	return user, nil
 }
 

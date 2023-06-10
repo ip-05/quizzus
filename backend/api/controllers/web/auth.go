@@ -11,19 +11,12 @@ import (
 
 	"github.com/ip-05/quizzus/api/middleware"
 	"github.com/ip-05/quizzus/config"
+	"github.com/ip-05/quizzus/entity"
 	"golang.org/x/oauth2"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 )
-
-type UserInfo struct {
-	Id            string `json:"id"`
-	Email         string `json:"email"`
-	VerifiedEmail bool   `json:"verified_email"`
-	Picture       string `json:"picture"`
-	GivenName     string `json:"given_name"`
-}
 
 type AuthController struct {
 	Config       *config.Config
@@ -99,7 +92,7 @@ func (a AuthController) GoogleCallback(c *gin.Context) {
 		return
 	}
 
-	var userInfo UserInfo
+	var userInfo entity.GoogleUser
 
 	err = json.Unmarshal(contents, &userInfo)
 	if err != nil {
