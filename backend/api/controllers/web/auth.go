@@ -22,6 +22,7 @@ type AuthController struct {
 	Config       *config.Config
 	GoogleConfig GoogleAuth
 	Http         HttpClient
+	//	User         IUserService
 }
 
 type GoogleAuth interface {
@@ -31,6 +32,13 @@ type GoogleAuth interface {
 
 type HttpClient interface {
 	Get(url string) (resp *http.Response, err error)
+}
+
+type IUserService interface {
+	CreateUser()
+	UpdateUser()
+	DeleteUser()
+	GetUser()
 }
 
 func NewAuthController(cfg *config.Config, gcfg GoogleAuth, http HttpClient) *AuthController {
@@ -115,6 +123,7 @@ func (a AuthController) GoogleCallback(c *gin.Context) {
 		return
 	}
 
+	// a.User.CreateUser(googleUserInfo)
 	c.SetCookie("token", tokenString, 7*24*60*60, "/", a.Config.Server.Domain, a.Config.Server.Secure, false)
 	c.JSON(http.StatusOK, gin.H{"message": "Successfully authenticated user", "token": tokenString})
 }

@@ -2,8 +2,10 @@ package entity
 
 type User struct {
 	Id          string   `json:"id"`
+	GoogleId    string   `json:"google_id"`
+	DiscordId   string   `json:"discord_id"`
 	Picture     string   `json:"picture"`
-	GivenName   string   `json:"given_name"`
+	Name        string   `json:"name"`
 	SavedGames  []string `json:"saved_games"`
 	PlayedGames []string `json:"played_games"`
 }
@@ -22,8 +24,13 @@ type DiscordUser struct {
 type TelegramUser struct {
 }
 
-func NewUser() (*User, error) {
-	user := &User{}
+func NewGoogleUser(body GoogleUser) (*User, error) {
+	user := &User{
+		GoogleId:  body.Id,
+		DiscordId: "",
+		Picture:   body.Picture,
+		Name:      body.GivenName,
+	}
 	return user, nil
 }
 
