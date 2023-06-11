@@ -3,14 +3,12 @@ package entity
 import "fmt"
 
 type User struct {
-	Id          string   `json:"id"`
-	GoogleId    string   `json:"google_id"`
-	DiscordId   string   `json:"discord_id"`
-	TelegramId  string   `json:"telegram_id"`
-	Picture     string   `json:"picture"`
-	Name        string   `json:"name"`
-	SavedGames  []string `json:"saved_games"`
-	PlayedGames []string `json:"played_games"`
+	Id         string `json:"id"`
+	GoogleId   string `json:"google_id"`
+	DiscordId  string `json:"discord_id"`
+	TelegramId string `json:"telegram_id"`
+	Picture    string `json:"picture"`
+	Name       string `json:"name"`
 }
 
 type GoogleUser struct {
