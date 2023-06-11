@@ -33,5 +33,3 @@ func NewGoogleUser(body GoogleUser) (*User, error) {
 	}
 	return user, nil
 }
-
-// TODO: add users to DB
