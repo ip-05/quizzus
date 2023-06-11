@@ -1,6 +1,9 @@
 package entity
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 type User struct {
 	Id         string `json:"id"`
@@ -37,6 +40,11 @@ func NewGoogleUser(body GoogleUser) (*User, error) {
 		Picture:  body.Picture,
 		Name:     body.GivenName,
 	}
+
+	if err := user.Validate(); err != nil {
+		return nil, err
+	}
+
 	return user, nil
 }
 
@@ -46,6 +54,11 @@ func NewDiscordUser(body DiscordUser) (*User, error) {
 		Picture:   fmt.Sprintf("https://cdn.discordapp.com/avatars/%s/%s.png", body.Id, body.Avatar),
 		Name:      body.Username,
 	}
+
+	if err := user.Validate(); err != nil {
+		return nil, err
+	}
+
 	return user, nil
 }
 
@@ -55,5 +68,18 @@ func NewTelegramUser(body TelegramUser) (*User, error) {
 		Picture:    body.PhotoUrl,
 		Name:       body.Username,
 	}
+
+	if err := user.Validate(); err != nil {
+		return nil, err
+	}
+
 	return user, nil
+}
+
+func (u *User) Validate() error {
+	if len(u.Name) < 2 || len(u.Name) > 32 {
+		return errors.New("name must be between 2 and 32 characters long")
+	}
+
+	return nil
 }
