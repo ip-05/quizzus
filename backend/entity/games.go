@@ -2,6 +2,7 @@ package entity
 
 import (
 	"errors"
+	"time"
 
 	"github.com/ip-05/quizzus/utils"
 )
@@ -12,14 +13,23 @@ type Game struct {
 	Topic      string      `json:"topic"`
 	RoundTime  int         `json:"roundTime"`
 	Points     float64     `json:"points"`
+	Public     bool        `json:"public"`
 	Questions  []*Question `json:"questions"`
 	Owner      uint        `json:"ownerId"`
+	CreatedAt  time.Time   `json:"createdAt" gorm:"default:current_timestamp"`
+}
+
+type FavoriteGame struct {
+	Id     uint `json:"id" gorm:"primary_key"`
+	GameId uint `json:"gameId"`
+	UserId uint `json:"userId"`
 }
 
 type CreateGame struct {
 	Topic     string           `json:"topic"`
 	RoundTime int              `json:"roundTime"`
 	Points    float64          `json:"points"`
+	Public    bool             `json:"public"`
 	Questions []CreateQuestion `json:"questions"`
 }
 
@@ -27,6 +37,7 @@ type UpdateBody struct {
 	Topic     string           `json:"topic"`
 	RoundTime int              `json:"roundTime"`
 	Points    float64          `json:"points"`
+	Public    bool             `json:"public"`
 	Questions []UpdateQuestion `json:"questions"`
 }
 
@@ -37,6 +48,7 @@ func NewGame(body CreateGame, ownerId uint) (*Game, error) {
 		Topic:      body.Topic,
 		RoundTime:  body.RoundTime,
 		Points:     body.Points,
+		Public:     body.Public,
 		Owner:      ownerId,
 	}
 

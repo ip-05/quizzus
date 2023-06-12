@@ -39,5 +39,10 @@ func New(cfg *config.Config) *gorm.DB {
 	if err != nil {
 		return nil
 	}
+
+	err = database.AutoMigrate(&entity.FavoriteGame{})
+	if err != nil {
+		return nil
+	}
 	return database
 }

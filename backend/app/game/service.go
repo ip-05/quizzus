@@ -2,16 +2,17 @@ package game
 
 import (
 	"errors"
-
 	"github.com/ip-05/quizzus/entity"
 )
 
 type IGameRepo interface {
 	Get(id int, code string) *entity.Game
+	GetByOwner(id int, hidePrivate bool, limit int) *[]entity.Game
 	Create(e *entity.Game) *entity.Game
 	Update(id int, code string, e *entity.Game) *entity.Game
 	Delete(e *entity.Game)
 	DeleteQuestion(id int)
+	GetFavorite(user int) *[]entity.Game
 }
 
 type GameService struct {
@@ -129,4 +130,20 @@ func (gs *GameService) GetGame(id int, code string) (*entity.Game, error) {
 	}
 
 	return e, nil
+}
+
+func (gs *GameService) GetGamesByOwner(id int, user int, limit int) (*[]entity.Game, error) {
+	hidePrivate := true
+
+	if user == id {
+		hidePrivate = false
+	}
+
+	games := gs.gameRepo.GetByOwner(id, hidePrivate, limit)
+	return games, nil
+}
+
+func (gs *GameService) GetFavoriteGames(user int) (*[]entity.Game, error) {
+	games := gs.gameRepo.GetFavorite(user)
+	return games, nil
 }

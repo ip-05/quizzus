@@ -14,6 +14,8 @@ type IGameService interface {
 	UpdateGame(body entity.UpdateBody, id int, code string, ownerId uint) (*entity.Game, error)
 	DeleteGame(id int, code string, userId uint) error
 	GetGame(id int, code string) (*entity.Game, error)
+	GetGamesByOwner(id int, user int, limit int) (*[]entity.Game, error)
+	GetFavoriteGames(user int) (*[]entity.Game, error)
 }
 
 type GameController struct {
@@ -45,8 +47,8 @@ func (g *GameController) CreateGame(c *gin.Context) {
 }
 
 func (g GameController) Get(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Query("id"))
-	code := c.Query("invite_code")
+	id, _ := strconv.Atoi(c.Param("id"))
+	code := c.Param("id")
 
 	game, err := g.game.GetGame(id, code)
 	if err != nil {
@@ -63,6 +65,49 @@ func (g GameController) Get(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, game)
+}
+
+func (g GameController) GetMany(c *gin.Context) {
+	/*
+
+		/games?owner=1 - Get game by owner id
+		If owner == authed user, then it will return all games both private and public
+
+	*/
+
+	owner := c.Query("owner")
+	favorite, _ := strconv.ParseBool(c.Query("favorite"))
+	limit, _ := strconv.Atoi(c.Query("limit"))
+	if limit == 0 {
+		limit = 10
+	}
+
+	authedUser, _ := c.Get("authedUser")
+	user := authedUser.(middleware.AuthedUser)
+
+	if favorite == true {
+		games, err := g.game.GetFavoriteGames(int(user.Id))
+		if err != nil {
+			c.JSON(http.StatusOK, err.Error())
+			return
+		}
+
+		c.JSON(http.StatusOK, games)
+		return
+	} else if owner != "" {
+		id, _ := strconv.Atoi(owner)
+
+		games, err := g.game.GetGamesByOwner(id, int(user.Id), limit)
+		if err != nil {
+			c.JSON(http.StatusOK, err.Error())
+			return
+		}
+
+		c.JSON(http.StatusOK, games)
+		return
+	}
+
+	c.JSON(http.StatusOK, []*entity.Game{})
 }
 
 func (g GameController) Update(c *gin.Context) {
