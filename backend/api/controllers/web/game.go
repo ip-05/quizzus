@@ -10,9 +10,9 @@ import (
 )
 
 type IGameService interface {
-	CreateGame(body entity.CreateBody, ownerId string) (*entity.Game, error)
-	UpdateGame(body entity.UpdateBody, id int, code, ownerId string) (*entity.Game, error)
-	DeleteGame(id int, code, userId string) error
+	CreateGame(body entity.CreateBody, ownerId uint) (*entity.Game, error)
+	UpdateGame(body entity.UpdateBody, id int, code string, ownerId uint) (*entity.Game, error)
+	DeleteGame(id int, code string, userId uint) error
 	GetGame(id int, code string) (*entity.Game, error)
 }
 

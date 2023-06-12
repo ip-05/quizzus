@@ -24,7 +24,7 @@ func NewGameService(gameR IGameRepo) *GameService {
 	}
 }
 
-func (gs *GameService) CreateGame(body entity.CreateBody, ownerId string) (*entity.Game, error) {
+func (gs *GameService) CreateGame(body entity.CreateBody, ownerId uint) (*entity.Game, error) {
 	e, err := entity.NewGame(body, ownerId)
 	if err != nil {
 		return nil, err
@@ -34,7 +34,7 @@ func (gs *GameService) CreateGame(body entity.CreateBody, ownerId string) (*enti
 	return game, nil
 }
 
-func (gs *GameService) UpdateGame(body entity.UpdateBody, id int, code, ownerId string) (*entity.Game, error) {
+func (gs *GameService) UpdateGame(body entity.UpdateBody, id int, code string, ownerId uint) (*entity.Game, error) {
 	game, err := gs.GetGame(id, code)
 	if err != nil {
 		return nil, err
@@ -107,7 +107,7 @@ func (gs *GameService) UpdateGame(body entity.UpdateBody, id int, code, ownerId 
 	return e, nil
 }
 
-func (gs *GameService) DeleteGame(id int, code, userId string) error {
+func (gs *GameService) DeleteGame(id int, code string, userId uint) error {
 	game, err := gs.GetGame(id, code)
 	if err != nil {
 		return err

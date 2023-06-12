@@ -40,7 +40,7 @@ func main() {
 	authService := auth.NewAuthService(cfg, gcfg, userService, &http.Client{})
 
 	// Presentation layer
-	r := api.InitWeb(cfg, gcfg, gameService, authService)
+	r := api.InitWeb(cfg, gcfg, gameService, authService, userService)
 
 	r.Run(fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port))
 }

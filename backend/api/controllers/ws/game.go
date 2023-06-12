@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/ip-05/quizzus/app/auth"
 	"time"
 
 	"github.com/jinzhu/copier"
@@ -43,7 +44,7 @@ const (
 )
 
 type User struct {
-	Id             string          `json:"id"`
+	Id             uint            `json:"id"`
 	Name           string          `json:"name"`
 	ProfilePicture string          `json:"profilePicture"`
 	ActiveGame     *Game           `json:"-"`
@@ -51,52 +52,59 @@ type User struct {
 }
 
 type Game struct {
-	Status        string             `json:"status"`
-	RoundStatus   string             `json:"roundStatus"`
-	CurrentRound  int                `json:"currentRound"`
-	Points        float64            `json:"points"`
-	Topic         string             `json:"topic"`
-	RoundTime     int                `json:"roundTime"`
-	QuestionCount int                `json:"questionCount"`
-	InviteCode    string             `json:"inviteCode"`
-	Members       map[string]*User   `json:"members"`
-	Owner         *User              `json:"owner"`
-	Leaderboard   map[string]float64 `json:"leaderboard"`
-	Data          *entity.Game       `json:"-"`
-	Rounds        map[int]*Round     `json:"-"`
+	Status        string           `json:"status"`
+	RoundStatus   string           `json:"roundStatus"`
+	CurrentRound  int              `json:"currentRound"`
+	Points        float64          `json:"points"`
+	Topic         string           `json:"topic"`
+	RoundTime     int              `json:"roundTime"`
+	QuestionCount int              `json:"questionCount"`
+	InviteCode    string           `json:"inviteCode"`
+	Members       map[uint]*User   `json:"members"`
+	Owner         *User            `json:"owner"`
+	Leaderboard   map[uint]float64 `json:"leaderboard"`
+	Data          *entity.Game     `json:"-"`
+	Rounds        map[int]*Round   `json:"-"`
 }
 
 type Round struct {
-	Answers map[string]uint
+	Answers map[uint]uint
 }
 
 type GameSocketController struct {
-	Users    map[string]*User
+	Users    map[uint]*User
 	Games    map[string]*Game
 	Game     web.IGameService
+	User     auth.IUserService
 	GameTime int
 }
 
 type IGameService interface {
-	CreateGame(body entity.CreateBody, ownerId string) (*entity.Game, error)
-	UpdateGame(body entity.UpdateBody, id int, code, ownerId string) (*entity.Game, error)
-	DeleteGame(id int, code, userId string) error
+	CreateGame(body entity.CreateBody, ownerId uint) (*entity.Game, error)
+	UpdateGame(body entity.UpdateBody, id int, code string, ownerId uint) (*entity.Game, error)
+	DeleteGame(id int, code string, userId uint) error
 	GetGame(id int, code string) (*entity.Game, error)
 }
 
-func NewGameSocketController(game IGameService) *GameSocketController {
+func NewGameSocketController(game IGameService, user auth.IUserService) *GameSocketController {
 	c := new(GameSocketController)
 
-	c.Users = make(map[string]*User)
+	c.Users = make(map[uint]*User)
 	c.Games = make(map[string]*Game)
 	c.Game = game
+	c.User = user
 	c.GameTime = 10
 
 	return c
 }
 
 func (g *GameSocketController) InitUser(ctx context.Context) (*User, error) {
-	user := ctx.Value("authedUser").(middleware.AuthedUser)
+	authedUser := ctx.Value("authedUser").(middleware.AuthedUser)
+
+	user := g.User.GetUser(authedUser.Id)
+	if user != nil {
+		return nil, errors.New("no user found")
+	}
 
 	_, found := g.Users[user.Id]
 	if found {
@@ -106,7 +114,7 @@ func (g *GameSocketController) InitUser(ctx context.Context) (*User, error) {
 	g.Users[user.Id] = &User{
 		Id:             user.Id,
 		Name:           user.Name,
-		ProfilePicture: user.ProfilePicture,
+		ProfilePicture: user.Picture,
 		Conn:           ctx.Value("conn").(*websocket.Conn),
 	}
 
@@ -182,8 +190,8 @@ func (g *GameSocketController) JoinGame(ctx context.Context, msgData json.RawMes
 		QuestionCount: len(game.Questions),
 		RoundTime:     game.RoundTime,
 		InviteCode:    game.InviteCode,
-		Members:       map[string]*User{},
-		Leaderboard:   map[string]float64{},
+		Members:       map[uint]*User{},
+		Leaderboard:   map[uint]float64{},
 		Rounds:        map[int]*Round{},
 		Owner:         user,
 		Data:          game,
@@ -309,7 +317,7 @@ func (g *GameSocketController) ResetGame(ctx context.Context) {
 	user.ActiveGame.Status = Standby
 	user.ActiveGame.RoundStatus = RoundWaiting
 	user.ActiveGame.CurrentRound = 0
-	user.ActiveGame.Leaderboard = map[string]float64{}
+	user.ActiveGame.Leaderboard = map[uint]float64{}
 	user.ActiveGame.Rounds = map[int]*Round{}
 
 	DataReply(false, ResetGame, user.ActiveGame).Send(conn)
@@ -330,9 +338,9 @@ type Question struct {
 }
 
 type FinishedReply struct {
-	Correct     bool               `json:"correct"`
-	Options     []*entity.Option   `json:"options"`
-	Leaderboard map[string]float64 `json:"leaderboard"`
+	Correct     bool             `json:"correct"`
+	Options     []*entity.Option `json:"options"`
+	Leaderboard map[uint]float64 `json:"leaderboard"`
 }
 
 func (g *GameSocketController) PlayRounds(game *Game) {
@@ -342,7 +350,7 @@ func (g *GameSocketController) PlayRounds(game *Game) {
 			n := game.Data.RoundTime
 			question := Question{}
 			copier.Copy(&question, game.Data.Questions[game.CurrentRound])
-			game.Rounds[game.CurrentRound] = &Round{Answers: map[string]uint{}}
+			game.Rounds[game.CurrentRound] = &Round{Answers: map[uint]uint{}}
 
 			for range time.Tick(time.Second * 1) {
 				if n == 0 {
@@ -396,8 +404,8 @@ type AnswerData struct {
 }
 
 type AnswerResponse struct {
-	UserId string `json:"user"`
-	Option uint   `json:"option"`
+	UserId uint `json:"user"`
+	Option uint `json:"option"`
 }
 
 func (g *GameSocketController) AnswerQuestion(ctx context.Context, msgData json.RawMessage) {

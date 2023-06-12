@@ -3,7 +3,7 @@ package user
 import "github.com/ip-05/quizzus/entity"
 
 type IUserRepo interface {
-	Get(id int) *entity.User
+	Get(id uint) *entity.User
 	GetByGoogle(id string) *entity.User
 	GetByDiscord(id string) *entity.User
 	GetByTelegram(id string) *entity.User
@@ -40,8 +40,8 @@ func (us *UserService) DeleteUser() {
 
 }
 
-func (us *UserService) GetUser() {
-
+func (us *UserService) GetUser(id uint) *entity.User {
+	return us.userRepo.Get(id)
 }
 
 func (us *UserService) GetUserByProvider(id string, provider string) *entity.User {

@@ -15,7 +15,7 @@ func NewUserStore(db *gorm.DB) *UserStore {
 	}
 }
 
-func (db *UserStore) Get(id int) *entity.User {
+func (db *UserStore) Get(id uint) *entity.User {
 	var user *entity.User
 	db.DB.Where("id = ?", id).First(&user)
 	return user

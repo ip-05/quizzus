@@ -6,11 +6,12 @@ import (
 	"github.com/ip-05/quizzus/api/controllers/web"
 	"github.com/ip-05/quizzus/api/controllers/ws"
 	"github.com/ip-05/quizzus/api/middleware"
+	"github.com/ip-05/quizzus/app/auth"
 	"github.com/ip-05/quizzus/config"
 	"golang.org/x/oauth2"
 )
 
-func InitWeb(cfg *config.Config, gcfg *oauth2.Config, gameService web.IGameService, authService web.IAuthService) *gin.Engine {
+func InitWeb(cfg *config.Config, gcfg *oauth2.Config, gameService web.IGameService, authService web.IAuthService, userService auth.IUserService) *gin.Engine {
 	router := gin.New()
 	router.Use(gin.Recovery())
 
@@ -20,10 +21,10 @@ func InitWeb(cfg *config.Config, gcfg *oauth2.Config, gameService web.IGameServi
 	corsConfig.AddAllowHeaders("Authorization")
 	router.Use(cors.New(corsConfig))
 
-	authController := web.NewAuthController(cfg, gcfg, authService)
+	authController := web.NewAuthController(cfg, gcfg, authService, userService)
 
 	game := web.NewGameController(gameService)
-	ws := ws.NewCoreController(gameService)
+	ws := ws.NewCoreController(gameService, userService)
 
 	authGroup := router.Group("auth")
 	{

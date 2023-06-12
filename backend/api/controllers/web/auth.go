@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"github.com/ip-05/quizzus/api/middleware"
+	"github.com/ip-05/quizzus/app/auth"
 	"github.com/ip-05/quizzus/config"
 	"golang.org/x/oauth2"
 	"net/http"
@@ -17,6 +18,7 @@ type AuthController struct {
 	Config       *config.Config
 	GoogleConfig GoogleAuth
 	Auth         IAuthService
+	User         auth.IUserService
 }
 
 type GoogleAuth interface {
@@ -28,8 +30,8 @@ type IAuthService interface {
 	AuthenticateGoogle(code string) (string, error)
 }
 
-func NewAuthController(cfg *config.Config, gcfg GoogleAuth, auth IAuthService) *AuthController {
-	return &AuthController{Auth: auth, GoogleConfig: gcfg, Config: cfg}
+func NewAuthController(cfg *config.Config, gcfg GoogleAuth, auth IAuthService, user auth.IUserService) *AuthController {
+	return &AuthController{Auth: auth, GoogleConfig: gcfg, Config: cfg, User: user}
 }
 
 func (a AuthController) GoogleLogin(c *gin.Context) {
@@ -75,5 +77,8 @@ func (a AuthController) GoogleCallback(c *gin.Context) {
 func (a AuthController) Me(c *gin.Context) {
 	authedUser, _ := c.Get("authedUser")
 	user := authedUser.(middleware.AuthedUser)
-	c.JSON(http.StatusOK, user)
+
+	dbUser := a.User.GetUser(user.Id)
+
+	c.JSON(http.StatusOK, dbUser)
 }

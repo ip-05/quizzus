@@ -3,6 +3,7 @@ package ws
 import (
 	"context"
 	"encoding/json"
+	"github.com/ip-05/quizzus/app/auth"
 	"go/types"
 	"net/http"
 
@@ -106,9 +107,9 @@ func (w CoreController) messageHandler(ctx context.Context, conn *websocket.Conn
 	}
 }
 
-func NewCoreController(game web.IGameService) *CoreController {
+func NewCoreController(game web.IGameService, user auth.IUserService) *CoreController {
 	return &CoreController{
-		gameController: NewGameSocketController(game),
+		gameController: NewGameSocketController(game, user),
 	}
 }
 
