@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var testGameBody = entity.CreateBody{
+var testGameBody = entity.CreateGame{
 	Topic:     "My game",
 	RoundTime: 10,
 	Points:    3,

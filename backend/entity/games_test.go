@@ -8,7 +8,7 @@ import (
 )
 
 func TestNewGame(t *testing.T) {
-	createBody := CreateBody{
+	createBody := CreateGame{
 		Topic:     "My game",
 		RoundTime: 10,
 		Points:    3,
@@ -48,7 +48,7 @@ func TestNewGame(t *testing.T) {
 }
 
 func BenchmarkNewGame(b *testing.B) {
-	createBody := CreateBody{
+	createBody := CreateGame{
 		Topic:     "My game",
 		RoundTime: 10,
 		Points:    3,
@@ -70,7 +70,7 @@ func BenchmarkNewGame(b *testing.B) {
 }
 
 func TestValidateGame(t *testing.T) {
-	createBody := CreateBody{
+	createBody := CreateGame{
 		Topic:     "My game",
 		RoundTime: 10,
 		Points:    3,

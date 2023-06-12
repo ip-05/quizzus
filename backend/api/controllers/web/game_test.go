@@ -106,7 +106,7 @@ func (gs *GameSuite) TestCreateGame_OK() {
 		Options: []entity.CreateOption{option1, option2, option3, option4},
 	}
 
-	createBody := entity.CreateBody{
+	createBody := entity.CreateGame{
 		Topic:     "Topic Test",
 		RoundTime: 10,
 		Points:    10,

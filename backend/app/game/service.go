@@ -24,7 +24,7 @@ func NewGameService(gameR IGameRepo) *GameService {
 	}
 }
 
-func (gs *GameService) CreateGame(body entity.CreateBody, ownerId uint) (*entity.Game, error) {
+func (gs *GameService) CreateGame(body entity.CreateGame, ownerId uint) (*entity.Game, error) {
 	e, err := entity.NewGame(body, ownerId)
 	if err != nil {
 		return nil, err
