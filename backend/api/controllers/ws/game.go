@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/ip-05/quizzus/app/auth"
 	"time"
+
+	"github.com/ip-05/quizzus/app/auth"
 
 	"github.com/jinzhu/copier"
 
@@ -80,7 +81,7 @@ type GameSocketController struct {
 }
 
 type IGameService interface {
-	CreateGame(body entity.CreateBody, ownerId uint) (*entity.Game, error)
+	CreateGame(body entity.CreateGame, ownerId uint) (*entity.Game, error)
 	UpdateGame(body entity.UpdateBody, id int, code string, ownerId uint) (*entity.Game, error)
 	DeleteGame(id int, code string, userId uint) error
 	GetGame(id int, code string) (*entity.Game, error)

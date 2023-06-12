@@ -16,7 +16,7 @@ type Game struct {
 	Owner      uint        `json:"ownerId"`
 }
 
-type CreateBody struct {
+type CreateGame struct {
 	Topic     string           `json:"topic"`
 	RoundTime int              `json:"roundTime"`
 	Points    float64          `json:"points"`
@@ -30,7 +30,7 @@ type UpdateBody struct {
 	Questions []UpdateQuestion `json:"questions"`
 }
 
-func NewGame(body CreateBody, ownerId uint) (*Game, error) {
+func NewGame(body CreateGame, ownerId uint) (*Game, error) {
 	code := utils.GenerateCode()
 	game := &Game{
 		InviteCode: code,
