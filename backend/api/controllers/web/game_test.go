@@ -68,10 +68,8 @@ func (gs *GameSuite) SetupTest() {
 	gs.mock = mock
 
 	authedUser := middleware.AuthedUser{
-		Id:             "123",
-		Name:           "John",
-		Email:          "john@doe.com",
-		ProfilePicture: "https://doe.com/profile.png",
+		Id:   123,
+		Name: "John",
 	}
 
 	gs.ctx.Set("authedUser", authedUser)
