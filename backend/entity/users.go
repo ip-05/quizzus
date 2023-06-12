@@ -6,7 +6,15 @@ import (
 )
 
 type User struct {
-	Id         string `json:"id"`
+	Id         uint   `json:"id" gorm:"primary_key"`
+	GoogleId   string `json:"google_id"`
+	DiscordId  string `json:"discord_id"`
+	TelegramId string `json:"telegram_id"`
+	Picture    string `json:"picture"`
+	Name       string `json:"name"`
+}
+
+type CreateUser struct {
 	GoogleId   string `json:"google_id"`
 	DiscordId  string `json:"discord_id"`
 	TelegramId string `json:"telegram_id"`
@@ -34,43 +42,47 @@ type TelegramUser struct {
 	PhotoUrl string `json:"photo_url"`
 }
 
-func NewGoogleUser(body GoogleUser) (*User, error) {
+func NewUser(body *CreateUser) (*User, error) {
 	user := &User{
+		GoogleId:   body.GoogleId,
+		DiscordId:  body.DiscordId,
+		TelegramId: body.TelegramId,
+		Picture:    body.Picture,
+		Name:       body.Name,
+	}
+
+	if err := user.Validate(); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func NewGoogleUser(body GoogleUser) (*CreateUser, error) {
+	user := &CreateUser{
 		GoogleId: body.Id,
 		Picture:  body.Picture,
 		Name:     body.GivenName,
 	}
 
-	if err := user.Validate(); err != nil {
-		return nil, err
-	}
-
 	return user, nil
 }
 
-func NewDiscordUser(body DiscordUser) (*User, error) {
-	user := &User{
+func NewDiscordUser(body DiscordUser) (*CreateUser, error) {
+	user := &CreateUser{
 		DiscordId: body.Id,
 		Picture:   fmt.Sprintf("https://cdn.discordapp.com/avatars/%s/%s.png", body.Id, body.Avatar),
 		Name:      body.Username,
 	}
 
-	if err := user.Validate(); err != nil {
-		return nil, err
-	}
-
 	return user, nil
 }
 
-func NewTelegramUser(body TelegramUser) (*User, error) {
-	user := &User{
+func NewTelegramUser(body TelegramUser) (*CreateUser, error) {
+	user := &CreateUser{
 		TelegramId: body.Id,
 		Picture:    body.PhotoUrl,
 		Name:       body.Username,
-	}
-
-	if err := user.Validate(); err != nil {
-		return nil, err
 	}
 
 	return user, nil

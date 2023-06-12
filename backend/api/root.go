@@ -1,9 +1,6 @@
 package api
 
 import (
-	"fmt"
-	"net/http"
-
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/ip-05/quizzus/api/controllers/web"
@@ -11,11 +8,9 @@ import (
 	"github.com/ip-05/quizzus/api/middleware"
 	"github.com/ip-05/quizzus/config"
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
-	"gorm.io/gorm"
 )
 
-func InitWeb(cfg *config.Config, db *gorm.DB, gameService web.IGameService) *gin.Engine {
+func InitWeb(cfg *config.Config, gcfg *oauth2.Config, gameService web.IGameService, authService web.IAuthService) *gin.Engine {
 	router := gin.New()
 	router.Use(gin.Recovery())
 
@@ -25,27 +20,18 @@ func InitWeb(cfg *config.Config, db *gorm.DB, gameService web.IGameService) *gin
 	corsConfig.AddAllowHeaders("Authorization")
 	router.Use(cors.New(corsConfig))
 
-	auth := web.NewAuthController(cfg, &oauth2.Config{
-		RedirectURL:  fmt.Sprintf("%s/auth/google", cfg.Frontend.Base),
-		ClientID:     cfg.Google.ClientId,
-		ClientSecret: cfg.Google.ClientSecret,
-		Scopes: []string{
-			"https://www.googleapis.com/auth/userinfo.email",
-			"https://www.googleapis.com/auth/userinfo.profile",
-		},
-		Endpoint: google.Endpoint,
-	}, &http.Client{})
+	authController := web.NewAuthController(cfg, gcfg, authService)
 
 	game := web.NewGameController(gameService)
 	ws := ws.NewCoreController(gameService)
 
 	authGroup := router.Group("auth")
 	{
-		authGroup.GET("/google", auth.GoogleLogin)
-		authGroup.GET("/google/callback", auth.GoogleCallback)
+		authGroup.GET("/google", authController.GoogleLogin)
+		authGroup.GET("/google/callback", authController.GoogleCallback)
 
 		authGroup.Use(middleware.AuthMiddleware(cfg))
-		authGroup.GET("/me", auth.Me)
+		authGroup.GET("/me", authController.Me)
 	}
 
 	gamesGroup := router.Group("games")
