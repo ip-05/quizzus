@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/golang-jwt/jwt/v4"
-	"github.com/ip-05/quizzus/config"
-	"github.com/ip-05/quizzus/entity"
-	"golang.org/x/oauth2"
 	"io"
 	"net/http"
-	"time"
+
+	"github.com/ip-05/quizzus/config"
+	"github.com/ip-05/quizzus/entity"
+	"github.com/ip-05/quizzus/utils"
+	"golang.org/x/oauth2"
 )
 
 type IUserService interface {
@@ -78,19 +78,10 @@ func (u *AuthService) AuthenticateGoogle(code string) (string, error) {
 
 	existingUser := u.User.GetUserByProvider(userInfo.Id, "google")
 	if existingUser != nil {
-		// TODO: Move token generation to utility class
-		secretKey := []byte(u.Config.Secrets.Jwt)
-		tokenJWT := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"id":   existingUser.Id,
-			"name": existingUser.Name,
-			"exp":  time.Now().Add(7 * 24 * time.Hour).Unix(),
-		})
-
-		tokenString, err := tokenJWT.SignedString(secretKey)
+		tokenString, err := utils.GenerateToken(existingUser.Id, existingUser.Name, u.Config.Secrets.Jwt)
 		if err != nil {
-			return "", errors.New("error while signing JWT token")
+			return "", err
 		}
-
 		return tokenString, nil
 	}
 
@@ -104,16 +95,9 @@ func (u *AuthService) AuthenticateGoogle(code string) (string, error) {
 		return "", err
 	}
 
-	secretKey := []byte(u.Config.Secrets.Jwt)
-	tokenJWT := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id":   user.Id,
-		"name": user.Name,
-		"exp":  time.Now().Add(7 * 24 * time.Hour).Unix(),
-	})
-
-	tokenString, err := tokenJWT.SignedString(secretKey)
+	tokenString, err := utils.GenerateToken(user.Id, user.Name, u.Config.Secrets.Jwt)
 	if err != nil {
-		return "", errors.New("error while signing JWT token")
+		return "", err
 	}
 
 	return tokenString, nil

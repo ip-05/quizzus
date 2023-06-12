@@ -116,16 +116,3 @@ func TestValidateGame(t *testing.T) {
 		assert.Contains(t, errValidate.Error(), "should be at least 1 question")
 	})
 }
-
-func TestGenerateCode(t *testing.T) {
-	// Given
-	wantLen := 9
-	wantContain := "-"
-
-	// When
-	gotCode := generateCode()
-
-	// Then
-	assert.Equal(t, wantLen, len(gotCode))
-	assert.Contains(t, gotCode, wantContain)
-}

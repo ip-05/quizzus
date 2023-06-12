@@ -1,10 +1,9 @@
 package entity
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"errors"
-	"fmt"
+
+	"github.com/ip-05/quizzus/utils"
 )
 
 type Game struct {
@@ -32,8 +31,9 @@ type UpdateBody struct {
 }
 
 func NewGame(body CreateBody, ownerId string) (*Game, error) {
+	code := utils.GenerateCode()
 	game := &Game{
-		InviteCode: generateCode(),
+		InviteCode: code,
 		Topic:      body.Topic,
 		RoundTime:  body.RoundTime,
 		Points:     body.Points,
@@ -73,14 +73,4 @@ func (g *Game) Validate() error {
 		return errors.New("should be at least 1 question")
 	}
 	return nil
-}
-
-func generateCode() string {
-	bytes := make([]byte, 4)
-	if _, err := rand.Read(bytes); err != nil {
-		return ""
-	}
-	code := hex.EncodeToString(bytes)
-
-	return fmt.Sprintf("%s-%s", code[:4], code[4:])
 }
