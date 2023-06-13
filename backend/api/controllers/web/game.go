@@ -16,6 +16,7 @@ type IGameService interface {
 	GetGame(id int, code string) (*entity.Game, error)
 	GetGamesByOwner(id int, user int, limit int) (*[]entity.Game, error)
 	GetFavoriteGames(user int) (*[]entity.Game, error)
+	Favorite(id int, userId int) bool
 }
 
 type GameController struct {
@@ -108,6 +109,17 @@ func (g GameController) GetMany(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, []*entity.Game{})
+}
+
+func (g GameController) Favorite(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+
+	authedUser, _ := c.Get("authedUser")
+	user := authedUser.(middleware.AuthedUser)
+
+	toggle := g.game.Favorite(id, int(user.Id))
+
+	c.JSON(http.StatusOK, gin.H{"favorite": toggle})
 }
 
 func (g GameController) Update(c *gin.Context) {

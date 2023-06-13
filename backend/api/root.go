@@ -40,6 +40,7 @@ func InitWeb(cfg *config.Config, gcfg *oauth2.Config, gameService web.IGameServi
 		gamesGroup.Use(middleware.AuthMiddleware(cfg))
 		gamesGroup.GET("/:id", game.Get)
 		gamesGroup.GET("", game.GetMany)
+		gamesGroup.POST("/:id/favorite", game.Favorite)
 		gamesGroup.POST("", game.CreateGame)
 		gamesGroup.PATCH("", game.Update)
 		gamesGroup.DELETE("", game.Delete)

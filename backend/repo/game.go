@@ -36,12 +36,25 @@ func (db *GameStore) GetByOwner(id int, hidePrivate bool, limit int) *[]entity.G
 	var games *[]entity.Game
 
 	hide := ""
-	if hidePrivate == true {
+	if hidePrivate {
 		hide = " and public = true"
 	}
 
 	db.DB.Preload("Questions.Options").Where("owner = ?"+hide, id).Limit(limit).Find(&games)
 	return games
+}
+
+func (db *GameStore) ToggleFavorite(e *entity.FavoriteGame) bool {
+	favorite := entity.FavoriteGame{}
+	db.DB.Where("favorite_games.game_id = ? and favorite_games.user_id = ?", e.GameId, e.UserId).First(&favorite)
+
+	if favorite.Id == 0 {
+		db.DB.Create(&e)
+		return true
+	}
+
+	db.DB.Where("favorite_games.game_id = ? and favorite_games.user_id = ?", e.GameId, e.UserId).Delete(&favorite)
+	return false
 }
 
 func (db *GameStore) Create(e *entity.Game) *entity.Game {

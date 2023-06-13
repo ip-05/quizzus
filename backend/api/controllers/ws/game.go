@@ -84,6 +84,7 @@ type IGameService interface {
 	GetGame(id int, code string) (*entity.Game, error)
 	GetGamesByOwner(id int, user int, limit int) (*[]entity.Game, error)
 	GetFavoriteGames(user int) (*[]entity.Game, error)
+	Favorite(id int, userId int) bool
 }
 
 func NewGameSocketController(game IGameService, user IUserService) *GameSocketController {

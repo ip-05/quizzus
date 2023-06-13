@@ -2,6 +2,7 @@ package game
 
 import (
 	"errors"
+
 	"github.com/ip-05/quizzus/entity"
 )
 
@@ -13,6 +14,7 @@ type IGameRepo interface {
 	Delete(e *entity.Game)
 	DeleteQuestion(id int)
 	GetFavorite(user int) *[]entity.Game
+	ToggleFavorite(e *entity.FavoriteGame) bool
 }
 
 type GameService struct {
@@ -146,4 +148,14 @@ func (gs *GameService) GetGamesByOwner(id int, user int, limit int) (*[]entity.G
 func (gs *GameService) GetFavoriteGames(user int) (*[]entity.Game, error) {
 	games := gs.gameRepo.GetFavorite(user)
 	return games, nil
+}
+
+func (gs *GameService) Favorite(id int, userId int) bool {
+	favorite := &entity.FavoriteGame{
+		GameId: uint(id),
+		UserId: uint(userId),
+	}
+
+	toggle := gs.gameRepo.ToggleFavorite(favorite)
+	return toggle
 }
