@@ -6,11 +6,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/ip-05/quizzus/app/auth"
-
 	"github.com/jinzhu/copier"
 
-	"github.com/ip-05/quizzus/api/controllers/web"
 	"github.com/ip-05/quizzus/api/middleware"
 	"github.com/ip-05/quizzus/entity"
 	"nhooyr.io/websocket"
@@ -75,8 +72,8 @@ type Round struct {
 type GameSocketController struct {
 	Users    map[uint]*User
 	Games    map[string]*Game
-	Game     web.IGameService
-	User     auth.IUserService
+	Game     IGameService
+	User     IUserService
 	GameTime int
 }
 
@@ -89,7 +86,7 @@ type IGameService interface {
 	GetFavoriteGames(user int) (*[]entity.Game, error)
 }
 
-func NewGameSocketController(game IGameService, user auth.IUserService) *GameSocketController {
+func NewGameSocketController(game IGameService, user IUserService) *GameSocketController {
 	c := new(GameSocketController)
 
 	c.Users = make(map[uint]*User)

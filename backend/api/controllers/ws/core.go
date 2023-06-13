@@ -3,17 +3,20 @@ package ws
 import (
 	"context"
 	"encoding/json"
-	"github.com/ip-05/quizzus/app/auth"
 	"go/types"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/ip-05/quizzus/api/controllers/web"
+	"github.com/ip-05/quizzus/entity"
 	"nhooyr.io/websocket"
 )
 
-type CoreController struct {
-	gameController *GameSocketController
+type IUserService interface {
+	CreateUser(body *entity.CreateUser) (*entity.User, error)
+	UpdateUser()
+	DeleteUser()
+	GetUser(id uint) *entity.User
+	GetUserByProvider(id string, provider string) *entity.User
 }
 
 type SocketMessage struct {
@@ -25,6 +28,16 @@ type SocketReply[D any] struct {
 	Error   bool   `json:"error"`
 	Message string `json:"message"`
 	Data    any    `json:"data"`
+}
+
+type CoreController struct {
+	gameController *GameSocketController
+}
+
+func NewCoreController(game IGameService, user IUserService) *CoreController {
+	return &CoreController{
+		gameController: NewGameSocketController(game, user),
+	}
 }
 
 const (
@@ -104,12 +117,6 @@ func (w CoreController) messageHandler(ctx context.Context, conn *websocket.Conn
 				}
 			}
 		}
-	}
-}
-
-func NewCoreController(game web.IGameService, user auth.IUserService) *CoreController {
-	return &CoreController{
-		gameController: NewGameSocketController(game, user),
 	}
 }
 

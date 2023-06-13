@@ -4,21 +4,23 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
-	"github.com/ip-05/quizzus/api/middleware"
-	"github.com/ip-05/quizzus/app/auth"
-	"github.com/ip-05/quizzus/config"
-	"golang.org/x/oauth2"
 	"net/http"
 	"time"
+
+	"github.com/ip-05/quizzus/api/middleware"
+	"github.com/ip-05/quizzus/config"
+	"github.com/ip-05/quizzus/entity"
+	"golang.org/x/oauth2"
 
 	"github.com/gin-gonic/gin"
 )
 
-type AuthController struct {
-	Config       *config.Config
-	GoogleConfig GoogleAuth
-	Auth         IAuthService
-	User         auth.IUserService
+type IUserService interface {
+	CreateUser(body *entity.CreateUser) (*entity.User, error)
+	UpdateUser()
+	DeleteUser()
+	GetUser(id uint) *entity.User
+	GetUserByProvider(id string, provider string) *entity.User
 }
 
 type GoogleAuth interface {
@@ -30,7 +32,14 @@ type IAuthService interface {
 	AuthenticateGoogle(code string) (string, error)
 }
 
-func NewAuthController(cfg *config.Config, gcfg GoogleAuth, auth IAuthService, user auth.IUserService) *AuthController {
+type AuthController struct {
+	Config       *config.Config
+	GoogleConfig GoogleAuth
+	Auth         IAuthService
+	User         IUserService
+}
+
+func NewAuthController(cfg *config.Config, gcfg GoogleAuth, auth IAuthService, user IUserService) *AuthController {
 	return &AuthController{Auth: auth, GoogleConfig: gcfg, Config: cfg, User: user}
 }
 
