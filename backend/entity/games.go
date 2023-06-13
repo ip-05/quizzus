@@ -25,6 +25,13 @@ type FavoriteGame struct {
 	UserId uint `json:"userId"`
 }
 
+type GameSession struct {
+	Id        uint      `json:"id" gorm:"primary_key"`
+	GameId    uint      `json:"gameId"`
+	UserId    uint      `json:"userId"`
+	StartedAt time.Time `json:"startedAt" gorm:"default:current_timestamp"`
+}
+
 type CreateGame struct {
 	Topic     string           `json:"topic"`
 	RoundTime int              `json:"roundTime"`

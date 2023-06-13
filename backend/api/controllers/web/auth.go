@@ -17,8 +17,8 @@ import (
 
 type IUserService interface {
 	CreateUser(body *entity.CreateUser) (*entity.User, error)
-	UpdateUser()
-	DeleteUser()
+	UpdateUser(id uint, body *entity.UpdateUser) (*entity.User, error)
+	DeleteUser(user *entity.User)
 	GetUser(id uint) *entity.User
 	GetUserByProvider(id string, provider string) *entity.User
 }

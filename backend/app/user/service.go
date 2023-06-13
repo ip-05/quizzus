@@ -8,7 +8,7 @@ type IUserRepo interface {
 	GetByDiscord(id string) *entity.User
 	GetByTelegram(id string) *entity.User
 	Create(e *entity.User) *entity.User
-	Update(id int, e *entity.User) *entity.User
+	Update(e *entity.User) *entity.User
 	Delete(e *entity.User)
 }
 
@@ -32,12 +32,22 @@ func (us *UserService) CreateUser(body *entity.CreateUser) (*entity.User, error)
 	return user, nil
 }
 
-func (us *UserService) UpdateUser() {
+func (us *UserService) UpdateUser(id uint, body *entity.UpdateUser) (*entity.User, error) {
+	user := us.userRepo.Get(id)
 
+	user.Name = body.Name
+	user.Picture = body.Picture
+
+	if err := user.Validate(); err != nil {
+		return nil, err
+	}
+
+	us.userRepo.Update(user)
+	return user, nil
 }
 
-func (us *UserService) DeleteUser() {
-
+func (us *UserService) DeleteUser(user *entity.User) {
+	us.userRepo.Delete(user)
 }
 
 func (us *UserService) GetUser(id uint) *entity.User {

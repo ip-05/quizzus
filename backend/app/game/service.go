@@ -9,12 +9,15 @@ import (
 type IGameRepo interface {
 	Get(id int, code string) *entity.Game
 	GetByOwner(id int, hidePrivate bool, limit int) *[]entity.Game
+	GetFavorite(user int) *[]entity.Game
+
 	Create(e *entity.Game) *entity.Game
 	Update(id int, code string, e *entity.Game) *entity.Game
 	Delete(e *entity.Game)
 	DeleteQuestion(id int)
-	GetFavorite(user int) *[]entity.Game
+
 	ToggleFavorite(e *entity.FavoriteGame) bool
+	CreateSession(e *entity.GameSession) *entity.GameSession
 }
 
 type GameService struct {
@@ -158,4 +161,14 @@ func (gs *GameService) Favorite(id int, userId int) bool {
 
 	toggle := gs.gameRepo.ToggleFavorite(favorite)
 	return toggle
+}
+
+func (gs *GameService) NewSession(id int, userId int) uint {
+	s := &entity.GameSession{
+		GameId: uint(id),
+		UserId: uint(userId),
+	}
+
+	session := gs.gameRepo.CreateSession(s)
+	return session.UserId
 }

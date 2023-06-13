@@ -44,8 +44,8 @@ func (db *UserStore) Create(e *entity.User) *entity.User {
 	return e
 }
 
-func (db *UserStore) Update(id int, e *entity.User) *entity.User {
-	db.DB.Where("id = ?", id).Updates(&e)
+func (db *UserStore) Update(e *entity.User) *entity.User {
+	db.DB.Where("id = ?", e.Id).Updates(&e)
 	return e
 }
 

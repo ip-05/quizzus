@@ -22,6 +22,11 @@ type CreateUser struct {
 	Name       string `json:"name"`
 }
 
+type UpdateUser struct {
+	Picture string `json:"picture"`
+	Name    string `json:"name"`
+}
+
 type GoogleUser struct {
 	Id            string `json:"id"`
 	Email         string `json:"email"`

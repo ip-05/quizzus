@@ -7,17 +7,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/ip-05/quizzus/entity"
 	"nhooyr.io/websocket"
 )
-
-type IUserService interface {
-	CreateUser(body *entity.CreateUser) (*entity.User, error)
-	UpdateUser()
-	DeleteUser()
-	GetUser(id uint) *entity.User
-	GetUserByProvider(id string, provider string) *entity.User
-}
 
 type SocketMessage struct {
 	Message string          `json:"message"`

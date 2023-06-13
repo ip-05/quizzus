@@ -13,10 +13,13 @@ type IGameService interface {
 	CreateGame(body entity.CreateGame, ownerId uint) (*entity.Game, error)
 	UpdateGame(body entity.UpdateBody, id int, code string, ownerId uint) (*entity.Game, error)
 	DeleteGame(id int, code string, userId uint) error
+
 	GetGame(id int, code string) (*entity.Game, error)
 	GetGamesByOwner(id int, user int, limit int) (*[]entity.Game, error)
 	GetFavoriteGames(user int) (*[]entity.Game, error)
+
 	Favorite(id int, userId int) bool
+	NewSession(id int, userId int) uint
 }
 
 type GameController struct {
