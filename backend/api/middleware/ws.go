@@ -41,7 +41,7 @@ func WSMiddleware(cfg *config.Config) gin.HandlerFunc {
 			}
 
 			authedUser := AuthedUser{
-				Id:   claims["id"].(uint),
+				Id:   uint(claims["id"].(float64)),
 				Name: claims["name"].(string),
 			}
 			c.Set("authedUser", authedUser)
