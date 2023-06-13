@@ -26,7 +26,7 @@ func TestNewGame(t *testing.T) {
 	}
 
 	t.Run("TestCreateOK", func(t *testing.T) {
-		actual, err := NewGame(createBody, "123")
+		actual, err := NewGame(createBody, uint(123))
 		assert.Nil(t, err)
 
 		assert.Equal(t, createBody.Topic, actual.Topic)
@@ -40,7 +40,7 @@ func TestNewGame(t *testing.T) {
 
 	t.Run("TestCreateErr", func(t *testing.T) {
 		createBody.Points = 0
-		actual, err := NewGame(createBody, "123")
+		actual, err := NewGame(createBody, uint(123))
 		assert.Nil(t, actual)
 		assert.NotNil(t, err)
 		assert.Contains(t, err.Error(), "points should not be lower than 0")
@@ -65,7 +65,7 @@ func BenchmarkNewGame(b *testing.B) {
 		},
 	}
 	for i := 0; i < b.N; i++ {
-		NewGame(createBody, "123")
+		NewGame(createBody, uint(123))
 	}
 }
 
@@ -87,7 +87,7 @@ func TestValidateGame(t *testing.T) {
 		},
 	}
 
-	actual, err := NewGame(createBody, "123")
+	actual, err := NewGame(createBody, uint(123))
 	assert.Nil(t, err)
 
 	t.Run("TestTopic", func(t *testing.T) {

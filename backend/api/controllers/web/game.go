@@ -85,7 +85,7 @@ func (g GameController) GetMany(c *gin.Context) {
 	authedUser, _ := c.Get("authedUser")
 	user := authedUser.(middleware.AuthedUser)
 
-	if favorite == true {
+	if favorite {
 		games, err := g.game.GetFavoriteGames(int(user.Id))
 		if err != nil {
 			c.JSON(http.StatusOK, err.Error())

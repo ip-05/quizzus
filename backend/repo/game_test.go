@@ -30,7 +30,7 @@ func TestRepo_CreateGame(t *testing.T) {
 
 	repo := NewGameStore(db)
 
-	newGame, err := entity.NewGame(testGameBody, "1")
+	newGame, err := entity.NewGame(testGameBody, uint(1))
 	assert.Nil(t, err)
 
 	game := repo.Create(newGame)
@@ -43,7 +43,7 @@ func TestRepo_GetGame(t *testing.T) {
 
 	repo := NewGameStore(db)
 
-	newGame, err := entity.NewGame(testGameBody, "1")
+	newGame, err := entity.NewGame(testGameBody, uint(1))
 	assert.Nil(t, err)
 
 	game := repo.Create(newGame)
@@ -59,7 +59,7 @@ func TestRepo_DeleteGame(t *testing.T) {
 
 	repo := NewGameStore(db)
 
-	newGame, err := entity.NewGame(testGameBody, "1")
+	newGame, err := entity.NewGame(testGameBody, uint(1))
 	assert.Nil(t, err)
 
 	game := repo.Create(newGame)
@@ -77,7 +77,7 @@ func TestRepo_UpdateGame(t *testing.T) {
 
 	repo := NewGameStore(db)
 
-	newGame, err := entity.NewGame(testGameBody, "1")
+	newGame, err := entity.NewGame(testGameBody, uint(1))
 	assert.Nil(t, err)
 
 	game := repo.Create(newGame)
