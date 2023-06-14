@@ -1,16 +1,16 @@
 package web
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 	"github.com/ip-05/quizzus/api/middleware"
 	"github.com/ip-05/quizzus/entity"
-	"net/http"
-	"strconv"
 )
 
 type ISessionService interface {
-	GetSessions(userId, limit int) *[]entity.GameSession
-
+	GetSessions(userId, limit int) (*[]entity.GameSession, *[]entity.Leaderboard)
 	NewSession(id, userId, instId int) uint
 	EndSession(id, userId, instId, place, questions, players int, points float64) uint
 }
@@ -32,7 +32,7 @@ func (s *SessionController) GetSessions(c *gin.Context) {
 	authedUser, _ := c.Get("authedUser")
 	user := authedUser.(middleware.AuthedUser)
 
-	sessions := s.session.GetSessions(int(user.Id), limit)
+	sessions, _ := s.session.GetSessions(int(user.Id), limit)
 
 	c.JSON(http.StatusOK, sessions)
 	return

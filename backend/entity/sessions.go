@@ -18,6 +18,11 @@ type GameSession struct {
 	EndedAt    time.Time `json:"endedAt"`
 }
 
+type Leaderboard struct {
+	UserId uint    `json:"user"`
+	Points float64 `json:"points"`
+}
+
 func NewSession(gameId, userId, instId uint) *GameSession {
 	session := &GameSession{
 		GameId:     gameId,

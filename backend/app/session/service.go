@@ -1,13 +1,15 @@
 package session
 
 import (
-	"github.com/ip-05/quizzus/entity"
 	"time"
+
+	"github.com/ip-05/quizzus/entity"
 )
 
 type ISessionRepo interface {
 	CreateSession(e *entity.GameSession) *entity.GameSession
 	EndSession(e *entity.GameSession) *entity.GameSession
+	GetSessions(userId, limit int) (*[]entity.GameSession, *[]entity.Leaderboard)
 }
 
 type SessionService struct {
@@ -39,10 +41,11 @@ func (ss *SessionService) EndSession(id, userId, instId, place, questions, playe
 	return session.UserId
 }
 
-func (ss *SessionService) GetSessions(userId, limit int) *[]entity.GameSession {
+func (ss *SessionService) GetSessions(userId, limit int) (*[]entity.GameSession, *[]entity.Leaderboard) {
 	// TODO: Return game sessions with filled game info and leaderboard
 	// Leaderboard needs to be gotten by joining all game sessions and returning user id and points
 	// Like this:
 	// leaderboard: [{ user: 1, points: 500 }]
-	return nil
+	sessions, leaderboard := ss.sessionRepo.GetSessions(userId, limit)
+	return sessions, leaderboard
 }
