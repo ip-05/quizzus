@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ip-05/quizzus/api/middleware"
 	"github.com/ip-05/quizzus/config"
 	"golang.org/x/oauth2"
 
@@ -72,13 +71,4 @@ func (a AuthController) GoogleCallback(c *gin.Context) {
 
 	c.SetCookie("token", token, 7*24*60*60, "/", a.Config.Server.Domain, a.Config.Server.Secure, false)
 	c.JSON(http.StatusOK, gin.H{"message": "Successfully authenticated user", "token": token})
-}
-
-func (a AuthController) Me(c *gin.Context) {
-	authedUser, _ := c.Get("authedUser")
-	user := authedUser.(middleware.AuthedUser)
-
-	dbUser := a.User.GetUser(user.Id)
-
-	c.JSON(http.StatusOK, dbUser)
 }

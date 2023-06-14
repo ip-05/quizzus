@@ -27,8 +27,10 @@ func InitWeb(cfg *config.Config, gcfg *oauth2.Config, gameService web.IGameServi
 	game := web.NewGameController(gameService)
 	ws := ws.NewCoreController(gameService, userService)
 
-	userGroup := router.Group("/user")
+	userGroup := router.Group("users")
 	{
+		userGroup.Use(middleware.AuthMiddleware(cfg))
+		userGroup.GET("/me", userController.Me)
 		userGroup.PATCH("", userController.Update)
 		userGroup.DELETE("", userController.Delete)
 	}
@@ -37,9 +39,6 @@ func InitWeb(cfg *config.Config, gcfg *oauth2.Config, gameService web.IGameServi
 	{
 		authGroup.GET("/google", authController.GoogleLogin)
 		authGroup.GET("/google/callback", authController.GoogleCallback)
-
-		authGroup.Use(middleware.AuthMiddleware(cfg))
-		authGroup.GET("/me", authController.Me)
 	}
 
 	gamesGroup := router.Group("games")

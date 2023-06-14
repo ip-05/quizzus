@@ -24,7 +24,16 @@ func NewUserController(user IUserService) *UserController {
 	return &UserController{user: user}
 }
 
-func (u *UserController) Update(c *gin.Context) {
+func (u UserController) Me(c *gin.Context) {
+	authedUser, _ := c.Get("authedUser")
+	user := authedUser.(middleware.AuthedUser)
+
+	dbUser := u.user.GetUser(user.Id)
+
+	c.JSON(http.StatusOK, dbUser)
+}
+
+func (u UserController) Update(c *gin.Context) {
 	var body entity.UpdateUser
 
 	if err := c.BindJSON(&body); err != nil {
@@ -44,7 +53,7 @@ func (u *UserController) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, updatedUser)
 }
 
-func (u *UserController) Delete(c *gin.Context) {
+func (u UserController) Delete(c *gin.Context) {
 	authedUser, _ := c.Get("authedUser")
 	user := authedUser.(middleware.AuthedUser)
 
