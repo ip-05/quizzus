@@ -7,9 +7,9 @@ import (
 
 type User struct {
 	Id         uint   `json:"id" gorm:"primary_key"`
-	GoogleId   string `json:"google_id,omitempty"`
-	DiscordId  string `json:"discord_id,omitempty"`
-	TelegramId string `json:"telegram_id,omitempty"`
+	GoogleId   string `json:"-"`
+	DiscordId  string `json:"-"`
+	TelegramId string `json:"-"`
 	Picture    string `json:"picture"`
 	Name       string `json:"name"`
 }

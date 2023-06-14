@@ -32,8 +32,8 @@ func (us *UserService) CreateUser(body *entity.CreateUser) (*entity.User, error)
 	return user, nil
 }
 
-func (us *UserService) UpdateUser(id uint, body *entity.UpdateUser) (*entity.User, error) {
-	user := us.userRepo.Get(id)
+func (us *UserService) UpdateUser(id uint, body entity.UpdateUser) (*entity.User, error) {
+	user := us.GetUser(id)
 
 	user.Name = body.Name
 	user.Picture = body.Picture
@@ -46,7 +46,8 @@ func (us *UserService) UpdateUser(id uint, body *entity.UpdateUser) (*entity.Use
 	return user, nil
 }
 
-func (us *UserService) DeleteUser(user *entity.User) {
+func (us *UserService) DeleteUser(id uint) {
+	user := us.GetUser(id)
 	us.userRepo.Delete(user)
 }
 

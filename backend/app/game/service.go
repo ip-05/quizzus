@@ -42,7 +42,7 @@ func (gs *GameService) CreateGame(body entity.CreateGame, ownerId uint) (*entity
 	return game, nil
 }
 
-func (gs *GameService) UpdateGame(body entity.UpdateBody, id int, code string, ownerId uint) (*entity.Game, error) {
+func (gs *GameService) UpdateGame(body entity.UpdateGame, id int, code string, ownerId uint) (*entity.Game, error) {
 	game, err := gs.GetGame(id, code)
 	if err != nil {
 		return nil, err

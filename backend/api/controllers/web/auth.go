@@ -7,21 +7,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ip-05/quizzus/api/middleware"
 	"github.com/ip-05/quizzus/config"
-	"github.com/ip-05/quizzus/entity"
 	"golang.org/x/oauth2"
 
 	"github.com/gin-gonic/gin"
 )
-
-type IUserService interface {
-	CreateUser(body *entity.CreateUser) (*entity.User, error)
-	UpdateUser(id uint, body *entity.UpdateUser) (*entity.User, error)
-	DeleteUser(user *entity.User)
-	GetUser(id uint) *entity.User
-	GetUserByProvider(id string, provider string) *entity.User
-}
 
 type GoogleAuth interface {
 	AuthCodeURL(state string, opts ...oauth2.AuthCodeOption) string
@@ -81,13 +71,4 @@ func (a AuthController) GoogleCallback(c *gin.Context) {
 
 	c.SetCookie("token", token, 7*24*60*60, "/", a.Config.Server.Domain, a.Config.Server.Secure, false)
 	c.JSON(http.StatusOK, gin.H{"message": "Successfully authenticated user", "token": token})
-}
-
-func (a AuthController) Me(c *gin.Context) {
-	authedUser, _ := c.Get("authedUser")
-	user := authedUser.(middleware.AuthedUser)
-
-	dbUser := a.User.GetUser(user.Id)
-
-	c.JSON(http.StatusOK, dbUser)
 }

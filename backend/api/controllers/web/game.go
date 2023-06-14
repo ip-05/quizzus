@@ -11,7 +11,7 @@ import (
 
 type IGameService interface {
 	CreateGame(body entity.CreateGame, ownerId uint) (*entity.Game, error)
-	UpdateGame(body entity.UpdateBody, id int, code string, ownerId uint) (*entity.Game, error)
+	UpdateGame(body entity.UpdateGame, id int, code string, ownerId uint) (*entity.Game, error)
 	DeleteGame(id int, code string, userId uint) error
 
 	GetGame(id int, code string) (*entity.Game, error)
@@ -127,7 +127,7 @@ func (g GameController) Favorite(c *gin.Context) {
 }
 
 func (g GameController) Update(c *gin.Context) {
-	var body entity.UpdateBody
+	var body entity.UpdateGame
 
 	if err := c.BindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})

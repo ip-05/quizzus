@@ -33,7 +33,7 @@ type CreateGame struct {
 	Questions []CreateQuestion `json:"questions"`
 }
 
-type UpdateBody struct {
+type UpdateGame struct {
 	Topic     string           `json:"topic"`
 	RoundTime int              `json:"roundTime"`
 	Points    float64          `json:"points"`
