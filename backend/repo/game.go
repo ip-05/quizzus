@@ -83,3 +83,8 @@ func (db *GameStore) CreateSession(e *entity.GameSession) *entity.GameSession {
 	db.DB.Create(&e)
 	return e
 }
+
+func (db *GameStore) EndSession(e *entity.GameSession) *entity.GameSession {
+	db.DB.Where("user_id = ? and game_id = ?", e.UserId, e.GameId).Updates(&e)
+	return e
+}

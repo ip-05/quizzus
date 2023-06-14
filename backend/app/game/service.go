@@ -2,6 +2,7 @@ package game
 
 import (
 	"errors"
+	"time"
 
 	"github.com/ip-05/quizzus/entity"
 )
@@ -18,6 +19,7 @@ type IGameRepo interface {
 
 	ToggleFavorite(e *entity.FavoriteGame) bool
 	CreateSession(e *entity.GameSession) *entity.GameSession
+	EndSession(e *entity.GameSession) *entity.GameSession
 }
 
 type GameService struct {
@@ -163,12 +165,31 @@ func (gs *GameService) Favorite(id int, userId int) bool {
 	return toggle
 }
 
-func (gs *GameService) NewSession(id int, userId int) uint {
+func (gs *GameService) NewSession(id, userId, place, questions, players int, points float64) uint {
 	s := &entity.GameSession{
-		GameId: uint(id),
-		UserId: uint(userId),
+		GameId:    uint(id),
+		UserId:    uint(userId),
+		Place:     place,
+		Questions: questions,
+		Players:   players,
+		Points:    points,
 	}
 
 	session := gs.gameRepo.CreateSession(s)
+	return session.UserId
+}
+
+func (gs *GameService) EndSession(id, userId, place, questions, players int, points float64) uint {
+	s := &entity.GameSession{
+		GameId:    uint(id),
+		UserId:    uint(userId),
+		Place:     place,
+		Questions: questions,
+		Players:   players,
+		Points:    points,
+		EndedAt:   time.Now(),
+	}
+
+	session := gs.gameRepo.EndSession(s)
 	return session.UserId
 }

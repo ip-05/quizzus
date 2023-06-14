@@ -50,6 +50,7 @@ type User struct {
 }
 
 type Game struct {
+	Id            uint             `json:"id"`
 	Status        string           `json:"status"`
 	RoundStatus   string           `json:"roundStatus"`
 	CurrentRound  int              `json:"currentRound"`
@@ -87,7 +88,8 @@ type IGameService interface {
 	GetFavoriteGames(user int) (*[]entity.Game, error)
 
 	Favorite(id int, userId int) bool
-	NewSession(id int, userId int) uint
+	NewSession(id, userId, place, questions, players int, points float64) uint
+	EndSession(id, userId, place, questions, players int, points float64) uint
 }
 
 type IUserService interface {
@@ -114,7 +116,7 @@ func (g *GameSocketController) InitUser(ctx context.Context) (*User, error) {
 	authedUser := ctx.Value("authedUser").(middleware.AuthedUser)
 
 	user := g.User.GetUser(authedUser.Id)
-	if user != nil {
+	if user == nil {
 		return nil, errors.New("no user found")
 	}
 
@@ -195,6 +197,7 @@ func (g *GameSocketController) JoinGame(ctx context.Context, msgData json.RawMes
 	}
 
 	newGame := Game{
+		Id:            game.Id,
 		Status:        Standby,
 		RoundStatus:   RoundWaiting,
 		Points:        game.Points,
@@ -299,8 +302,11 @@ func (g *GameSocketController) StartGame(ctx context.Context) {
 
 		n -= 1
 	}
-	for _, member := range user.ActiveGame.Members {
+	for id, member := range user.ActiveGame.Members {
 		MessageReply(false, InProgress).Send(member.Conn)
+
+		// TODO: Start session for all users
+		g.Game.NewSession(int(user.ActiveGame.Id), int(id), 0, 0, 0, 0)
 	}
 	user.ActiveGame.Status = InProgress
 	go g.PlayRounds(user.ActiveGame)
@@ -401,8 +407,10 @@ func (g *GameSocketController) PlayRounds(game *Game) {
 			if game.CurrentRound >= len(game.Data.Questions) {
 				game.Status = Finished
 
-				for _, member := range game.Members {
+				for id, member := range game.Members {
 					DataReply(false, Finished, game.Leaderboard).Send(member.Conn)
+
+					g.Game.EndSession(int(game.Id), int(id), 1, game.QuestionCount, len(game.Members), game.Leaderboard[id])
 				}
 
 				break
