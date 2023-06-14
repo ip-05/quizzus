@@ -1,1 +1,44 @@
-@import './base.css';
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* official Quizzus color palette */
+:root {
+  --c-white: #ffffff;
+  --c-black: #333333;
+  --c-black-soft: #9CA3AF;
+  --c-grey: #F2F2F2;
+  --c-grey-dark: #D9D9D9;
+
+  --c-yellow: #F1C40F;
+  --c-blue: #4285F4;
+  --c-green: #2ECC71;
+  --c-red: #E74C3C;
+}
+
+/* semantic color variables for this project */
+:root {
+  --color-background: var(--c-white);
+  --color-background-soft: var(--c-grey);
+  --color-background-dark: var(--c-grey-dark);
+  --color-background-active: var(--c-green);
+
+  --color-border: var(--c-grey);
+
+  --color-heading: var(--c-black);
+  --color-text: var(--c-black-soft);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
