@@ -9,19 +9,10 @@ import (
 
 	"github.com/ip-05/quizzus/api/middleware"
 	"github.com/ip-05/quizzus/config"
-	"github.com/ip-05/quizzus/entity"
 	"golang.org/x/oauth2"
 
 	"github.com/gin-gonic/gin"
 )
-
-type IUserService interface {
-	CreateUser(body *entity.CreateUser) (*entity.User, error)
-	UpdateUser(id uint, body *entity.UpdateUser) (*entity.User, error)
-	DeleteUser(user *entity.User)
-	GetUser(id uint) *entity.User
-	GetUserByProvider(id string, provider string) *entity.User
-}
 
 type GoogleAuth interface {
 	AuthCodeURL(state string, opts ...oauth2.AuthCodeOption) string

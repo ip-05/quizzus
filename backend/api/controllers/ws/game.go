@@ -80,7 +80,7 @@ type GameSocketController struct {
 
 type IGameService interface {
 	CreateGame(body entity.CreateGame, ownerId uint) (*entity.Game, error)
-	UpdateGame(body entity.UpdateBody, id int, code string, ownerId uint) (*entity.Game, error)
+	UpdateGame(body entity.UpdateGame, id int, code string, ownerId uint) (*entity.Game, error)
 	DeleteGame(id int, code string, userId uint) error
 
 	GetGame(id int, code string) (*entity.Game, error)
@@ -94,8 +94,8 @@ type IGameService interface {
 
 type IUserService interface {
 	CreateUser(body *entity.CreateUser) (*entity.User, error)
-	UpdateUser(id uint, body *entity.UpdateUser) (*entity.User, error)
-	DeleteUser(user *entity.User)
+	UpdateUser(id uint, body entity.UpdateUser) (*entity.User, error)
+	DeleteUser(id uint)
 	GetUser(id uint) *entity.User
 	GetUserByProvider(id string, provider string) *entity.User
 }

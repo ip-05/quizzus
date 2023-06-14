@@ -21,10 +21,17 @@ func InitWeb(cfg *config.Config, gcfg *oauth2.Config, gameService web.IGameServi
 	corsConfig.AddAllowHeaders("Authorization")
 	router.Use(cors.New(corsConfig))
 
+	userController := web.NewUserController(userService)
 	authController := web.NewAuthController(cfg, gcfg, authService, userService)
 
 	game := web.NewGameController(gameService)
 	ws := ws.NewCoreController(gameService, userService)
+
+	userGroup := router.Group("/user")
+	{
+		userGroup.PATCH("", userController.Update)
+		userGroup.DELETE("", userController.Delete)
+	}
 
 	authGroup := router.Group("auth")
 	{

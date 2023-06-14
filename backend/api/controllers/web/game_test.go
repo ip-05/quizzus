@@ -284,7 +284,7 @@ func (gs *GameSuite) TestUpdate_NotFound() {
 		Options: []entity.UpdateOption{option1, option2, option3, option4},
 	}
 
-	updateBody := entity.UpdateBody{
+	updateBody := entity.UpdateGame{
 		Topic:     "Update Topic",
 		RoundTime: 10,
 		Points:    10,
@@ -344,7 +344,7 @@ func (gs *GameSuite) TestUpdate_NotOwner() {
 		Options: []entity.UpdateOption{option1, option2, option3, option4},
 	}
 
-	updateBody := entity.UpdateBody{
+	updateBody := entity.UpdateGame{
 		Topic:     "Update Topic",
 		RoundTime: 10,
 		Points:    10,
@@ -419,7 +419,7 @@ func (gs *GameSuite) TestUpdate_Ok() {
 		Options: []entity.UpdateOption{option1, option2, option3, option4},
 	}
 
-	updateBody := entity.UpdateBody{
+	updateBody := entity.UpdateGame{
 		Topic:     "Update Topic",
 		RoundTime: 10,
 		Points:    10,
