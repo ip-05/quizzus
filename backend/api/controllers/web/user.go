@@ -1,7 +1,9 @@
 package web
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ip-05/quizzus/api/middleware"
@@ -24,12 +26,25 @@ func NewUserController(user IUserService) *UserController {
 	return &UserController{user: user}
 }
 
-func (u UserController) Me(c *gin.Context) {
-	authedUser, _ := c.Get("authedUser")
-	user := authedUser.(middleware.AuthedUser)
+func (u UserController) Get(c *gin.Context) {
+	var userId int
+	var err error
 
-	dbUser := u.user.GetUser(user.Id)
+	id := c.Param("id")
+	fmt.Println(id)
+	if id == "me" {
+		authedUser, _ := c.Get("authedUser")
+		user := authedUser.(middleware.AuthedUser)
+		userId = int(user.Id)
+	} else {
+		userId, err = strconv.Atoi(id)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+			return
+		}
+	}
 
+	dbUser := u.user.GetUser(uint(userId))
 	c.JSON(http.StatusOK, dbUser)
 }
 

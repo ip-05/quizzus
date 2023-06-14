@@ -30,9 +30,9 @@ func InitWeb(cfg *config.Config, gcfg *oauth2.Config, gameService web.IGameServi
 	userGroup := router.Group("users")
 	{
 		userGroup.Use(middleware.AuthMiddleware(cfg))
-		userGroup.GET("/me", userController.Me)
-		userGroup.PATCH("", userController.Update)
-		userGroup.DELETE("", userController.Delete)
+		userGroup.GET("/:id", userController.Get)
+		userGroup.PATCH("/me", userController.Update)
+		userGroup.DELETE("/me", userController.Delete)
 	}
 
 	authGroup := router.Group("auth")
