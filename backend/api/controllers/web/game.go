@@ -19,8 +19,6 @@ type IGameService interface {
 	GetFavoriteGames(user int) (*[]entity.Game, error)
 
 	Favorite(id int, userId int) bool
-	NewSession(id, userId, place, questions, players int, points float64) uint
-	EndSession(id, userId, place, questions, players int, points float64) uint
 }
 
 type GameController struct {

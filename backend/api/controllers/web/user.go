@@ -1,7 +1,6 @@
 package web
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -31,7 +30,6 @@ func (u UserController) Get(c *gin.Context) {
 	var err error
 
 	id := c.Param("id")
-	fmt.Println(id)
 	if id == "me" {
 		authedUser, _ := c.Get("authedUser")
 		user := authedUser.(middleware.AuthedUser)

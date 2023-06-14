@@ -25,9 +25,9 @@ type CoreController struct {
 	gameController *GameSocketController
 }
 
-func NewCoreController(game IGameService, user IUserService) *CoreController {
+func NewCoreController(game IGameService, user IUserService, session ISessionService) *CoreController {
 	return &CoreController{
-		gameController: NewGameSocketController(game, user),
+		gameController: NewGameSocketController(game, user, session),
 	}
 }
 

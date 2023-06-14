@@ -78,13 +78,3 @@ func (db *GameStore) ToggleFavorite(e *entity.FavoriteGame) bool {
 	db.DB.Where("favorite_games.game_id = ? and favorite_games.user_id = ?", e.GameId, e.UserId).Delete(&favorite)
 	return false
 }
-
-func (db *GameStore) CreateSession(e *entity.GameSession) *entity.GameSession {
-	db.DB.Create(&e)
-	return e
-}
-
-func (db *GameStore) EndSession(e *entity.GameSession) *entity.GameSession {
-	db.DB.Where("user_id = ? and game_id = ?", e.UserId, e.GameId).Updates(&e)
-	return e
-}

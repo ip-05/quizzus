@@ -1,8 +1,6 @@
 package entity
 
 import (
-	"crypto/rand"
-	"math/big"
 	"time"
 )
 
@@ -15,16 +13,16 @@ type GameSession struct {
 	Points     float64   `json:"points"`
 	Questions  int       `json:"questions"`
 	Players    int       `json:"players"`
+	Game       Game      `json:"game"`
 	StartedAt  time.Time `json:"startedAt" gorm:"default:current_timestamp"`
 	EndedAt    time.Time `json:"endedAt"`
 }
 
-func NewSession(gameId, userId uint) *GameSession {
-	random, _ := rand.Int(rand.Reader, big.NewInt(10000000000000))
+func NewSession(gameId, userId, instId uint) *GameSession {
 	session := &GameSession{
 		GameId:     gameId,
 		UserId:     userId,
-		InstanceId: uint(random.Uint64()),
+		InstanceId: instId,
 		StartedAt:  time.Now(),
 	}
 	return session

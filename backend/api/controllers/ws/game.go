@@ -2,8 +2,10 @@ package ws
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"errors"
+	"math/big"
 	"time"
 
 	"github.com/jinzhu/copier"
@@ -51,6 +53,7 @@ type User struct {
 
 type Game struct {
 	Id            uint             `json:"id"`
+	InstId        int              `json:"-"`
 	Status        string           `json:"status"`
 	RoundStatus   string           `json:"roundStatus"`
 	CurrentRound  int              `json:"currentRound"`
@@ -75,6 +78,7 @@ type GameSocketController struct {
 	Games    map[string]*Game
 	Game     IGameService
 	User     IUserService
+	Session  ISessionService
 	GameTime int
 }
 
@@ -88,8 +92,11 @@ type IGameService interface {
 	GetFavoriteGames(user int) (*[]entity.Game, error)
 
 	Favorite(id int, userId int) bool
-	NewSession(id, userId, place, questions, players int, points float64) uint
-	EndSession(id, userId, place, questions, players int, points float64) uint
+}
+
+type ISessionService interface {
+	NewSession(id, userId, instId int) uint
+	EndSession(id, userId, instId, place, questions, players int, points float64) uint
 }
 
 type IUserService interface {
@@ -100,13 +107,14 @@ type IUserService interface {
 	GetUserByProvider(id string, provider string) *entity.User
 }
 
-func NewGameSocketController(game IGameService, user IUserService) *GameSocketController {
+func NewGameSocketController(game IGameService, user IUserService, session ISessionService) *GameSocketController {
 	c := new(GameSocketController)
 
 	c.Users = make(map[uint]*User)
 	c.Games = make(map[string]*Game)
 	c.Game = game
 	c.User = user
+	c.Session = session
 	c.GameTime = 10
 
 	return c
@@ -196,8 +204,11 @@ func (g *GameSocketController) JoinGame(ctx context.Context, msgData json.RawMes
 		return
 	}
 
+	instId, _ := rand.Int(rand.Reader, big.NewInt(100000000000))
+
 	newGame := Game{
 		Id:            game.Id,
+		InstId:        int(instId.Int64()),
 		Status:        Standby,
 		RoundStatus:   RoundWaiting,
 		Points:        game.Points,
@@ -306,7 +317,7 @@ func (g *GameSocketController) StartGame(ctx context.Context) {
 		MessageReply(false, InProgress).Send(member.Conn)
 
 		// TODO: Start session for all users
-		g.Game.NewSession(int(user.ActiveGame.Id), int(id), 0, 0, 0, 0)
+		g.Session.NewSession(int(user.ActiveGame.Id), int(id), user.ActiveGame.InstId)
 	}
 	user.ActiveGame.Status = InProgress
 	go g.PlayRounds(user.ActiveGame)
@@ -410,7 +421,7 @@ func (g *GameSocketController) PlayRounds(game *Game) {
 				for id, member := range game.Members {
 					DataReply(false, Finished, game.Leaderboard).Send(member.Conn)
 
-					g.Game.EndSession(int(game.Id), int(id), 1, game.QuestionCount, len(game.Members), game.Leaderboard[id])
+					g.Session.EndSession(int(game.Id), int(id), game.InstId, 1, game.QuestionCount, len(game.Members), game.Leaderboard[id])
 				}
 
 				break

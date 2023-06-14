@@ -11,7 +11,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func InitWeb(cfg *config.Config, gcfg *oauth2.Config, gameService web.IGameService, authService web.IAuthService, userService auth.IUserService) *gin.Engine {
+func InitWeb(cfg *config.Config, gcfg *oauth2.Config, gameService web.IGameService, authService web.IAuthService, userService auth.IUserService, sessionService web.ISessionService) *gin.Engine {
 	router := gin.New()
 	router.Use(gin.Recovery())
 
@@ -22,10 +22,11 @@ func InitWeb(cfg *config.Config, gcfg *oauth2.Config, gameService web.IGameServi
 	router.Use(cors.New(corsConfig))
 
 	userController := web.NewUserController(userService)
+	sessionsController := web.NewSessionController(sessionService)
 	authController := web.NewAuthController(cfg, gcfg, authService, userService)
 
 	game := web.NewGameController(gameService)
-	ws := ws.NewCoreController(gameService, userService)
+	ws := ws.NewCoreController(gameService, userService, sessionService)
 
 	userGroup := router.Group("users")
 	{
@@ -50,6 +51,12 @@ func InitWeb(cfg *config.Config, gcfg *oauth2.Config, gameService web.IGameServi
 		gamesGroup.POST("", game.CreateGame)
 		gamesGroup.PATCH("", game.Update)
 		gamesGroup.DELETE("", game.Delete)
+	}
+
+	sessionsGroup := router.Group("sessions")
+	{
+		sessionsGroup.Use(middleware.AuthMiddleware(cfg))
+		gamesGroup.GET("/", sessionsController.GetSessions)
 	}
 
 	wsGroup := router.Group("ws")
