@@ -1,0 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* official Quizzus color palette */
+:root {
+  --c-white: #ffffff;
+  --c-black: #333333;
+  --c-black-soft: #9ca3af;
+  --c-grey: #f2f2f2;
+  --c-grey-dark: #d9d9d9;
+  --c-grey-soft: #fbfbfb;
+
+  --c-yellow: #f1c40f;
+  --c-blue: #4285f4;
+  --c-green: #2ecc71;
+  --c-red: #e74c3c;
+}
+
+/* semantic color variables for this project */
+:root {
+  --color-background: var(--c-white);
+  --color-background-soft: var(--c-grey);
+  --color-background-superlight: var(--c-grey-soft);
+  --color-background-dark: var(--c-grey-dark);
+  --color-background-active: var(--c-green);
+
+  --color-border: var(--c-grey);
+
+  --color-heading: var(--c-black);
+  --color-text: var(--c-black-soft);
+}
+
+::selection {
+  background-color: var(--c-black);
+  color: var(--c-white);
+}
+
+*,
+*::before,
+*::after {
+  font-family: 'Inter', sans-serif;
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--color-heading);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1 {
+  font-size: 64px;
+  font-weight: 700;
+}
+
+h2 {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+h4 {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+h5 {
+  font-size: 12px;
+  font-weight: 600;
+}
