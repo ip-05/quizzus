@@ -137,15 +137,13 @@ export const useGameStore = defineStore('GameStore', () => {
     }
   }
 
-  async function getGame(query) {
-    // console.log(localStorage.getItem('token'));
+  async function getGame(id) {
     try {
-      const { data } = await axios.get(`/games`, {
+      const { data } = await axios.get(`/games/${id}`, {
         baseURL: config.public.apiUrl,
         headers: {
           Authorization: 'Bearer ' + authStore.token,
-        },
-        params: query,
+        }
       });
       // for regular user to join
       if (data.message === 'Game found' && data.topic) {

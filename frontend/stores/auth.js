@@ -37,7 +37,7 @@ export const useAuthStore = defineStore('AuthStore', () => {
 
   async function getMe() {
     console.log(config.public.apiUrl);
-    const { data } = await axios.get('/auth/me', {
+    const { data } = await axios.get('/users/me', {
       baseURL: config.public.apiUrl,
       headers: {
         Authorization: 'Bearer ' + token.value,
