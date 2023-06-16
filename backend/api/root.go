@@ -57,6 +57,7 @@ func InitWeb(cfg *config.Config, gcfg *oauth2.Config, gameService web.IGameServi
 	{
 		sessionsGroup.Use(middleware.AuthMiddleware(cfg))
 		sessionsGroup.GET("", sessionsController.GetSessions)
+		sessionsGroup.GET("/:id", sessionsController.GetSession)
 	}
 
 	wsGroup := router.Group("ws")

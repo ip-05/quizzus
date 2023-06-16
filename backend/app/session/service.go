@@ -9,7 +9,8 @@ import (
 type ISessionRepo interface {
 	CreateSession(e *entity.GameSession) *entity.GameSession
 	EndSession(e *entity.GameSession) *entity.GameSession
-	GetSessions(userId, limit int) (*[]entity.GameSession, *[]entity.Leaderboard)
+	GetSessions(userId, limit int) *[]entity.GameSession
+	GetSession(id, userId int) *entity.GameSession
 }
 
 type SessionService struct {
@@ -29,9 +30,8 @@ func (ss *SessionService) NewSession(id, userId, instId int) uint {
 	return session.UserId
 }
 
-func (ss *SessionService) EndSession(id, userId, instId, place, questions, players int, points float64) uint {
+func (ss *SessionService) EndSession(id, userId, instId, questions, players int, points float64) uint {
 	s := entity.NewSession(uint(id), uint(userId), uint(instId))
-	s.Place = place
 	s.Questions = questions
 	s.Players = players
 	s.Points = points
@@ -41,11 +41,12 @@ func (ss *SessionService) EndSession(id, userId, instId, place, questions, playe
 	return session.UserId
 }
 
-func (ss *SessionService) GetSessions(userId, limit int) (*[]entity.GameSession, *[]entity.Leaderboard) {
-	// TODO: Return game sessions with filled game info and leaderboard
-	// Leaderboard needs to be gotten by joining all game sessions and returning user id and points
-	// Like this:
-	// leaderboard: [{ user: 1, points: 500 }]
-	sessions, leaderboard := ss.sessionRepo.GetSessions(userId, limit)
-	return sessions, leaderboard
+func (ss *SessionService) GetSessions(userId, limit int) *[]entity.GameSession {
+	sessions := ss.sessionRepo.GetSessions(userId, limit)
+	return sessions
+}
+
+func (ss *SessionService) GetSession(id, userId int) *entity.GameSession {
+	session := ss.sessionRepo.GetSession(id, userId)
+	return session
 }

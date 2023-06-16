@@ -15,12 +15,40 @@ func NewSessionStore(db *gorm.DB) *SessionStore {
 	}
 }
 
-func (db *SessionStore) GetSessions(userId, limit int) (*[]entity.GameSession, *[]entity.Leaderboard) {
-	var sessions *[]entity.GameSession
-	var leaderboard *[]entity.Leaderboard
+func (db *SessionStore) GetSessions(userId, limit int) *[]entity.GameSession {
+	var sessions []entity.GameSession
 
-	db.DB.Select("user_id, points").Where("user_id = ?", userId).Limit(limit).Find(&sessions)
-	return sessions, leaderboard
+	db.DB.Preload("Game").Select("*").Where("user_id = ?", userId).Limit(limit).Order("id DESC").Find(&sessions)
+
+	for i := 0; i < len(sessions); i++ {
+		var leaderboard *[]entity.Leaderboard
+		db.DB.Model(&entity.GameSession{}).Select("users.id, users.name, points").
+			Joins("INNER JOIN users ON users.id = user_id").
+			Where("game_sessions.instance_id = ?", sessions[0].InstanceId).
+			Order("points DESC").
+			Scan(&leaderboard)
+
+		sessions[i].Leaderboard = leaderboard
+	}
+
+	return &sessions
+}
+
+func (db *SessionStore) GetSession(id, userId int) *entity.GameSession {
+	var session entity.GameSession
+
+	db.DB.Preload("Game").Select("*").Where("user_id = ? and id = ?", userId, id).First(&session)
+
+	var leaderboard *[]entity.Leaderboard
+	db.DB.Model(&entity.GameSession{}).Select("users.id, users.name, points").
+		Joins("INNER JOIN users ON users.id = user_id").
+		Where("game_sessions.instance_id = ?", session.InstanceId).
+		Order("points DESC").
+		Scan(&leaderboard)
+
+	session.Leaderboard = leaderboard
+
+	return &session
 }
 
 func (db *SessionStore) CreateSession(e *entity.GameSession) *entity.GameSession {

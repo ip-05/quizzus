@@ -96,7 +96,7 @@ type IGameService interface {
 
 type ISessionService interface {
 	NewSession(id, userId, instId int) uint
-	EndSession(id, userId, instId, place, questions, players int, points float64) uint
+	EndSession(id, userId, instId, questions, players int, points float64) uint
 }
 
 type IUserService interface {
@@ -316,7 +316,6 @@ func (g *GameSocketController) StartGame(ctx context.Context) {
 	for id, member := range user.ActiveGame.Members {
 		MessageReply(false, InProgress).Send(member.Conn)
 
-		// TODO: Start session for all users
 		g.Session.NewSession(int(user.ActiveGame.Id), int(id), user.ActiveGame.InstId)
 	}
 	user.ActiveGame.Status = InProgress
@@ -421,7 +420,7 @@ func (g *GameSocketController) PlayRounds(game *Game) {
 				for id, member := range game.Members {
 					DataReply(false, Finished, game.Leaderboard).Send(member.Conn)
 
-					g.Session.EndSession(int(game.Id), int(id), game.InstId, 1, game.QuestionCount, len(game.Members), game.Leaderboard[id])
+					g.Session.EndSession(int(game.Id), int(id), game.InstId, game.QuestionCount, len(game.Members)-1, game.Leaderboard[id])
 				}
 
 				break
