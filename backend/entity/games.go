@@ -1,10 +1,10 @@
 package entity
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"errors"
-	"fmt"
+	"time"
+
+	"github.com/ip-05/quizzus/utils"
 )
 
 type Game struct {
@@ -13,30 +13,42 @@ type Game struct {
 	Topic      string      `json:"topic"`
 	RoundTime  int         `json:"roundTime"`
 	Points     float64     `json:"points"`
+	Public     bool        `json:"public"`
 	Questions  []*Question `json:"questions"`
-	Owner      string      `json:"ownerId"`
+	Owner      uint        `json:"ownerId"`
+	CreatedAt  time.Time   `json:"createdAt" gorm:"default:current_timestamp"`
 }
 
-type CreateBody struct {
+type FavoriteGame struct {
+	Id     uint `json:"id" gorm:"primary_key"`
+	GameId uint `json:"gameId"`
+	UserId uint `json:"userId"`
+}
+
+type CreateGame struct {
 	Topic     string           `json:"topic"`
 	RoundTime int              `json:"roundTime"`
 	Points    float64          `json:"points"`
+	Public    bool             `json:"public"`
 	Questions []CreateQuestion `json:"questions"`
 }
 
-type UpdateBody struct {
+type UpdateGame struct {
 	Topic     string           `json:"topic"`
 	RoundTime int              `json:"roundTime"`
 	Points    float64          `json:"points"`
+	Public    bool             `json:"public"`
 	Questions []UpdateQuestion `json:"questions"`
 }
 
-func NewGame(body CreateBody, ownerId string) (*Game, error) {
+func NewGame(body CreateGame, ownerId uint) (*Game, error) {
+	code := utils.GenerateCode()
 	game := &Game{
-		InviteCode: generateCode(),
+		InviteCode: code,
 		Topic:      body.Topic,
 		RoundTime:  body.RoundTime,
 		Points:     body.Points,
+		Public:     body.Public,
 		Owner:      ownerId,
 	}
 
@@ -73,14 +85,4 @@ func (g *Game) Validate() error {
 		return errors.New("should be at least 1 question")
 	}
 	return nil
-}
-
-func generateCode() string {
-	bytes := make([]byte, 4)
-	if _, err := rand.Read(bytes); err != nil {
-		return ""
-	}
-	code := hex.EncodeToString(bytes)
-
-	return fmt.Sprintf("%s-%s", code[:4], code[4:])
 }

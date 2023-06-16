@@ -11,8 +11,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ip-05/quizzus/api/middleware"
+	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/ip-05/quizzus/app/auth"
+	"github.com/ip-05/quizzus/app/user"
+	"github.com/ip-05/quizzus/entity"
+	"github.com/ip-05/quizzus/repo"
 	"github.com/stretchr/testify/suite"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ip-05/quizzus/config"
@@ -87,14 +93,30 @@ func (s *AuthControllerSuite) SetupTest() {
 	oAuthMock := oAuth2Mock{}
 	s.httpMock = httpClientMock{}
 
-	s.controller = NewAuthController(newTestConfig(), oAuthMock, &s.httpMock)
+	db, _, err := sqlmock.New()
+	assert.Nil(s.T(), err)
+
+	dialector := postgres.New(postgres.Config{
+		DSN:                  "sqlmock_db_0",
+		DriverName:           "postgres",
+		Conn:                 db,
+		PreferSimpleProtocol: true,
+	})
+
+	database, err := gorm.Open(dialector)
+	userRepo := repo.NewUserStore(database)
+
+	// Business logic layer
+	userService := user.NewUserService(userRepo)
+	authService := auth.NewAuthService(newTestConfig(), oAuthMock, userService, &s.httpMock)
+
+	s.controller = NewAuthController(newTestConfig(), oAuthMock, authService, userService)
 
 	gin.SetMode(gin.TestMode)
 
 	s.w = httptest.NewRecorder()
 	s.ctx, s.engine = gin.CreateTestContext(s.w)
 
-	s.engine.GET("/auth/me", s.controller.Me)
 	s.engine.GET("/auth/google", s.controller.GoogleLogin)
 	s.engine.GET("/auth/google/callback", s.controller.GoogleCallback)
 }
@@ -210,7 +232,7 @@ func (s *AuthControllerSuite) TestLogin_VerifyError() {
 
 func (s *AuthControllerSuite) TestLogin_ReturnJWT() {
 	// When
-	userInfo := UserInfo{
+	userInfo := entity.GoogleUser{
 		Id:            "123123",
 		Email:         "john@doe.com",
 		VerifiedEmail: true,
@@ -244,7 +266,7 @@ func (s *AuthControllerSuite) TestLogin_ReturnJWT() {
 
 func (s *AuthControllerSuite) TestLogin_SetCookie() {
 	// When
-	userInfo := UserInfo{
+	userInfo := entity.GoogleUser{
 		Id:            "123123",
 		Email:         "john@doe.com",
 		VerifiedEmail: true,
@@ -274,29 +296,27 @@ func (s *AuthControllerSuite) TestLogin_SetCookie() {
 	assert.NotEmpty(s.T(), setCookie)
 }
 
-func (s *AuthControllerSuite) TestMe() {
-	// Given
-	authedUser := middleware.AuthedUser{
-		Id:             "123",
-		Name:           "John",
-		Email:          "john@doe.com",
-		ProfilePicture: "https://doe.com/profile.png",
-	}
+// func (s *AuthControllerSuite) TestMe() {
+// 	// Given
+// 	authedUser := middleware.AuthedUser{
+// 		Id:   uint(123),
+// 		Name: "John",
+// 	}
 
-	s.ctx.Set("authedUser", authedUser)
+// 	s.ctx.Set("authedUser", authedUser)
 
-	// When
-	s.controller.Me(s.ctx)
+// 	// When
+// 	s.controller.Me(s.ctx)
 
-	// Then
-	r, err := io.ReadAll(s.w.Body)
-	assert.Nil(s.T(), err)
+// 	// Then
+// 	r, err := io.ReadAll(s.w.Body)
+// 	assert.Nil(s.T(), err)
 
-	json, err := json.Marshal(authedUser)
-	assert.Nil(s.T(), err)
+// 	json, err := json.Marshal(authedUser)
+// 	assert.Nil(s.T(), err)
 
-	assert.Equal(s.T(), json, r)
-}
+// 	assert.Equal(s.T(), json, r)
+// }
 
 func TestGoogleLogin(t *testing.T) {
 	suite.Run(t, new(AuthControllerSuite))

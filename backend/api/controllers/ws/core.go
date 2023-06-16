@@ -7,13 +7,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/ip-05/quizzus/api/controllers/web"
 	"nhooyr.io/websocket"
 )
-
-type CoreController struct {
-	gameController *GameSocketController
-}
 
 type SocketMessage struct {
 	Message string          `json:"message"`
@@ -24,6 +19,16 @@ type SocketReply[D any] struct {
 	Error   bool   `json:"error"`
 	Message string `json:"message"`
 	Data    any    `json:"data"`
+}
+
+type CoreController struct {
+	gameController *GameSocketController
+}
+
+func NewCoreController(game IGameService, user IUserService, session ISessionService) *CoreController {
+	return &CoreController{
+		gameController: NewGameSocketController(game, user, session),
+	}
 }
 
 const (
@@ -103,12 +108,6 @@ func (w CoreController) messageHandler(ctx context.Context, conn *websocket.Conn
 				}
 			}
 		}
-	}
-}
-
-func NewCoreController(game web.IGameService) *CoreController {
-	return &CoreController{
-		gameController: NewGameSocketController(game),
 	}
 }
 
