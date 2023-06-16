@@ -40,6 +40,8 @@ const (
 	ResetGame      = "RESET_GAME"
 	AnswerQuestion = "ANSWER_QUESTION"
 	NextRound      = "NEXT_ROUND"
+	SendChat       = "SEND_CHAT"
+	ReceiveChat    = "RECEIVE_CHAT"
 	Ping           = "PING"
 	Pong           = "PONG"
 )
@@ -101,6 +103,8 @@ func (w CoreController) messageHandler(ctx context.Context, conn *websocket.Conn
 					w.gameController.ResetGame(ctx)
 				case AnswerQuestion:
 					w.gameController.AnswerQuestion(ctx, msg.Data)
+				case SendChat:
+					w.gameController.SendChat(ctx, msg.Data)
 				case NextRound:
 					w.gameController.NextRound(ctx)
 				case Ping:

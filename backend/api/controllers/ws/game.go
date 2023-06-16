@@ -231,6 +231,37 @@ func (g *GameSocketController) JoinGame(ctx context.Context, msgData json.RawMes
 	DataReply(false, JoinedGame, newGame).Send(conn)
 }
 
+type ChatData struct {
+	Message string `json:"message"`
+}
+
+type ChatBroadcast struct {
+	Name    string `json:"name"`
+	UserId  uint   `json:"userId"`
+	Message string `json:"message"`
+}
+
+func (g *GameSocketController) SendChat(ctx context.Context, msgData json.RawMessage) {
+	conn := ctx.Value("conn").(*websocket.Conn)
+	user := ctx.Value("user").(*User)
+	if user.ActiveGame == nil {
+		MessageReply(true, NotInGame).Send(conn)
+		return
+	}
+
+	var data ChatData
+	err := json.Unmarshal(msgData, &data)
+	if err != nil {
+		DataReply(true, "DATA_ERROR", err.Error()).Send(conn)
+		return
+	}
+
+	game := user.ActiveGame
+	for _, member := range game.Members {
+		DataReply(false, ReceiveChat, ChatBroadcast{Name: user.Name, Message: data.Message, UserId: user.Id}).Send(member.Conn)
+	}
+}
+
 func (g *GameSocketController) LeaveGame(ctx context.Context) {
 	conn := ctx.Value("conn").(*websocket.Conn)
 	user := ctx.Value("user").(*User)
