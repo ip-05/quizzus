@@ -39,6 +39,7 @@ const currentState = computed(() => states[props.state]);
   gap: 5px;
   font-weight: 600;
   font-size: 14px;
+  border-radius: 8px;
   color: var(--color-heading);
   background-color: var(--color-background);
   border: none;
@@ -80,6 +81,6 @@ const currentState = computed(() => states[props.state]);
 }
 
 .button:hover {
-  background-color: var(--color-background-superlight);
+  background-color: var(--color-background-soft);
 }
 </style>
