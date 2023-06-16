@@ -27,6 +27,7 @@ import { RouterLink } from 'vue-router';
   display: flex;
   justify-content: space-between;
   padding: 20px 30px;
+  background: var(--color-background);
 }
 
 .logo {

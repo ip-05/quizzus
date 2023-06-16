@@ -29,6 +29,11 @@
   --color-text: var(--c-black-soft);
 }
 
+::selection {
+  background-color: var(--c-black);
+  color: var(--c-white);
+}
+
 *,
 *::before,
 *::after {
@@ -40,6 +45,7 @@
 
 body {
   min-height: 100vh;
+  color: var(--color-heading);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
