@@ -1,0 +1,121 @@
+@import 'vue-select/dist/vue-select.css';
+
+.vs__search {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0px;
+  margin: 0;
+  line-height: 1em;
+  border: none;
+}
+
+.vs__search:focus {
+  padding: 0;
+  margin: 0;
+  line-height: 17px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.vs__dropdown-toggle {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0;
+  margin: 0;
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
+  padding: 8px 13px;
+}
+
+.vs__actions {
+  padding: 0;
+  margin: 0;
+}
+
+.vs__selected {
+  padding: 0;
+  margin: 0;
+  line-height: 1em;
+  border: none;
+}
+
+.vs__dropdown-menu {
+  font-size: 14px;
+  color: var(--color-heading);
+  font-weight: 600;
+  padding: 0px;
+  box-shadow: none;
+  border: 2px solid var(--color-border);
+  border-top: none;
+  border-radius: 0px 0px 8px 8px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.vs--open .vs__dropdown-toggle,
+.vs--open .vs__dropdown-menu {
+  border-color: var(--color-background-dark);
+}
+
+.vs--open .vs__dropdown-toggle {
+  border-bottom-color: white;
+}
+
+.vs__dropdown-option {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-heading);
+  padding: 5px 15px;
+  margin: 0 5px;
+  border-radius: 6px;
+}
+
+.vs__no-options {
+  padding: 5px 0;
+}
+
+.vs--single.vs--open .vs__selected,
+.vs--single.vs--loading .vs__selected {
+  display: flex;
+  align-self: center;
+}
+
+.vs__dropdown-option:hover {
+  color: var(--color-heading);
+}
+
+.vs__dropdown-option--highlight {
+  background-color: var(--color-background-soft);
+}
+
+.vs__clear {
+  width: 16px;
+  height: 16px;
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAADISURBVHgBpZLRDYQgDIbR3KvTuIADOIcDuIAOwAIwAAuwE7zDAByQKykIysU/IYG/5dO2DM6LvNCID9baxwta69xwP63r6uZ5dowx11KIhZxt25I3wpeBzDmPqxT28V9EwDRNxFOrybXzvu9p/4ENACCxBIDO8yTLsqTzUE6hVQJc9r3Kzbtm4SWlrDZ2JJ1SSlX9C6BnCk1AmRRqvptOVKtuXHMZE0KkWAQYYx4bhiF+jDkg6DiOGGh1G0Mopcm7vIN/1T3Glr4/70kaRvnNKQAAAABJRU5ErkJggg==');
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0;
+  transition: all 250ms ease;
+}
+
+.vs__clear * {
+  display: none;
+}
+
+.vs__dropdown-toggle:hover .vs__clear {
+  opacity: 1;
+}
+
+.vs__open-indicator {
+  width: 16px;
+  height: 16px;
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAC2SURBVHgBzZNLEcMgEIY3aa8xEAExECnxEB3YAAFwB+5gAAMIwAYt6dBSQikzXPLNcFjY1z/LDv4JdDBCJxdJwBgDa21zkDEGpJQvg3Pu13U9jhDC/wNj/PZXSvkvCQihT+YChJDjpNwopSi2FdBawzzPsCxLNXjfd9i2DaDUWi4nfwt25J5mjJWinIBz7lQ5+gaG/CeWdP4KDowtTrV7aBlXqjlnqC1TmMw0TaeJpFQTtNC9Cw/QRN8JtUerBQAAAABJRU5ErkJggg==');
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.vs__open-indicator * {
+  display: none;
+}
