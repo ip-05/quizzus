@@ -8,7 +8,7 @@ import (
 )
 
 func TestNewGame(t *testing.T) {
-	createBody := CreateBody{
+	createBody := CreateGame{
 		Topic:     "My game",
 		RoundTime: 10,
 		Points:    3,
@@ -26,7 +26,7 @@ func TestNewGame(t *testing.T) {
 	}
 
 	t.Run("TestCreateOK", func(t *testing.T) {
-		actual, err := NewGame(createBody, "123")
+		actual, err := NewGame(createBody, uint(123))
 		assert.Nil(t, err)
 
 		assert.Equal(t, createBody.Topic, actual.Topic)
@@ -40,15 +40,37 @@ func TestNewGame(t *testing.T) {
 
 	t.Run("TestCreateErr", func(t *testing.T) {
 		createBody.Points = 0
-		actual, err := NewGame(createBody, "123")
+		actual, err := NewGame(createBody, uint(123))
 		assert.Nil(t, actual)
 		assert.NotNil(t, err)
 		assert.Contains(t, err.Error(), "points should not be lower than 0")
 	})
 }
 
+func BenchmarkNewGame(b *testing.B) {
+	createBody := CreateGame{
+		Topic:     "My game",
+		RoundTime: 10,
+		Points:    3,
+		Questions: []CreateQuestion{
+			{
+				Name: "What color is tomato?",
+				Options: []CreateOption{
+					{Name: "Red", Correct: true},
+					{Name: "Green", Correct: false},
+					{Name: "Blue", Correct: false},
+					{Name: "Orange", Correct: false},
+				},
+			},
+		},
+	}
+	for i := 0; i < b.N; i++ {
+		NewGame(createBody, uint(123))
+	}
+}
+
 func TestValidateGame(t *testing.T) {
-	createBody := CreateBody{
+	createBody := CreateGame{
 		Topic:     "My game",
 		RoundTime: 10,
 		Points:    3,
@@ -65,7 +87,7 @@ func TestValidateGame(t *testing.T) {
 		},
 	}
 
-	actual, err := NewGame(createBody, "123")
+	actual, err := NewGame(createBody, uint(123))
 	assert.Nil(t, err)
 
 	t.Run("TestTopic", func(t *testing.T) {
@@ -93,17 +115,4 @@ func TestValidateGame(t *testing.T) {
 		errValidate := actual.Validate()
 		assert.Contains(t, errValidate.Error(), "should be at least 1 question")
 	})
-}
-
-func TestGenerateCode(t *testing.T) {
-	// Given
-	wantLen := 9
-	wantContain := "-"
-
-	// When
-	gotCode := generateCode()
-
-	// Then
-	assert.Equal(t, wantLen, len(gotCode))
-	assert.Contains(t, gotCode, wantContain)
 }

@@ -12,10 +12,8 @@ import (
 )
 
 type AuthedUser struct {
-	Id             string `json:"id"`
-	Name           string `json:"name"`
-	Email          string `json:"email"`
-	ProfilePicture string `json:"profilePicture"`
+	Id   uint   `json:"id"`
+	Name string `json:"name"`
 }
 
 func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
@@ -51,10 +49,8 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 			}
 
 			authedUser := AuthedUser{
-				Id:             claims["id"].(string),
-				Name:           claims["name"].(string),
-				Email:          claims["email"].(string),
-				ProfilePicture: claims["profilePicture"].(string),
+				Id:   uint(claims["id"].(float64)),
+				Name: claims["name"].(string),
 			}
 			c.Set("authedUser", authedUser)
 			c.Next()

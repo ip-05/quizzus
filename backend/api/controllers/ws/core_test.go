@@ -14,6 +14,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/ip-05/quizzus/api/middleware"
 	"github.com/ip-05/quizzus/app/game"
+	"github.com/ip-05/quizzus/app/user"
 	"github.com/ip-05/quizzus/config"
 	"github.com/ip-05/quizzus/entity"
 	"github.com/ip-05/quizzus/repo"
@@ -39,7 +40,7 @@ type WebSocketSuite struct {
 	conn    *websocket.Conn
 }
 
-func createToken(secret string, id string, name string, email string, pfp string) (string, error) {
+func createToken(secret string, id uint, name string, email string, pfp string) (string, error) {
 	secretKey := []byte(secret)
 	tokenJWT := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":             id,
@@ -87,7 +88,7 @@ func (w *WebSocketSuite) SetupTest() {
 		Topic:      "Topic",
 		RoundTime:  30,
 		Points:     float64(50),
-		Owner:      "123123123123",
+		Owner:      uint(123123123123),
 	}
 
 	db, mock, err := sqlmock.New()
@@ -103,11 +104,14 @@ func (w *WebSocketSuite) SetupTest() {
 	})
 
 	database, err := gorm.Open(dialector)
-	repository := repo.NewGameStore(database)
-	svc := game.NewGameService(repository)
+	gameRepo := repo.NewGameStore(database)
+	gameSvc := game.NewGameService(gameRepo)
 	assert.Nil(w.T(), err)
 
-	controller := NewCoreController(svc)
+	userRepo := repo.NewUserStore(database)
+	userSvc := user.NewUserService(userRepo)
+
+	controller := NewCoreController(gameSvc, userSvc)
 	controller.gameController.GameTime = 0
 
 	ctx, engine := gin.CreateTestContext(httptest.NewRecorder())
@@ -235,7 +239,7 @@ func (w *WebSocketSuite) TestJoinGame_Owner() {
 
 func (w *WebSocketSuite) TestJoinGame_NotOwner() {
 	// Given
-	w.newGame.Owner = "321"
+	w.newGame.Owner = uint(321)
 	rowsGame, rowsQuestion, rowsOption := createRows(w.newGame, false)
 
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321", 0).WillReturnRows(rowsGame)
@@ -264,7 +268,7 @@ func (w *WebSocketSuite) TestUserJoined() {
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion2)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption2)
 
-	token, err := createToken("secret", "321", "TestUser", "user@gmail.com", "https://test.com/test.png")
+	token, err := createToken("secret", uint(321), "TestUser", "user@gmail.com", "https://test.com/test.png")
 	assert.Nil(w.T(), err)
 
 	conn, _, err := websocket.Dial(context.Background(), fmt.Sprintf("%s/ws?token=%s", w.serv.URL, token), &websocket.DialOptions{})
@@ -357,7 +361,7 @@ func (w *WebSocketSuite) TestLeaveGame_Player() {
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion2)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption2)
 
-	token, err := createToken("secret", "321", "TestUser", "user@gmail.com", "https://test.com/test.png")
+	token, err := createToken("secret", uint(321), "TestUser", "user@gmail.com", "https://test.com/test.png")
 	assert.Nil(w.T(), err)
 
 	conn, _, err := websocket.Dial(context.Background(), fmt.Sprintf("%s/ws?token=%s", w.serv.URL, token), &websocket.DialOptions{})
@@ -431,14 +435,14 @@ func (w *WebSocketSuite) TestIsOwner_False() {
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
 
-	w.newGame.Owner = "321"
+	w.newGame.Owner = uint(321)
 	rowsGame2, rowsQuestion2, rowsOption2 := createRows(w.newGame, false)
 
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("1234-4321", 0).WillReturnRows(rowsGame2)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectQuestion)).WithArgs(1).WillReturnRows(rowsQuestion2)
 	w.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption2)
 
-	token, err := createToken("secret", "321", "TestUser", "user@gmail.com", "https://test.com/test.png")
+	token, err := createToken("secret", uint(321), "TestUser", "user@gmail.com", "https://test.com/test.png")
 	assert.Nil(w.T(), err)
 
 	conn, _, err := websocket.Dial(context.Background(), fmt.Sprintf("%s/ws?token=%s", w.serv.URL, token), &websocket.DialOptions{})
@@ -539,7 +543,7 @@ func (w *WebSocketSuite) TestAnswerQuestion_Success() {
 	assert.Contains(w.T(), string(message), "leaderboard")
 
 	DataReply(false, "USER_ANSWERED", AnswerResponse{
-		UserId: "123123123123",
+		UserId: uint(123123123123),
 		Option: uint(2),
 	}).Send(w.conn)
 	_, message, _ = w.conn.Read(context.Background())

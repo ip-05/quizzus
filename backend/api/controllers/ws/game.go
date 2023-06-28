@@ -2,13 +2,14 @@ package ws
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"errors"
+	"math/big"
 	"time"
 
 	"github.com/jinzhu/copier"
 
-	"github.com/ip-05/quizzus/api/controllers/web"
 	"github.com/ip-05/quizzus/api/middleware"
 	"github.com/ip-05/quizzus/entity"
 	"nhooyr.io/websocket"
@@ -43,7 +44,7 @@ const (
 )
 
 type User struct {
-	Id             string          `json:"id"`
+	Id             uint            `json:"id"`
 	Name           string          `json:"name"`
 	ProfilePicture string          `json:"profilePicture"`
 	ActiveGame     *Game           `json:"-"`
@@ -51,52 +52,81 @@ type User struct {
 }
 
 type Game struct {
-	Status        string             `json:"status"`
-	RoundStatus   string             `json:"roundStatus"`
-	CurrentRound  int                `json:"currentRound"`
-	Points        float64            `json:"points"`
-	Topic         string             `json:"topic"`
-	RoundTime     int                `json:"roundTime"`
-	QuestionCount int                `json:"questionCount"`
-	InviteCode    string             `json:"inviteCode"`
-	Members       map[string]*User   `json:"members"`
-	Owner         *User              `json:"owner"`
-	Leaderboard   map[string]float64 `json:"leaderboard"`
-	Data          *entity.Game       `json:"-"`
-	Rounds        map[int]*Round     `json:"-"`
+	Id            uint             `json:"id"`
+	InstId        int              `json:"-"`
+	Status        string           `json:"status"`
+	RoundStatus   string           `json:"roundStatus"`
+	CurrentRound  int              `json:"currentRound"`
+	Points        float64          `json:"points"`
+	Topic         string           `json:"topic"`
+	RoundTime     int              `json:"roundTime"`
+	QuestionCount int              `json:"questionCount"`
+	InviteCode    string           `json:"inviteCode"`
+	Members       map[uint]*User   `json:"members"`
+	Owner         *User            `json:"owner"`
+	Leaderboard   map[uint]float64 `json:"leaderboard"`
+	Data          *entity.Game     `json:"-"`
+	Rounds        map[int]*Round   `json:"-"`
 }
 
 type Round struct {
-	Answers map[string]uint
+	Answers map[uint]uint
 }
 
 type GameSocketController struct {
-	Users    map[string]*User
+	Users    map[uint]*User
 	Games    map[string]*Game
-	Game     web.IGameService
+	Game     IGameService
+	User     IUserService
+	Session  ISessionService
 	GameTime int
 }
 
 type IGameService interface {
-	CreateGame(body entity.CreateBody, ownerId string) (*entity.Game, error)
-	UpdateGame(body entity.UpdateBody, id int, code, ownerId string) (*entity.Game, error)
-	DeleteGame(id int, code, userId string) error
+	CreateGame(body entity.CreateGame, ownerId uint) (*entity.Game, error)
+	UpdateGame(body entity.UpdateGame, id int, code string, ownerId uint) (*entity.Game, error)
+	DeleteGame(id int, code string, userId uint) error
+
 	GetGame(id int, code string) (*entity.Game, error)
+	GetGamesByOwner(id int, user int, limit int) (*[]entity.Game, error)
+	GetFavoriteGames(user int) (*[]entity.Game, error)
+
+	Favorite(id int, userId int) bool
 }
 
-func NewGameSocketController(game IGameService) *GameSocketController {
+type ISessionService interface {
+	NewSession(id, userId, instId int) uint
+	EndSession(id, userId, instId, questions, players int, points float64) uint
+}
+
+type IUserService interface {
+	CreateUser(body *entity.CreateUser) (*entity.User, error)
+	UpdateUser(id uint, body entity.UpdateUser) (*entity.User, error)
+	DeleteUser(id uint)
+	GetUser(id uint) *entity.User
+	GetUserByProvider(id string, provider string) *entity.User
+}
+
+func NewGameSocketController(game IGameService, user IUserService, session ISessionService) *GameSocketController {
 	c := new(GameSocketController)
 
-	c.Users = make(map[string]*User)
+	c.Users = make(map[uint]*User)
 	c.Games = make(map[string]*Game)
 	c.Game = game
+	c.User = user
+	c.Session = session
 	c.GameTime = 10
 
 	return c
 }
 
 func (g *GameSocketController) InitUser(ctx context.Context) (*User, error) {
-	user := ctx.Value("authedUser").(middleware.AuthedUser)
+	authedUser := ctx.Value("authedUser").(middleware.AuthedUser)
+
+	user := g.User.GetUser(authedUser.Id)
+	if user == nil {
+		return nil, errors.New("no user found")
+	}
 
 	_, found := g.Users[user.Id]
 	if found {
@@ -106,7 +136,7 @@ func (g *GameSocketController) InitUser(ctx context.Context) (*User, error) {
 	g.Users[user.Id] = &User{
 		Id:             user.Id,
 		Name:           user.Name,
-		ProfilePicture: user.ProfilePicture,
+		ProfilePicture: user.Picture,
 		Conn:           ctx.Value("conn").(*websocket.Conn),
 	}
 
@@ -174,7 +204,11 @@ func (g *GameSocketController) JoinGame(ctx context.Context, msgData json.RawMes
 		return
 	}
 
+	instId, _ := rand.Int(rand.Reader, big.NewInt(100000000000))
+
 	newGame := Game{
+		Id:            game.Id,
+		InstId:        int(instId.Int64()),
 		Status:        Standby,
 		RoundStatus:   RoundWaiting,
 		Points:        game.Points,
@@ -182,8 +216,8 @@ func (g *GameSocketController) JoinGame(ctx context.Context, msgData json.RawMes
 		QuestionCount: len(game.Questions),
 		RoundTime:     game.RoundTime,
 		InviteCode:    game.InviteCode,
-		Members:       map[string]*User{},
-		Leaderboard:   map[string]float64{},
+		Members:       map[uint]*User{},
+		Leaderboard:   map[uint]float64{},
 		Rounds:        map[int]*Round{},
 		Owner:         user,
 		Data:          game,
@@ -195,6 +229,37 @@ func (g *GameSocketController) JoinGame(ctx context.Context, msgData json.RawMes
 	g.Games[newGame.InviteCode] = &newGame
 	user.ActiveGame = g.Games[newGame.InviteCode]
 	DataReply(false, JoinedGame, newGame).Send(conn)
+}
+
+type ChatData struct {
+	Message string `json:"message"`
+}
+
+type ChatBroadcast struct {
+	Name    string `json:"name"`
+	UserId  uint   `json:"userId"`
+	Message string `json:"message"`
+}
+
+func (g *GameSocketController) SendChat(ctx context.Context, msgData json.RawMessage) {
+	conn := ctx.Value("conn").(*websocket.Conn)
+	user := ctx.Value("user").(*User)
+	if user.ActiveGame == nil {
+		MessageReply(true, NotInGame).Send(conn)
+		return
+	}
+
+	var data ChatData
+	err := json.Unmarshal(msgData, &data)
+	if err != nil {
+		DataReply(true, "DATA_ERROR", err.Error()).Send(conn)
+		return
+	}
+
+	game := user.ActiveGame
+	for _, member := range game.Members {
+		DataReply(false, ReceiveChat, ChatBroadcast{Name: user.Name, Message: data.Message, UserId: user.Id}).Send(member.Conn)
+	}
 }
 
 func (g *GameSocketController) LeaveGame(ctx context.Context) {
@@ -279,8 +344,10 @@ func (g *GameSocketController) StartGame(ctx context.Context) {
 
 		n -= 1
 	}
-	for _, member := range user.ActiveGame.Members {
+	for id, member := range user.ActiveGame.Members {
 		MessageReply(false, InProgress).Send(member.Conn)
+
+		g.Session.NewSession(int(user.ActiveGame.Id), int(id), user.ActiveGame.InstId)
 	}
 	user.ActiveGame.Status = InProgress
 	go g.PlayRounds(user.ActiveGame)
@@ -309,7 +376,7 @@ func (g *GameSocketController) ResetGame(ctx context.Context) {
 	user.ActiveGame.Status = Standby
 	user.ActiveGame.RoundStatus = RoundWaiting
 	user.ActiveGame.CurrentRound = 0
-	user.ActiveGame.Leaderboard = map[string]float64{}
+	user.ActiveGame.Leaderboard = map[uint]float64{}
 	user.ActiveGame.Rounds = map[int]*Round{}
 
 	DataReply(false, ResetGame, user.ActiveGame).Send(conn)
@@ -330,9 +397,9 @@ type Question struct {
 }
 
 type FinishedReply struct {
-	Correct     bool               `json:"correct"`
-	Options     []*entity.Option   `json:"options"`
-	Leaderboard map[string]float64 `json:"leaderboard"`
+	Correct     bool             `json:"correct"`
+	Options     []*entity.Option `json:"options"`
+	Leaderboard map[uint]float64 `json:"leaderboard"`
 }
 
 func (g *GameSocketController) PlayRounds(game *Game) {
@@ -342,7 +409,7 @@ func (g *GameSocketController) PlayRounds(game *Game) {
 			n := game.Data.RoundTime
 			question := Question{}
 			copier.Copy(&question, game.Data.Questions[game.CurrentRound])
-			game.Rounds[game.CurrentRound] = &Round{Answers: map[string]uint{}}
+			game.Rounds[game.CurrentRound] = &Round{Answers: map[uint]uint{}}
 
 			for range time.Tick(time.Second * 1) {
 				if n == 0 {
@@ -381,8 +448,10 @@ func (g *GameSocketController) PlayRounds(game *Game) {
 			if game.CurrentRound >= len(game.Data.Questions) {
 				game.Status = Finished
 
-				for _, member := range game.Members {
+				for id, member := range game.Members {
 					DataReply(false, Finished, game.Leaderboard).Send(member.Conn)
+
+					g.Session.EndSession(int(game.Id), int(id), game.InstId, game.QuestionCount, len(game.Members)-1, game.Leaderboard[id])
 				}
 
 				break
@@ -396,8 +465,8 @@ type AnswerData struct {
 }
 
 type AnswerResponse struct {
-	UserId string `json:"user"`
-	Option uint   `json:"option"`
+	UserId uint `json:"user"`
+	Option uint `json:"option"`
 }
 
 func (g *GameSocketController) AnswerQuestion(ctx context.Context, msgData json.RawMessage) {

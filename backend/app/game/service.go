@@ -2,16 +2,20 @@ package game
 
 import (
 	"errors"
-
 	"github.com/ip-05/quizzus/entity"
 )
 
 type IGameRepo interface {
 	Get(id int, code string) *entity.Game
+	GetByOwner(id int, hidePrivate bool, limit int) *[]entity.Game
+	GetFavorite(user int) *[]entity.Game
+
 	Create(e *entity.Game) *entity.Game
 	Update(id int, code string, e *entity.Game) *entity.Game
 	Delete(e *entity.Game)
 	DeleteQuestion(id int)
+
+	ToggleFavorite(e *entity.FavoriteGame) bool
 }
 
 type GameService struct {
@@ -24,7 +28,7 @@ func NewGameService(gameR IGameRepo) *GameService {
 	}
 }
 
-func (gs *GameService) CreateGame(body entity.CreateBody, ownerId string) (*entity.Game, error) {
+func (gs *GameService) CreateGame(body entity.CreateGame, ownerId uint) (*entity.Game, error) {
 	e, err := entity.NewGame(body, ownerId)
 	if err != nil {
 		return nil, err
@@ -34,7 +38,7 @@ func (gs *GameService) CreateGame(body entity.CreateBody, ownerId string) (*enti
 	return game, nil
 }
 
-func (gs *GameService) UpdateGame(body entity.UpdateBody, id int, code, ownerId string) (*entity.Game, error) {
+func (gs *GameService) UpdateGame(body entity.UpdateGame, id int, code string, ownerId uint) (*entity.Game, error) {
 	game, err := gs.GetGame(id, code)
 	if err != nil {
 		return nil, err
@@ -107,7 +111,7 @@ func (gs *GameService) UpdateGame(body entity.UpdateBody, id int, code, ownerId 
 	return e, nil
 }
 
-func (gs *GameService) DeleteGame(id int, code, userId string) error {
+func (gs *GameService) DeleteGame(id int, code string, userId uint) error {
 	game, err := gs.GetGame(id, code)
 	if err != nil {
 		return err
@@ -129,4 +133,30 @@ func (gs *GameService) GetGame(id int, code string) (*entity.Game, error) {
 	}
 
 	return e, nil
+}
+
+func (gs *GameService) GetGamesByOwner(id int, user int, limit int) (*[]entity.Game, error) {
+	hidePrivate := true
+
+	if user == id {
+		hidePrivate = false
+	}
+
+	games := gs.gameRepo.GetByOwner(id, hidePrivate, limit)
+	return games, nil
+}
+
+func (gs *GameService) GetFavoriteGames(user int) (*[]entity.Game, error) {
+	games := gs.gameRepo.GetFavorite(user)
+	return games, nil
+}
+
+func (gs *GameService) Favorite(id int, userId int) bool {
+	favorite := &entity.FavoriteGame{
+		GameId: uint(id),
+		UserId: uint(userId),
+	}
+
+	toggle := gs.gameRepo.ToggleFavorite(favorite)
+	return toggle
 }

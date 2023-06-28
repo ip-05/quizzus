@@ -33,5 +33,5 @@ jobs:
     - name: Test-Config
       run: go test -v ./config
       
-    - name: Test-Entity
-      run: go test -v ./entity
+    - name: Test-Benchmark-Entity
+      run: go test -v -bench=. ./entity

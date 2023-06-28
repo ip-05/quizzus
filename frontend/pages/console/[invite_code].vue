@@ -57,7 +57,7 @@ const disabled = computed(() => {
 
 onMounted(() => {
   gameStore.inviteCode = params.invite_code;
-  gameStore.getGame(params);
+  gameStore.getGame(params.invite_code);
   const socketStore = useSocketStore();
   socketStore.joinGame(params.invite_code);
   // gameStore.joinGame(params.invite_code);

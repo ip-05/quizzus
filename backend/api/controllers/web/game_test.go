@@ -68,10 +68,8 @@ func (gs *GameSuite) SetupTest() {
 	gs.mock = mock
 
 	authedUser := middleware.AuthedUser{
-		Id:             "123",
-		Name:           "John",
-		Email:          "john@doe.com",
-		ProfilePicture: "https://doe.com/profile.png",
+		Id:   123,
+		Name: "John",
 	}
 
 	gs.ctx.Set("authedUser", authedUser)
@@ -108,7 +106,7 @@ func (gs *GameSuite) TestCreateGame_OK() {
 		Options: []entity.CreateOption{option1, option2, option3, option4},
 	}
 
-	createBody := entity.CreateBody{
+	createBody := entity.CreateGame{
 		Topic:     "Topic Test",
 		RoundTime: 10,
 		Points:    10,
@@ -286,7 +284,7 @@ func (gs *GameSuite) TestUpdate_NotFound() {
 		Options: []entity.UpdateOption{option1, option2, option3, option4},
 	}
 
-	updateBody := entity.UpdateBody{
+	updateBody := entity.UpdateGame{
 		Topic:     "Update Topic",
 		RoundTime: 10,
 		Points:    10,
@@ -346,7 +344,7 @@ func (gs *GameSuite) TestUpdate_NotOwner() {
 		Options: []entity.UpdateOption{option1, option2, option3, option4},
 	}
 
-	updateBody := entity.UpdateBody{
+	updateBody := entity.UpdateGame{
 		Topic:     "Update Topic",
 		RoundTime: 10,
 		Points:    10,
@@ -421,7 +419,7 @@ func (gs *GameSuite) TestUpdate_Ok() {
 		Options: []entity.UpdateOption{option1, option2, option3, option4},
 	}
 
-	updateBody := entity.UpdateBody{
+	updateBody := entity.UpdateGame{
 		Topic:     "Update Topic",
 		RoundTime: 10,
 		Points:    10,

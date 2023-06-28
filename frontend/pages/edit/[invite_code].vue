@@ -17,7 +17,7 @@ const errorStore = useErrorStore();
 const { params } = useRoute();
 
 onMounted(() => {
-  gameStore.getGame(params);
+  gameStore.getGame(params.invite_code);
 });
 
 const mode = computed(() => {
