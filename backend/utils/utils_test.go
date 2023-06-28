@@ -18,3 +18,15 @@ func TestGenerateCode(t *testing.T) {
 	assert.Equal(t, wantLen, len(gotCode))
 	assert.Contains(t, gotCode, wantContain)
 }
+
+func TestGenerateToken(t *testing.T) {
+	// Given
+	wantContain := "."
+
+	// When
+	gotToken, err := GenerateToken(1, "test", "secret")
+
+	// Then
+	assert.Contains(t, gotToken, wantContain)
+	assert.Nil(t, err)
+}

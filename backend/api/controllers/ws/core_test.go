@@ -14,6 +14,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/ip-05/quizzus/api/middleware"
 	"github.com/ip-05/quizzus/app/game"
+	"github.com/ip-05/quizzus/app/session"
 	"github.com/ip-05/quizzus/app/user"
 	"github.com/ip-05/quizzus/config"
 	"github.com/ip-05/quizzus/entity"
@@ -111,7 +112,10 @@ func (w *WebSocketSuite) SetupTest() {
 	userRepo := repo.NewUserStore(database)
 	userSvc := user.NewUserService(userRepo)
 
-	controller := NewCoreController(gameSvc, userSvc)
+	sessionRepo := repo.NewSessionStore(database)
+	sessionService := session.NewSessionService(sessionRepo)
+
+	controller := NewCoreController(gameSvc, userSvc, sessionService)
 	controller.gameController.GameTime = 0
 
 	ctx, engine := gin.CreateTestContext(httptest.NewRecorder())
