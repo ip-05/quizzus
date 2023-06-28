@@ -227,7 +227,7 @@ func (s *AuthControllerSuite) TestLogin_VerifyError() {
 	assert.Nil(s.T(), err)
 
 	assert.Equal(s.T(), http.StatusBadRequest, s.w.Code)
-	assert.Contains(s.T(), string(body), "Error while verifying auth token")
+	assert.Contains(s.T(), string(body), "error fetching user data from google")
 }
 
 func (s *AuthControllerSuite) TestLogin_ReturnJWT() {
@@ -295,28 +295,6 @@ func (s *AuthControllerSuite) TestLogin_SetCookie() {
 	setCookie := s.w.Header().Get("Set-Cookie")
 	assert.NotEmpty(s.T(), setCookie)
 }
-
-// func (s *AuthControllerSuite) TestMe() {
-// 	// Given
-// 	authedUser := middleware.AuthedUser{
-// 		Id:   uint(123),
-// 		Name: "John",
-// 	}
-
-// 	s.ctx.Set("authedUser", authedUser)
-
-// 	// When
-// 	s.controller.Me(s.ctx)
-
-// 	// Then
-// 	r, err := io.ReadAll(s.w.Body)
-// 	assert.Nil(s.T(), err)
-
-// 	json, err := json.Marshal(authedUser)
-// 	assert.Nil(s.T(), err)
-
-// 	assert.Equal(s.T(), json, r)
-// }
 
 func TestGoogleLogin(t *testing.T) {
 	suite.Run(t, new(AuthControllerSuite))

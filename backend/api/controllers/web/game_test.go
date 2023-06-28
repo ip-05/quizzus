@@ -23,7 +23,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var insertGame = `INSERT INTO "games" ("invite_code","topic","round_time","points","owner") VALUES ($1,$2,$3,$4,$5) RETURNING "id"`
+var insertGame = `INSERT INTO "games" ("invite_code","topic","round_time","points","public","owner") VALUES ($1,$2,$3,$4,$5,$6) RETURNING "created_at","id"`
 var insertQuestion = `INSERT INTO "questions" ("name","game_id") VALUES ($1,$2) ON CONFLICT ("id") DO UPDATE SET "name"="excluded"."name","game_id"="excluded"."game_id" RETURNING "id"`
 var insertOptions = `INSERT INTO "options" ("name","correct","question_id") VALUES ($1,$2,$3),($4,$5,$6),($7,$8,$9),($10,$11,$12) ON CONFLICT ("id") DO UPDATE SET "name"="excluded"."name","correct"="excluded"."correct","question_id"="excluded"."question_id" RETURNING "id"`
 
@@ -110,6 +110,7 @@ func (gs *GameSuite) TestCreateGame_OK() {
 		Topic:     "Topic Test",
 		RoundTime: 10,
 		Points:    10,
+		Public:    true,
 		Questions: []entity.CreateQuestion{createQuestion},
 	}
 
@@ -162,7 +163,7 @@ func (gs *GameSuite) TestGet_NotFound() {
 
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectGame)).WithArgs("", 1).WillReturnRows(rows)
 
-	gs.ctx.Request = httptest.NewRequest("GET", "/games?id=1", nil)
+	gs.ctx.Request = httptest.NewRequest("GET", "/games/1", nil)
 
 	// When
 	gs.controller.Get(gs.ctx)
@@ -197,7 +198,7 @@ func (gs *GameSuite) TestGet_NotOwner() {
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
 
 	// When
-	gs.ctx.Request = httptest.NewRequest("GET", "/games?id=1", nil)
+	gs.ctx.Request = httptest.NewRequest("GET", "/games/1", nil)
 	gs.controller.Get(gs.ctx)
 
 	// Then
@@ -233,7 +234,7 @@ func (gs *GameSuite) TestGet_Ok() {
 	gs.mock.ExpectQuery(regexp.QuoteMeta(selectOption)).WithArgs(1).WillReturnRows(rowsOption)
 
 	// When
-	gs.ctx.Request = httptest.NewRequest("GET", "/games?id=1", nil)
+	gs.ctx.Request = httptest.NewRequest("GET", "/games/1", nil)
 	gs.controller.Get(gs.ctx)
 
 	// Then
