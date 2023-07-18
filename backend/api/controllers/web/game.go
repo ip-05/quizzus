@@ -79,7 +79,11 @@ func (g GameController) GetMany(c *gin.Context) {
 	*/
 
 	owner := c.Query("owner")
-	favorite, _ := strconv.ParseBool(c.Query("favorite"))
+	favorite, err := strconv.ParseBool(c.Query("favorite"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "value for favorite must be true (1) or false (0)"})
+		return
+	}
 	limit, _ := strconv.Atoi(c.Query("limit"))
 	if limit == 0 {
 		limit = 10
