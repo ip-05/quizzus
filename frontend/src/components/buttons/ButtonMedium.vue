@@ -1,28 +1,22 @@
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue';
-import Icon from './Icon.vue';
+import Icon from '../icons/Icon.vue';
 
-const props = defineProps({
-  state: {
-    type: String,
-    default: 'default',
-  },
-  icon: {
-    type: Boolean,
-    default: false,
-  },
-});
+import { Icons } from '@/types';
 
-const states = {
-  rainbow: 'button--rainbow',
-};
+interface Props {
+  state?: 'rainbow' | 'default';
+  icon?: Icons;
+}
 
-const currentState = computed(() => states[props.state]);
+const props = defineProps<Props>();
+
+const currentState = computed(() => (props.state !== 'default' ? `button--${props.state}` : null));
 </script>
 
 <template>
   <button class="button" :class="currentState">
-    <Icon v-if="icon" icon="plus" class="icon" />
+    <Icon v-if="icon" :icon="icon" class="icon" />
     <slot>Button Medium</slot>
   </button>
 </template>

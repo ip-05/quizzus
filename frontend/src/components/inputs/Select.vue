@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 /**
  *
  * This is a wrapper component for v-select
@@ -8,19 +8,15 @@
 
 import { defineProps, defineEmits, ref, watch } from 'vue';
 
+interface Props {
+  placeholder?: string;
+  options: (string | number)[];
+  modelValue: string | number;
+}
+
 const emit = defineEmits(['update:modelValue']);
-defineProps({
-  placeholder: {
-    type: String,
-    default: 'Please select one',
-  },
-  options: {
-    type: Array,
-  },
-  modelValue: {
-    type: [String, Number],
-    default: null,
-  },
+withDefaults(defineProps<Props>(), {
+  placeholder: 'Please select one',
 });
 
 const selected = ref('');

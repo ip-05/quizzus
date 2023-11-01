@@ -1,16 +1,14 @@
-<script setup>
+<script setup lang="ts">
 import { defineProps, defineEmits } from 'vue';
 
+interface Props {
+  placeholder?: string;
+  modelValue: string | number;
+}
+
 defineEmits(['update:modelValue']);
-defineProps({
-  placeholder: {
-    type: String,
-    default: 'Input',
-  },
-  modelValue: {
-    type: [String, Number],
-    default: null,
-  },
+withDefaults(defineProps<Props>(), {
+  placeholder: 'Textarea',
 });
 </script>
 
@@ -20,7 +18,7 @@ defineProps({
       class="textarea"
       :placeholder="placeholder"
       :value="modelValue"
-      @input="$emit('update:modelValue', $event.target.value)"
+      @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
     ></textarea>
   </div>
 </template>

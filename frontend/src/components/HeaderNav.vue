@@ -1,5 +1,5 @@
 <script setup>
-import ButtonMedium from './ButtonMedium.vue';
+import ButtonMedium from './buttons/ButtonMedium.vue';
 import { RouterLink } from 'vue-router';
 </script>
 

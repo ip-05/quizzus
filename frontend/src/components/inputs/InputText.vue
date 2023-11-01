@@ -1,44 +1,37 @@
-<script setup>
-import { computed, defineProps, defineEmits } from 'vue';
-import Icon from './Icon.vue';
+<script setup lang="ts">
+import { defineProps, defineEmits } from 'vue';
+import Icon from '../icons/Icon.vue';
+import { Icons } from '@/types';
 
 /**
  * Reference:
  * https://vuejs.org/guide/components/events.html#usage-with-v-model
  */
 
+interface Props {
+  placeholder?: string;
+  icon?: Icons;
+  modelValue: string | number;
+}
+
 defineEmits(['update:modelValue']);
-const props = defineProps({
-  placeholder: {
-    type: String,
-    default: 'Input',
-  },
-  icon: {
-    type: String,
-  },
-  modelValue: {
-    type: [String, Number],
-    default: null,
-  },
+withDefaults(defineProps<Props>(), {
+  placeholder: 'Input',
 });
-
-const hasIcon = computed(() => !!props.icon)
-console.log(hasIcon.value);
-
 </script>
 
 <template>
   <div class="form">
-    <div v-if="hasIcon" class="icon">
-      <Icon />
+    <div v-if="icon" class="icon">
+      <Icon :icon="icon" />
     </div>
     <input
       class="input"
-      :class="{ 'input--icon': hasIcon }"
+      :class="{ 'input--icon': icon }"
       type="text"
       :placeholder="placeholder"
       :value="modelValue"
-      @input="$emit('update:modelValue', $event.target.value)"
+      @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
     />
   </div>
 </template>
@@ -85,5 +78,4 @@ console.log(hasIcon.value);
 .input::placeholder {
   color: var(--color-text);
 }
-
 </style>

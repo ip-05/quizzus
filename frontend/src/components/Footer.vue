@@ -1,6 +1,6 @@
 <template>
   <footer class="footer">
-    <h4 class="footer__text">© 2022 Kahootussy All rights reserved</h4>
+    <h4 class="footer__text">© 2023 Quizzus All rights reserved</h4>
   </footer>
 </template>
 
