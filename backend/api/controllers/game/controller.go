@@ -10,15 +10,15 @@ import (
 )
 
 type Service interface {
-	CreateGame(body entity.CreateGame, ownerId uint) (*entity.Game, error)
-	UpdateGame(body entity.UpdateGame, id int, code string, ownerId uint) (*entity.Game, error)
-	DeleteGame(id int, code string, userId uint) error
+	CreateGame(body entity.CreateGame, ownerID uint) (*entity.Game, error)
+	UpdateGame(body entity.UpdateGame, ID int, code string, ownerID uint) (*entity.Game, error)
+	DeleteGame(ID int, code string, userID uint) error
 
-	GetGame(id int, code string) (*entity.Game, error)
-	GetGamesByOwner(id int, user int, limit int) (*[]entity.Game, error)
+	GetGame(ID int, code string) (*entity.Game, error)
+	GetGamesByOwner(ID int, user int, limit int) (*[]entity.Game, error)
 	GetFavoriteGames(user int) (*[]entity.Game, error)
 
-	Favorite(id int, userId int) bool
+	Favorite(ID int, userID int) bool
 }
 
 type Controller struct {
@@ -40,7 +40,7 @@ func (c Controller) CreateGame(ctx *gin.Context) {
 		return
 	}
 
-	game, err := c.service.CreateGame(body, user.Id)
+	game, err := c.service.CreateGame(body, user.ID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -62,7 +62,7 @@ func (c Controller) Get(ctx *gin.Context) {
 	authedUser, _ := ctx.Get("authedUser")
 	user := authedUser.(middleware.AuthedUser)
 
-	if user.Id != game.Owner {
+	if user.ID != game.Owner {
 		ctx.JSON(http.StatusOK, gin.H{"message": "Game found", "topic": game.Topic})
 		return
 	}
@@ -93,7 +93,7 @@ func (c Controller) GetMany(ctx *gin.Context) {
 	user := authedUser.(middleware.AuthedUser)
 
 	if favorite {
-		games, err := c.service.GetFavoriteGames(int(user.Id))
+		games, err := c.service.GetFavoriteGames(int(user.ID))
 		if err != nil {
 			ctx.JSON(http.StatusOK, err.Error())
 			return
@@ -104,7 +104,7 @@ func (c Controller) GetMany(ctx *gin.Context) {
 	} else if owner != "" {
 		id, _ := strconv.Atoi(owner)
 
-		games, err := c.service.GetGamesByOwner(id, int(user.Id), limit)
+		games, err := c.service.GetGamesByOwner(id, int(user.ID), limit)
 		if err != nil {
 			ctx.JSON(http.StatusOK, err.Error())
 			return
@@ -123,7 +123,7 @@ func (c Controller) Favorite(ctx *gin.Context) {
 	authedUser, _ := ctx.Get("authedUser")
 	user := authedUser.(middleware.AuthedUser)
 
-	toggle := c.service.Favorite(id, int(user.Id))
+	toggle := c.service.Favorite(id, int(user.ID))
 
 	ctx.JSON(http.StatusOK, gin.H{"favorite": toggle})
 }
@@ -142,7 +142,7 @@ func (c Controller) Update(ctx *gin.Context) {
 	authedUser, _ := ctx.Get("authedUser")
 	user := authedUser.(middleware.AuthedUser)
 
-	game, err := c.service.UpdateGame(body, id, code, user.Id)
+	game, err := c.service.UpdateGame(body, id, code, user.ID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -158,7 +158,7 @@ func (c Controller) Delete(ctx *gin.Context) {
 	authedUser, _ := ctx.Get("authedUser")
 	user := authedUser.(middleware.AuthedUser)
 
-	err := c.service.DeleteGame(id, code, user.Id)
+	err := c.service.DeleteGame(id, code, user.ID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

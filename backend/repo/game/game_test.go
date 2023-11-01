@@ -1,4 +1,4 @@
-package repo
+package game
 
 import (
 	"testing"
@@ -28,28 +28,28 @@ func TestRepo_CreateGame(t *testing.T) {
 	db, cleanup := SetupIntegration(t)
 	defer cleanup()
 
-	repo := NewGameStore(db)
+	repo := NewRepository(db)
 
 	newGame, err := entity.NewGame(testGameBody, uint(1))
 	assert.Nil(t, err)
 
-	game := repo.Create(newGame)
-	assert.Greater(t, game.Id, uint(0))
+	game := repo.CreateGame(newGame)
+	assert.Greater(t, game.ID, uint(0))
 }
 
 func TestRepo_GetGame(t *testing.T) {
 	db, cleanup := SetupIntegration(t)
 	defer cleanup()
 
-	repo := NewGameStore(db)
+	repo := NewRepository(db)
 
 	newGame, err := entity.NewGame(testGameBody, uint(1))
 	assert.Nil(t, err)
 
-	game := repo.Create(newGame)
-	assert.Greater(t, game.Id, uint(0))
+	game := repo.CreateGame(newGame)
+	assert.Greater(t, game.ID, uint(0))
 
-	gotGame := repo.Get(int(game.Id), game.InviteCode)
+	gotGame := repo.GetGame(int(game.ID), game.InviteCode)
 	assert.Equal(t, gotGame.Topic, newGame.Topic)
 }
 
@@ -57,33 +57,33 @@ func TestRepo_DeleteGame(t *testing.T) {
 	db, cleanup := SetupIntegration(t)
 	defer cleanup()
 
-	repo := NewGameStore(db)
+	repo := NewRepository(db)
 
 	newGame, err := entity.NewGame(testGameBody, uint(1))
 	assert.Nil(t, err)
 
-	game := repo.Create(newGame)
-	assert.Greater(t, game.Id, uint(0))
+	game := repo.CreateGame(newGame)
+	assert.Greater(t, game.ID, uint(0))
 
-	repo.Delete(game)
+	repo.DeleteGame(game)
 
-	gotGame := repo.Get(1, "")
-	assert.Equal(t, uint(0), gotGame.Id)
+	gotGame := repo.GetGame(1, "")
+	assert.Equal(t, uint(0), gotGame.ID)
 }
 
 func TestRepo_UpdateGame(t *testing.T) {
 	db, cleanup := SetupIntegration(t)
 	defer cleanup()
 
-	repo := NewGameStore(db)
+	repo := NewRepository(db)
 
 	newGame, err := entity.NewGame(testGameBody, uint(1))
 	assert.Nil(t, err)
 
-	game := repo.Create(newGame)
-	assert.Greater(t, game.Id, uint(0))
+	game := repo.CreateGame(newGame)
+	assert.Greater(t, game.ID, uint(0))
 
 	game.Topic = "Updated topic"
-	updatedGame := repo.Update(int(game.Id), game.InviteCode, game)
+	updatedGame := repo.UpdateGame(int(game.ID), game.InviteCode, game)
 	assert.Equal(t, updatedGame.Topic, "Updated topic")
 }

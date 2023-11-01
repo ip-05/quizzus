@@ -7,16 +7,16 @@ import (
 )
 
 type Repository interface {
-	Get(id int, code string) *entity.Game
-	GetByOwner(id int, hidePrivate bool, limit int) *[]entity.Game
-	GetFavorite(user int) *[]entity.Game
+	GetGame(ID int, code string) *entity.Game
+	GetGameByOwner(ID int, hidePrivate bool, limit int) *[]entity.Game
+	GetFavoriteGame(user int) *[]entity.Game
 
-	Create(e *entity.Game) *entity.Game
-	Update(id int, code string, e *entity.Game) *entity.Game
-	Delete(e *entity.Game)
-	DeleteQuestion(id int)
+	CreateGame(e *entity.Game) *entity.Game
+	UpdateGame(ID int, code string, e *entity.Game) *entity.Game
+	DeleteGame(e *entity.Game)
+	DeleteQuestion(ID int)
 
-	ToggleFavorite(e *entity.FavoriteGame) bool
+	ToggleFavoriteGame(e *entity.FavoriteGame) bool
 }
 
 type Service struct {
@@ -29,23 +29,23 @@ func NewService(gameRepo Repository) *Service {
 	}
 }
 
-func (s Service) CreateGame(body entity.CreateGame, ownerId uint) (*entity.Game, error) {
-	e, err := entity.NewGame(body, ownerId)
+func (s Service) CreateGame(body entity.CreateGame, ownerID uint) (*entity.Game, error) {
+	e, err := entity.NewGame(body, ownerID)
 	if err != nil {
 		return nil, err
 	}
 
-	game := s.repo.Create(e)
+	game := s.repo.CreateGame(e)
 	return game, nil
 }
 
-func (s Service) UpdateGame(body entity.UpdateGame, id int, code string, ownerId uint) (*entity.Game, error) {
-	game, err := s.GetGame(id, code)
+func (s Service) UpdateGame(body entity.UpdateGame, ID int, code string, ownerID uint) (*entity.Game, error) {
+	game, err := s.GetGame(ID, code)
 	if err != nil {
 		return nil, err
 	}
 
-	if ownerId != game.Owner {
+	if ownerID != game.Owner {
 		return nil, errors.New("you shall not pass! (not owner)")
 	}
 
@@ -56,15 +56,15 @@ func (s Service) UpdateGame(body entity.UpdateGame, id int, code string, ownerId
 	ids := make(map[uint]int)
 	// assign each question id from existing game a 1
 	for _, y := range game.Questions {
-		ids[y.Id] += 1
+		ids[y.ID] += 1
 	}
 
 	for i, x := range body.Questions {
 		// assign each question id from update a +1
-		ids[x.Id] += 1
+		ids[x.ID] += 1
 
 		// if question ids match => assign new values to question and it's options
-		if ids[x.Id] == 2 {
+		if ids[x.ID] == 2 {
 			game.Questions[i].Name = x.Name
 
 			for j := 0; j < 4; j++ {
@@ -87,7 +87,7 @@ func (s Service) UpdateGame(body entity.UpdateGame, id int, code string, ownerId
 			}
 
 			game.Questions = append(game.Questions, &question)
-			ids[x.Id] += 1
+			ids[x.ID] += 1
 		}
 	}
 
@@ -95,7 +95,7 @@ func (s Service) UpdateGame(body entity.UpdateGame, id int, code string, ownerId
 	for i, v := range ids {
 		if v == 1 {
 			for j, v2 := range game.Questions {
-				if v2.Id == i {
+				if v2.ID == i {
 					game.Questions = append(game.Questions[:j], game.Questions[j+1:]...)
 				}
 			}
@@ -108,56 +108,56 @@ func (s Service) UpdateGame(body entity.UpdateGame, id int, code string, ownerId
 		return nil, err
 	}
 
-	e := s.repo.Update(id, code, game)
+	e := s.repo.UpdateGame(ID, code, game)
 	return e, nil
 }
 
-func (s Service) DeleteGame(id int, code string, userId uint) error {
-	game, err := s.GetGame(id, code)
+func (s Service) DeleteGame(ID int, code string, userID uint) error {
+	game, err := s.GetGame(ID, code)
 	if err != nil {
 		return err
 	}
 
-	if userId != game.Owner {
+	if userID != game.Owner {
 		return errors.New("you shall not pass! (not owner)")
 	}
 
-	s.repo.Delete(game)
+	s.repo.DeleteGame(game)
 	return nil
 }
 
-func (s Service) GetGame(id int, code string) (*entity.Game, error) {
-	e := s.repo.Get(id, code)
+func (s Service) GetGame(ID int, code string) (*entity.Game, error) {
+	e := s.repo.GetGame(ID, code)
 
-	if e.Id == 0 {
+	if e.ID == 0 {
 		return nil, errors.New("game not found")
 	}
 
 	return e, nil
 }
 
-func (s Service) GetGamesByOwner(id int, user int, limit int) (*[]entity.Game, error) {
+func (s Service) GetGamesByOwner(ID int, user int, limit int) (*[]entity.Game, error) {
 	hidePrivate := true
 
-	if user == id {
+	if user == ID {
 		hidePrivate = false
 	}
 
-	games := s.repo.GetByOwner(id, hidePrivate, limit)
+	games := s.repo.GetGameByOwner(ID, hidePrivate, limit)
 	return games, nil
 }
 
 func (s Service) GetFavoriteGames(user int) (*[]entity.Game, error) {
-	games := s.repo.GetFavorite(user)
+	games := s.repo.GetFavoriteGame(user)
 	return games, nil
 }
 
-func (s Service) Favorite(id int, userId int) bool {
+func (s Service) Favorite(ID int, userID int) bool {
 	favorite := &entity.FavoriteGame{
-		GameId: uint(id),
-		UserId: uint(userId),
+		GameID: uint(ID),
+		UserID: uint(userID),
 	}
 
-	toggle := s.repo.ToggleFavorite(favorite)
+	toggle := s.repo.ToggleFavoriteGame(favorite)
 	return toggle
 }

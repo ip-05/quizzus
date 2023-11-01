@@ -9,9 +9,9 @@ import (
 func TestNewUser(t *testing.T) {
 	// Given
 	body := &CreateUser{
-		GoogleId:   "123",
-		DiscordId:  "456",
-		TelegramId: "789",
+		GoogleID:   "123",
+		DiscordID:  "456",
+		TelegramID: "789",
 		Picture:    "picture.com",
 		Name:       "test",
 	}
@@ -21,7 +21,7 @@ func TestNewUser(t *testing.T) {
 		actual, err := NewUser(body)
 
 		// Then
-		assert.Equal(t, body.DiscordId, actual.DiscordId)
+		assert.Equal(t, body.DiscordID, actual.DiscordID)
 		assert.Nil(t, err)
 	})
 

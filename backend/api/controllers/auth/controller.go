@@ -25,10 +25,10 @@ type AuthService interface {
 
 type UserService interface {
 	CreateUser(body *entity.CreateUser) (*entity.User, error)
-	UpdateUser(id uint, body entity.UpdateUser) (*entity.User, error)
-	DeleteUser(id uint)
-	GetUser(id uint) *entity.User
-	GetUserByProvider(id string, provider string) *entity.User
+	UpdateUser(ID uint, body entity.UpdateUser) (*entity.User, error)
+	DeleteUser(ID uint)
+	GetUserById(ID uint) *entity.User
+	GetUserByProvider(ID string, provider string) *entity.User
 }
 
 type Controller struct {

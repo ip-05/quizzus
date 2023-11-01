@@ -12,7 +12,7 @@ import (
 )
 
 type AuthedUser struct {
-	Id   uint   `json:"id"`
+	ID   uint   `json:"id"`
 	Name string `json:"name"`
 }
 
@@ -49,7 +49,7 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 			}
 
 			authedUser := AuthedUser{
-				Id:   uint(claims["id"].(float64)),
+				ID:   uint(claims["id"].(float64)),
 				Name: claims["name"].(string),
 			}
 			ctx.Set("authedUser", authedUser)

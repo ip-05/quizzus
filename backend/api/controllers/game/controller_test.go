@@ -6,7 +6,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/ip-05/quizzus/app/game"
-	"github.com/ip-05/quizzus/repo"
+	gameRepo "github.com/ip-05/quizzus/repo/game"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ip-05/quizzus/api/middleware"
@@ -51,7 +51,7 @@ func (gs *GameSuite) SetupTest() {
 	})
 
 	database, err := gorm.Open(dialector)
-	repository := repo.NewGameStore(database)
+	repository := gameRepo.NewRepository(database)
 	svc := game.NewService(repository)
 	assert.Nil(gs.T(), err)
 	gs.controller = NewController(svc)
@@ -63,7 +63,7 @@ func (gs *GameSuite) SetupTest() {
 	gs.mock = mock
 
 	authedUser := middleware.AuthedUser{
-		Id:   123,
+		ID:   123,
 		Name: "John",
 	}
 

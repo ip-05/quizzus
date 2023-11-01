@@ -13,7 +13,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/ip-05/quizzus/app/auth"
 	"github.com/ip-05/quizzus/app/user"
-	"github.com/ip-05/quizzus/repo"
+	userRepo "github.com/ip-05/quizzus/repo/user"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -102,7 +102,7 @@ func (s *AuthControllerSuite) SetupTest() {
 	})
 
 	database, err := gorm.Open(dialector)
-	userRepo := repo.NewUserStore(database)
+	userRepo := userRepo.NewRepository(database)
 
 	// Business logic layer
 	userService := user.NewService(userRepo)

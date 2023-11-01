@@ -1,4 +1,4 @@
-package repo
+package game
 
 import (
 	"fmt"
@@ -28,17 +28,11 @@ func SetupIntegration(t *testing.T) (*gorm.DB, func() error) {
 		panic("Failed to connect to database!")
 	}
 
-	err = db.AutoMigrate(&entity.Option{})
-	if err != nil {
-		return nil, nil
-	}
-
-	err = db.AutoMigrate(&entity.Question{})
-	if err != nil {
-		return nil, nil
-	}
-
-	err = db.AutoMigrate(&entity.Game{})
+	err = db.AutoMigrate(
+		&entity.Option{},
+		&entity.Question{},
+		&entity.Game{},
+	)
 	if err != nil {
 		return nil, nil
 	}

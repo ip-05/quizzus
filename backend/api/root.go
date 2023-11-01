@@ -20,7 +20,8 @@ func InitWeb(
 	gameSvc gameController.Service,
 	authSvc authController.AuthService,
 	userSvc userController.Service,
-	sessionSvc sessionController.Service) *gin.Engine {
+	sessionSvc sessionController.Service,
+) *gin.Engine {
 	router := gin.New()
 	router.Use(gin.Recovery())
 

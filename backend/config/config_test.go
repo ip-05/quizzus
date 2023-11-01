@@ -18,7 +18,7 @@ func TestInitConfig(t *testing.T) {
 	})
 
 	t.Run("TestConfigGoogle", func(t *testing.T) {
-		assert.Equal(t, "id", cfg.Google.ClientId, "should be equal")
+		assert.Equal(t, "id", cfg.Google.ClientID, "should be equal")
 		assert.Equal(t, "secret", cfg.Google.ClientSecret, "should be equal")
 	})
 

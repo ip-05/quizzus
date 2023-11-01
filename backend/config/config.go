@@ -23,7 +23,7 @@ type ServerConfig struct {
 }
 
 type GoogleConfig struct {
-	ClientId     string
+	ClientID     string
 	ClientSecret string
 }
 
@@ -65,7 +65,7 @@ func Init(name string, path string) *Config {
 	}
 
 	googleConfig := GoogleConfig{
-		ClientId:     viper.Get("google.client_id").(string),
+		ClientID:     viper.Get("google.client_id").(string),
 		ClientSecret: viper.Get("google.client_secret").(string),
 	}
 

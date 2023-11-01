@@ -15,10 +15,10 @@ import (
 
 type Repository interface {
 	CreateUser(body *entity.CreateUser) (*entity.User, error)
-	UpdateUser(id uint, body entity.UpdateUser) (*entity.User, error)
-	DeleteUser(id uint)
-	GetUser(id uint) *entity.User
-	GetUserByProvider(id string, provider string) *entity.User
+	UpdateUser(ID uint, body entity.UpdateUser) (*entity.User, error)
+	DeleteUser(ID uint)
+	GetUserById(ID uint) *entity.User
+	GetUserByProvider(ID string, provider string) *entity.User
 }
 
 type GoogleAuth interface {
@@ -76,9 +76,9 @@ func (s *AuthService) AuthenticateGoogle(code string) (string, error) {
 		return "", errors.New("error while parsing user info")
 	}
 
-	existingUser := s.Repo.GetUserByProvider(userInfo.Id, "google")
+	existingUser := s.Repo.GetUserByProvider(userInfo.ID, "google")
 	if existingUser != nil {
-		tokenString, err := utils.GenerateToken(existingUser.Id, existingUser.Name, s.Config.Secrets.Jwt)
+		tokenString, err := utils.GenerateToken(existingUser.ID, existingUser.Name, s.Config.Secrets.Jwt)
 		if err != nil {
 			return "", err
 		}
@@ -95,7 +95,7 @@ func (s *AuthService) AuthenticateGoogle(code string) (string, error) {
 		return "", err
 	}
 
-	tokenString, err := utils.GenerateToken(user.Id, user.Name, s.Config.Secrets.Jwt)
+	tokenString, err := utils.GenerateToken(user.ID, user.Name, s.Config.Secrets.Jwt)
 	if err != nil {
 		return "", err
 	}

@@ -17,24 +17,24 @@ import (
 )
 
 type User struct {
-	Id             uint            `json:"id"`
+	ID             uint            `json:"id"`
 	Name           string          `json:"name"`
-	ProfilePicture string          `json:"profilePicture"`
+	ProfilePicture string          `json:"profile_picture"`
 	ActiveGame     *Game           `json:"-"`
 	Conn           *websocket.Conn `json:"-"`
 }
 
 type Game struct {
-	Id            uint             `json:"id"`
-	InstId        int              `json:"-"`
+	ID            uint             `json:"id"`
+	InstID        int              `json:"-"`
 	Status        string           `json:"status"`
-	RoundStatus   string           `json:"roundStatus"`
-	CurrentRound  int              `json:"currentRound"`
+	RoundStatus   string           `json:"round_status"`
+	CurrentRound  int              `json:"current_round"`
 	Points        float64          `json:"points"`
 	Topic         string           `json:"topic"`
-	RoundTime     int              `json:"roundTime"`
-	QuestionCount int              `json:"questionCount"`
-	InviteCode    string           `json:"inviteCode"`
+	RoundTime     int              `json:"round_time"`
+	QuestionCount int              `json:"question_count"`
+	InviteCode    string           `json:"invite_code"`
 	Members       map[uint]*User   `json:"members"`
 	Owner         *User            `json:"owner"`
 	Leaderboard   map[uint]float64 `json:"leaderboard"`
@@ -56,28 +56,28 @@ type GameSocketController struct {
 }
 
 type GameService interface {
-	CreateGame(body entity.CreateGame, ownerId uint) (*entity.Game, error)
-	UpdateGame(body entity.UpdateGame, id int, code string, ownerId uint) (*entity.Game, error)
-	DeleteGame(id int, code string, userId uint) error
+	CreateGame(body entity.CreateGame, ownerID uint) (*entity.Game, error)
+	UpdateGame(body entity.UpdateGame, ID int, code string, ownerID uint) (*entity.Game, error)
+	DeleteGame(ID int, code string, userID uint) error
 
-	GetGame(id int, code string) (*entity.Game, error)
-	GetGamesByOwner(id int, user int, limit int) (*[]entity.Game, error)
+	GetGame(ID int, code string) (*entity.Game, error)
+	GetGamesByOwner(ID int, user int, limit int) (*[]entity.Game, error)
 	GetFavoriteGames(user int) (*[]entity.Game, error)
 
-	Favorite(id int, userId int) bool
+	Favorite(ID int, userID int) bool
 }
 
 type SessionService interface {
-	NewSession(id, userId, instId int) uint
-	EndSession(id, userId, instId, questions, players int, points float64) uint
+	NewSession(ID, userID, instID int) uint
+	EndSession(ID, userID, instID, questions, players int, points float64) uint
 }
 
 type UserService interface {
 	CreateUser(body *entity.CreateUser) (*entity.User, error)
-	UpdateUser(id uint, body entity.UpdateUser) (*entity.User, error)
-	DeleteUser(id uint)
-	GetUser(id uint) *entity.User
-	GetUserByProvider(id string, provider string) *entity.User
+	UpdateUser(ID uint, body entity.UpdateUser) (*entity.User, error)
+	DeleteUser(ID uint)
+	GetUserById(ID uint) *entity.User
+	GetUserByProvider(ID string, provider string) *entity.User
 }
 
 func NewGameSocketController(gameSvc GameService, userSvc UserService, sessionSvc SessionService) *GameSocketController {
@@ -96,24 +96,24 @@ func NewGameSocketController(gameSvc GameService, userSvc UserService, sessionSv
 func (c *GameSocketController) InitUser(ctx context.Context) (*User, error) {
 	authedUser := ctx.Value("authedUser").(middleware.AuthedUser)
 
-	user := c.User.GetUser(authedUser.Id)
+	user := c.User.GetUserById(authedUser.ID)
 	if user == nil {
 		return nil, errors.New("no user found")
 	}
 
-	_, found := c.Users[user.Id]
+	_, found := c.Users[user.ID]
 	if found {
 		return nil, errors.New("user already exists on another socket")
 	}
 
-	c.Users[user.Id] = &User{
-		Id:             user.Id,
+	c.Users[user.ID] = &User{
+		ID:             user.ID,
 		Name:           user.Name,
 		ProfilePicture: user.Picture,
 		Conn:           ctx.Value("conn").(*websocket.Conn),
 	}
 
-	return c.Users[user.Id], nil
+	return c.Users[user.ID], nil
 }
 
 func (c *GameSocketController) CleanUser(ctx context.Context) {
@@ -122,11 +122,11 @@ func (c *GameSocketController) CleanUser(ctx context.Context) {
 		c.LeaveGame(ctx)
 	}
 
-	delete(c.Users, user.Id)
+	delete(c.Users, user.ID)
 }
 
 type JoinGameData struct {
-	GameId string `json:"gameId"`
+	GameID string `json:"game_id"`
 }
 
 func (c *GameSocketController) JoinGame(ctx context.Context, msgData json.RawMessage) {
@@ -147,13 +147,13 @@ func (c *GameSocketController) JoinGame(ctx context.Context, msgData json.RawMes
 
 	// var game entity.Game
 	// g.DB.Preload("Questions.Options").Where("invite_code = ?", data.GameId).First(&game)
-	game, err := c.Game.GetGame(0, data.GameId)
+	game, err := c.Game.GetGame(0, data.GameID)
 	if err != nil {
 		DataReply(true, "DATA_ERROR", err.Error()).Send(conn)
 		return
 	}
 
-	if game.Id == 0 {
+	if game.ID == 0 {
 		MessageReply(true, utils.GameNotFound).Send(conn)
 		return
 	}
@@ -164,24 +164,24 @@ func (c *GameSocketController) JoinGame(ctx context.Context, msgData json.RawMes
 			DataReply(false, utils.UserJoined, user).Send(member.Conn)
 		}
 
-		value.Members[user.Id] = user
+		value.Members[user.ID] = user
 		user.ActiveGame = value
-		value.Leaderboard[user.Id] = 0
+		value.Leaderboard[user.ID] = 0
 
 		DataReply(false, utils.JoinedGame, value).Send(conn)
 		return
 	}
 
-	if game.Owner != user.Id {
+	if game.Owner != user.ID {
 		MessageReply(true, utils.NotOwner).Send(conn)
 		return
 	}
 
-	instId, _ := rand.Int(rand.Reader, big.NewInt(100000000000))
+	instID, _ := rand.Int(rand.Reader, big.NewInt(100000000000))
 
 	newGame := Game{
-		Id:            game.Id,
-		InstId:        int(instId.Int64()),
+		ID:            game.ID,
+		InstID:        int(instID.Int64()),
 		Status:        utils.Standby,
 		RoundStatus:   utils.RoundWaiting,
 		Points:        game.Points,
@@ -196,8 +196,8 @@ func (c *GameSocketController) JoinGame(ctx context.Context, msgData json.RawMes
 		Data:          game,
 	}
 
-	newGame.Members[user.Id] = user
-	newGame.Leaderboard[user.Id] = 0
+	newGame.Members[user.ID] = user
+	newGame.Leaderboard[user.ID] = 0
 
 	c.Games[newGame.InviteCode] = &newGame
 	user.ActiveGame = c.Games[newGame.InviteCode]
@@ -210,7 +210,7 @@ type ChatData struct {
 
 type ChatBroadcast struct {
 	Name    string `json:"name"`
-	UserId  uint   `json:"userId"`
+	UserID  uint   `json:"user_id"`
 	Message string `json:"message"`
 }
 
@@ -231,7 +231,7 @@ func (c *GameSocketController) SendChat(ctx context.Context, msgData json.RawMes
 
 	game := user.ActiveGame
 	for _, member := range game.Members {
-		DataReply(false, utils.ReceiveChat, ChatBroadcast{Name: user.Name, Message: data.Message, UserId: user.Id}).Send(member.Conn)
+		DataReply(false, utils.ReceiveChat, ChatBroadcast{Name: user.Name, Message: data.Message, UserID: user.ID}).Send(member.Conn)
 	}
 }
 
@@ -252,7 +252,7 @@ func (c *GameSocketController) LeaveGame(ctx context.Context) {
 		delete(c.Games, game.InviteCode)
 	}
 
-	delete(game.Members, user.Id)
+	delete(game.Members, user.ID)
 	user.ActiveGame = nil
 	MessageReply(false, utils.LeftGame).Send(conn)
 
@@ -320,7 +320,7 @@ func (c *GameSocketController) StartGame(ctx context.Context) {
 	for id, member := range user.ActiveGame.Members {
 		MessageReply(false, utils.InProgress).Send(member.Conn)
 
-		c.Session.NewSession(int(user.ActiveGame.Id), int(id), user.ActiveGame.InstId)
+		c.Session.NewSession(int(user.ActiveGame.ID), int(id), user.ActiveGame.InstID)
 	}
 	user.ActiveGame.Status = utils.InProgress
 	go c.PlayRounds(user.ActiveGame)
@@ -387,16 +387,16 @@ func (c *GameSocketController) PlayRounds(game *Game) {
 			for range time.Tick(time.Second * 1) {
 				if n == 0 {
 					for _, member := range game.Members {
-						choice := game.Rounds[game.CurrentRound].Answers[member.Id]
+						choice := game.Rounds[game.CurrentRound].Answers[member.ID]
 						correct := game.Data.Questions[game.CurrentRound].Options[choice].Correct
 
 						if correct {
-							game.Leaderboard[member.Id] += game.Data.Points
+							game.Leaderboard[member.ID] += game.Data.Points
 						}
 					}
 
 					for _, member := range game.Members {
-						choice := game.Rounds[game.CurrentRound].Answers[member.Id]
+						choice := game.Rounds[game.CurrentRound].Answers[member.ID]
 						correct := game.Data.Questions[game.CurrentRound].Options[choice].Correct
 
 						DataReply(false, utils.RoundFinished, FinishedReply{Correct: correct, Options: game.Data.Questions[game.CurrentRound].Options, Leaderboard: game.Leaderboard}).Send(member.Conn)
@@ -424,7 +424,7 @@ func (c *GameSocketController) PlayRounds(game *Game) {
 				for id, member := range game.Members {
 					DataReply(false, utils.Finished, game.Leaderboard).Send(member.Conn)
 
-					c.Session.EndSession(int(game.Id), int(id), game.InstId, game.QuestionCount, len(game.Members)-1, game.Leaderboard[id])
+					c.Session.EndSession(int(game.ID), int(id), game.InstID, game.QuestionCount, len(game.Members)-1, game.Leaderboard[id])
 				}
 
 				break
@@ -438,7 +438,7 @@ type AnswerData struct {
 }
 
 type AnswerResponse struct {
-	UserId uint `json:"user"`
+	UserID uint `json:"user"`
 	Option uint `json:"option"`
 }
 
@@ -459,10 +459,10 @@ func (c *GameSocketController) AnswerQuestion(ctx context.Context, msgData json.
 	}
 
 	if user.ActiveGame.RoundStatus == utils.RoundInProgress && user.ActiveGame.Status == utils.InProgress {
-		user.ActiveGame.Rounds[user.ActiveGame.CurrentRound].Answers[user.Id] = data.Option
+		user.ActiveGame.Rounds[user.ActiveGame.CurrentRound].Answers[user.ID] = data.Option
 		DataReply(false, utils.AnswerAccepted, user.ActiveGame).Send(conn)
 		DataReply(false, utils.UserAnswered, AnswerResponse{
-			UserId: user.Id,
+			UserID: user.ID,
 			Option: data.Option,
 		}).Send(user.ActiveGame.Owner.Conn)
 	} else {

@@ -10,10 +10,10 @@ import (
 )
 
 type Service interface {
-	GetSession(id, userId int) *entity.GameSession
-	GetSessions(userId, limit int) *[]entity.GameSession
-	NewSession(id, userId, instId int) uint
-	EndSession(id, userId, instId, questions, players int, points float64) uint
+	GetSession(ID, userID int) *entity.GameSession
+	GetSessions(userID, limit int) *[]entity.GameSession
+	NewSession(ID, userID, instID int) uint
+	EndSession(ID, userID, instID, questions, players int, points float64) uint
 }
 
 type Controller struct {
@@ -33,7 +33,7 @@ func (c Controller) GetSessions(ctx *gin.Context) {
 	authedUser, _ := ctx.Get("authedUser")
 	user := authedUser.(middleware.AuthedUser)
 
-	sessions := c.service.GetSessions(int(user.Id), limit)
+	sessions := c.service.GetSessions(int(user.ID), limit)
 
 	ctx.JSON(http.StatusOK, sessions)
 }
@@ -44,9 +44,9 @@ func (c Controller) GetSession(ctx *gin.Context) {
 	authedUser, _ := ctx.Get("authedUser")
 	user := authedUser.(middleware.AuthedUser)
 
-	session := c.service.GetSession(id, int(user.Id))
+	session := c.service.GetSession(id, int(user.ID))
 
-	if session.Id == 0 {
+	if session.ID == 0 {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "Session not found"})
 		return
 	}
