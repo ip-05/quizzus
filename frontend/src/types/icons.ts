@@ -29,4 +29,16 @@ export type Icons =
   | 'star-yellow'
   | 'telegram'
   | 'threedots'
-  | 'triangle-red';
+  | 'triangle-red'
+  | 'radio'
+  | 'radio-checked'
+  | 'radio-blue-checked'
+  | 'radio-yellow-checked'
+  | 'radio-red-checked'
+  | 'radio-green-checked'
+  | 'checkbox'
+  | 'checkbox-checked'
+  | 'checkbox-blue-checked'
+  | 'checkbox-yellow-checked'
+  | 'checkbox-red-checked'
+  | 'checkbox-green-checked';
