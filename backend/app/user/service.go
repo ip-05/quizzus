@@ -2,38 +2,38 @@ package user
 
 import "github.com/ip-05/quizzus/entity"
 
-type IUserRepo interface {
-	Get(id uint) *entity.User
-	GetByGoogle(id string) *entity.User
-	GetByDiscord(id string) *entity.User
-	GetByTelegram(id string) *entity.User
-	Create(e *entity.User) *entity.User
-	Update(e *entity.User) *entity.User
-	Delete(e *entity.User)
+type Repository interface {
+	GetUserById(ID uint) *entity.User
+	GetUserByGoogleId(ID string) *entity.User
+	GetUserByDiscordId(ID string) *entity.User
+	GetUserByTelegramId(ID string) *entity.User
+	CreateUser(e *entity.User) *entity.User
+	UpdateUser(e *entity.User) *entity.User
+	DeleteUser(e *entity.User)
 }
 
-type UserService struct {
-	userRepo IUserRepo
+type Service struct {
+	repo Repository
 }
 
-func NewUserService(userR IUserRepo) *UserService {
-	return &UserService{
-		userRepo: userR,
+func NewService(userRepo Repository) *Service {
+	return &Service{
+		repo: userRepo,
 	}
 }
 
-func (us *UserService) CreateUser(body *entity.CreateUser) (*entity.User, error) {
+func (s Service) CreateUser(body *entity.CreateUser) (*entity.User, error) {
 	u, err := entity.NewUser(body)
 	if err != nil {
 		return nil, err
 	}
 
-	user := us.userRepo.Create(u)
+	user := s.repo.CreateUser(u)
 	return user, nil
 }
 
-func (us *UserService) UpdateUser(id uint, body entity.UpdateUser) (*entity.User, error) {
-	user := us.GetUser(id)
+func (s Service) UpdateUser(ID uint, body entity.UpdateUser) (*entity.User, error) {
+	user := s.GetUserById(ID)
 
 	user.Name = body.Name
 	user.Picture = body.Picture
@@ -42,27 +42,27 @@ func (us *UserService) UpdateUser(id uint, body entity.UpdateUser) (*entity.User
 		return nil, err
 	}
 
-	us.userRepo.Update(user)
+	s.repo.UpdateUser(user)
 	return user, nil
 }
 
-func (us *UserService) DeleteUser(id uint) {
-	user := us.GetUser(id)
-	us.userRepo.Delete(user)
+func (s Service) DeleteUser(ID uint) {
+	user := s.GetUserById(ID)
+	s.repo.DeleteUser(user)
 }
 
-func (us *UserService) GetUser(id uint) *entity.User {
-	return us.userRepo.Get(id)
+func (s Service) GetUserById(ID uint) *entity.User {
+	return s.repo.GetUserById(ID)
 }
 
-func (us *UserService) GetUserByProvider(id string, provider string) *entity.User {
+func (s Service) GetUserByProvider(ID string, provider string) *entity.User {
 	switch provider {
 	case "google":
-		return us.userRepo.GetByGoogle(id)
+		return s.repo.GetUserByGoogleId(ID)
 	case "discord":
-		return us.userRepo.GetByDiscord(id)
+		return s.repo.GetUserByDiscordId(ID)
 	case "telegram":
-		return us.userRepo.GetByTelegram(id)
+		return s.repo.GetUserByTelegramId(ID)
 	default:
 		return nil
 	}

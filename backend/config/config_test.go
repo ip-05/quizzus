@@ -7,7 +7,7 @@ import (
 )
 
 func TestInitConfig(t *testing.T) {
-	cfg := InitConfig("../config.example", "config")
+	cfg := Init("../config.example", "config")
 
 	t.Run("TestConfigServer", func(t *testing.T) {
 		assert.Equal(t, false, cfg.Server.Secure, "should be equal")
@@ -18,7 +18,7 @@ func TestInitConfig(t *testing.T) {
 	})
 
 	t.Run("TestConfigGoogle", func(t *testing.T) {
-		assert.Equal(t, "id", cfg.Google.ClientId, "should be equal")
+		assert.Equal(t, "id", cfg.Google.ClientID, "should be equal")
 		assert.Equal(t, "secret", cfg.Google.ClientSecret, "should be equal")
 	})
 
@@ -41,7 +41,7 @@ func TestInitConfig(t *testing.T) {
 
 	t.Run("TestConfigInvalid", func(t *testing.T) {
 		assert.Panics(t, func() {
-			InitConfig("test_panic", "config")
+			Init("test_panic", "config")
 		}, "should panic")
 	})
 }

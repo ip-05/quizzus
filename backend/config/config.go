@@ -23,7 +23,7 @@ type ServerConfig struct {
 }
 
 type GoogleConfig struct {
-	ClientId     string
+	ClientID     string
 	ClientSecret string
 }
 
@@ -46,7 +46,7 @@ type DatabaseConfig struct {
 
 var config *Config
 
-func InitConfig(name string, path string) *Config {
+func Init(name string, path string) *Config {
 	viper.AddConfigPath(path)
 	viper.SetConfigName(name)
 	viper.SetConfigType("toml")
@@ -65,7 +65,7 @@ func InitConfig(name string, path string) *Config {
 	}
 
 	googleConfig := GoogleConfig{
-		ClientId:     viper.Get("google.client_id").(string),
+		ClientID:     viper.Get("google.client_id").(string),
 		ClientSecret: viper.Get("google.client_secret").(string),
 	}
 
@@ -101,5 +101,5 @@ func GetConfig() *Config {
 	if config != nil {
 		return config
 	}
-	return InitConfig("config", "config")
+	return Init("config", "config")
 }

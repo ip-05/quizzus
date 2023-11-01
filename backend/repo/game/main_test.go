@@ -1,13 +1,14 @@
-package repo
+package game
 
 import (
 	"fmt"
+	"os"
+	"testing"
+
 	"github.com/ip-05/quizzus/config"
 	"github.com/ip-05/quizzus/entity"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"os"
-	"testing"
 )
 
 func TestMain(m *testing.M) {
@@ -15,7 +16,7 @@ func TestMain(m *testing.M) {
 }
 
 func SetupIntegration(t *testing.T) (*gorm.DB, func() error) {
-	cfg := config.InitConfig("config", "../config")
+	cfg := config.Init("config", "../config")
 
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
@@ -27,17 +28,11 @@ func SetupIntegration(t *testing.T) (*gorm.DB, func() error) {
 		panic("Failed to connect to database!")
 	}
 
-	err = db.AutoMigrate(&entity.Option{})
-	if err != nil {
-		return nil, nil
-	}
-
-	err = db.AutoMigrate(&entity.Question{})
-	if err != nil {
-		return nil, nil
-	}
-
-	err = db.AutoMigrate(&entity.Game{})
+	err = db.AutoMigrate(
+		&entity.Option{},
+		&entity.Question{},
+		&entity.Game{},
+	)
 	if err != nil {
 		return nil, nil
 	}

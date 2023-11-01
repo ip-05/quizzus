@@ -5,7 +5,7 @@ import (
 )
 
 type Question struct {
-	Id      uint      `json:"id" gorm:"primary_key"`
+	ID      uint      `json:"id" gorm:"primary_key"`
 	Name    string    `json:"name"`
 	Options []*Option `json:"options"`
 	GameID  uint      `json:"-"`
@@ -17,7 +17,7 @@ type CreateQuestion struct {
 }
 
 type UpdateQuestion struct {
-	Id      uint           `json:"id"`
+	ID      uint           `json:"id"`
 	Name    string         `json:"name"`
 	Options []UpdateOption `json:"options"`
 }

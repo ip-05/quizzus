@@ -13,12 +13,12 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type IUserService interface {
+type Repository interface {
 	CreateUser(body *entity.CreateUser) (*entity.User, error)
-	UpdateUser(id uint, body entity.UpdateUser) (*entity.User, error)
-	DeleteUser(id uint)
-	GetUser(id uint) *entity.User
-	GetUserByProvider(id string, provider string) *entity.User
+	UpdateUser(ID uint, body entity.UpdateUser) (*entity.User, error)
+	DeleteUser(ID uint)
+	GetUserById(ID uint) *entity.User
+	GetUserByProvider(ID string, provider string) *entity.User
 }
 
 type GoogleAuth interface {
@@ -35,25 +35,25 @@ type AuthService struct {
 	GoogleConfig GoogleAuth
 	Http         HttpClient
 
-	User IUserService
+	Repo Repository
 }
 
-func NewAuthService(cfg *config.Config, gcfg GoogleAuth, user IUserService, http HttpClient) *AuthService {
+func NewService(cfg *config.Config, gcfg GoogleAuth, userRepo Repository, http HttpClient) *AuthService {
 	return &AuthService{
 		Config:       cfg,
 		GoogleConfig: gcfg,
-		User:         user,
+		Repo:         userRepo,
 		Http:         http,
 	}
 }
 
-func (u *AuthService) AuthenticateGoogle(code string) (string, error) {
-	token, err := u.GoogleConfig.Exchange(context.Background(), code)
+func (s *AuthService) AuthenticateGoogle(code string) (string, error) {
+	token, err := s.GoogleConfig.Exchange(context.Background(), code)
 	if err != nil {
 		return "", errors.New("error exchanging code for token")
 	}
 
-	response, err := u.Http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
+	response, err := s.Http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
 	if err != nil {
 		return "", errors.New("error fetching user data from google")
 	}
@@ -76,9 +76,9 @@ func (u *AuthService) AuthenticateGoogle(code string) (string, error) {
 		return "", errors.New("error while parsing user info")
 	}
 
-	existingUser := u.User.GetUserByProvider(userInfo.Id, "google")
+	existingUser := s.Repo.GetUserByProvider(userInfo.ID, "google")
 	if existingUser != nil {
-		tokenString, err := utils.GenerateToken(existingUser.Id, existingUser.Name, u.Config.Secrets.Jwt)
+		tokenString, err := utils.GenerateToken(existingUser.ID, existingUser.Name, s.Config.Secrets.Jwt)
 		if err != nil {
 			return "", err
 		}
@@ -90,12 +90,12 @@ func (u *AuthService) AuthenticateGoogle(code string) (string, error) {
 		return "", err
 	}
 
-	user, err := u.User.CreateUser(newUser)
+	user, err := s.Repo.CreateUser(newUser)
 	if err != nil {
 		return "", err
 	}
 
-	tokenString, err := utils.GenerateToken(user.Id, user.Name, u.Config.Secrets.Jwt)
+	tokenString, err := utils.GenerateToken(user.ID, user.Name, s.Config.Secrets.Jwt)
 	if err != nil {
 		return "", err
 	}

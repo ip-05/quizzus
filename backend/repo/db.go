@@ -2,6 +2,7 @@ package repo
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/ip-05/quizzus/config"
 	"github.com/ip-05/quizzus/entity"
@@ -17,37 +18,20 @@ func New(cfg *config.Config) *gorm.DB {
 
 	database, err := gorm.Open(postgres.Open(psqlInfo))
 	if err != nil {
-		panic("Failed to connect to database!")
+		panic("FAIL_CONNECT_DB")
 	}
 
-	err = database.AutoMigrate(&entity.Option{})
+	err = database.AutoMigrate(
+		&entity.Option{},
+		&entity.Question{},
+		&entity.Game{},
+		&entity.User{},
+		&entity.FavoriteGame{},
+		&entity.GameSession{},
+		&entity.GameSession{},
+	)
 	if err != nil {
-		return nil
-	}
-
-	err = database.AutoMigrate(&entity.Question{})
-	if err != nil {
-		return nil
-	}
-
-	err = database.AutoMigrate(&entity.Game{})
-	if err != nil {
-		return nil
-	}
-
-	err = database.AutoMigrate(&entity.User{})
-	if err != nil {
-		return nil
-	}
-
-	err = database.AutoMigrate(&entity.FavoriteGame{})
-	if err != nil {
-		return nil
-	}
-
-	err = database.AutoMigrate(&entity.GameSession{})
-	if err != nil {
-		return nil
+		log.Print("FAIL_MIGRATIONS")
 	}
 	return database
 }

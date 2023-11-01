@@ -8,26 +8,26 @@ import (
 )
 
 type Game struct {
-	Id         uint        `json:"id" gorm:"primary_key"`
-	InviteCode string      `json:"inviteCode"`
+	ID         uint        `json:"id" gorm:"primary_key"`
+	InviteCode string      `json:"invite_code"`
 	Topic      string      `json:"topic"`
-	RoundTime  int         `json:"roundTime"`
+	RoundTime  int         `json:"round_time"`
 	Points     float64     `json:"points"`
 	Public     bool        `json:"public"`
 	Questions  []*Question `json:"questions"`
-	Owner      uint        `json:"ownerId"`
-	CreatedAt  time.Time   `json:"createdAt" gorm:"default:current_timestamp"`
+	Owner      uint        `json:"owner_id"`
+	CreatedAt  time.Time   `json:"created_at" gorm:"default:current_timestamp"`
 }
 
 type FavoriteGame struct {
-	Id     uint `json:"id" gorm:"primary_key"`
-	GameId uint `json:"gameId"`
-	UserId uint `json:"userId"`
+	ID     uint `json:"id" gorm:"primary_key"`
+	GameID uint `json:"game_id"`
+	UserID uint `json:"user_id"`
 }
 
 type CreateGame struct {
 	Topic     string           `json:"topic"`
-	RoundTime int              `json:"roundTime"`
+	RoundTime int              `json:"round_time"`
 	Points    float64          `json:"points"`
 	Public    bool             `json:"public"`
 	Questions []CreateQuestion `json:"questions"`
@@ -35,13 +35,13 @@ type CreateGame struct {
 
 type UpdateGame struct {
 	Topic     string           `json:"topic"`
-	RoundTime int              `json:"roundTime"`
+	RoundTime int              `json:"round_time"`
 	Points    float64          `json:"points"`
 	Public    bool             `json:"public"`
 	Questions []UpdateQuestion `json:"questions"`
 }
 
-func NewGame(body CreateGame, ownerId uint) (*Game, error) {
+func NewGame(body CreateGame, ownerID uint) (*Game, error) {
 	code := utils.GenerateCode()
 	game := &Game{
 		InviteCode: code,
@@ -49,7 +49,7 @@ func NewGame(body CreateGame, ownerId uint) (*Game, error) {
 		RoundTime:  body.RoundTime,
 		Points:     body.Points,
 		Public:     body.Public,
-		Owner:      ownerId,
+		Owner:      ownerID,
 	}
 
 	for _, q := range body.Questions {
