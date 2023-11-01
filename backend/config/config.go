@@ -46,7 +46,7 @@ type DatabaseConfig struct {
 
 var config *Config
 
-func InitConfig(name string, path string) *Config {
+func Init(name string, path string) *Config {
 	viper.AddConfigPath(path)
 	viper.SetConfigName(name)
 	viper.SetConfigType("toml")
@@ -101,5 +101,5 @@ func GetConfig() *Config {
 	if config != nil {
 		return config
 	}
-	return InitConfig("config", "config")
+	return Init("config", "config")
 }

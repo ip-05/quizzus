@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/ip-05/quizzus/app/auth"
 	"github.com/ip-05/quizzus/app/session"
 	"github.com/ip-05/quizzus/app/user"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	"net/http"
 
 	"github.com/ip-05/quizzus/api"
 	"github.com/ip-05/quizzus/app/game"
@@ -37,9 +38,9 @@ func main() {
 	sessionRepo := repo.NewSessionStore(db)
 
 	// Business logic layer
-	gameService := game.NewGameService(gameRepo)
-	userService := user.NewUserService(userRepo)
-	authService := auth.NewAuthService(cfg, gcfg, userService, &http.Client{})
+	gameService := game.NewService(gameRepo)
+	userService := user.NewService(userRepo)
+	authService := auth.NewService(cfg, gcfg, userService, &http.Client{})
 	sessionService := session.NewSessionService(sessionRepo)
 
 	// Presentation layer

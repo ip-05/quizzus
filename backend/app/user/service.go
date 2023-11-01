@@ -2,7 +2,7 @@ package user
 
 import "github.com/ip-05/quizzus/entity"
 
-type IUserRepo interface {
+type Repository interface {
 	Get(id uint) *entity.User
 	GetByGoogle(id string) *entity.User
 	GetByDiscord(id string) *entity.User
@@ -12,28 +12,28 @@ type IUserRepo interface {
 	Delete(e *entity.User)
 }
 
-type UserService struct {
-	userRepo IUserRepo
+type Service struct {
+	repo Repository
 }
 
-func NewUserService(userR IUserRepo) *UserService {
-	return &UserService{
-		userRepo: userR,
+func NewService(userRepo Repository) *Service {
+	return &Service{
+		repo: userRepo,
 	}
 }
 
-func (us *UserService) CreateUser(body *entity.CreateUser) (*entity.User, error) {
+func (s Service) CreateUser(body *entity.CreateUser) (*entity.User, error) {
 	u, err := entity.NewUser(body)
 	if err != nil {
 		return nil, err
 	}
 
-	user := us.userRepo.Create(u)
+	user := s.repo.Create(u)
 	return user, nil
 }
 
-func (us *UserService) UpdateUser(id uint, body entity.UpdateUser) (*entity.User, error) {
-	user := us.GetUser(id)
+func (s Service) UpdateUser(id uint, body entity.UpdateUser) (*entity.User, error) {
+	user := s.GetUser(id)
 
 	user.Name = body.Name
 	user.Picture = body.Picture
@@ -42,27 +42,27 @@ func (us *UserService) UpdateUser(id uint, body entity.UpdateUser) (*entity.User
 		return nil, err
 	}
 
-	us.userRepo.Update(user)
+	s.repo.Update(user)
 	return user, nil
 }
 
-func (us *UserService) DeleteUser(id uint) {
-	user := us.GetUser(id)
-	us.userRepo.Delete(user)
+func (s Service) DeleteUser(id uint) {
+	user := s.GetUser(id)
+	s.repo.Delete(user)
 }
 
-func (us *UserService) GetUser(id uint) *entity.User {
-	return us.userRepo.Get(id)
+func (s Service) GetUser(id uint) *entity.User {
+	return s.repo.Get(id)
 }
 
-func (us *UserService) GetUserByProvider(id string, provider string) *entity.User {
+func (s Service) GetUserByProvider(id string, provider string) *entity.User {
 	switch provider {
 	case "google":
-		return us.userRepo.GetByGoogle(id)
+		return s.repo.GetByGoogle(id)
 	case "discord":
-		return us.userRepo.GetByDiscord(id)
+		return s.repo.GetByDiscord(id)
 	case "telegram":
-		return us.userRepo.GetByTelegram(id)
+		return s.repo.GetByTelegram(id)
 	default:
 		return nil
 	}

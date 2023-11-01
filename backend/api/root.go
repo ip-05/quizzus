@@ -3,15 +3,24 @@ package api
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/ip-05/quizzus/api/controllers/web"
-	"github.com/ip-05/quizzus/api/controllers/ws"
+	authController "github.com/ip-05/quizzus/api/controllers/auth"
+	gameController "github.com/ip-05/quizzus/api/controllers/game"
+	sessionController "github.com/ip-05/quizzus/api/controllers/session"
+	userController "github.com/ip-05/quizzus/api/controllers/user"
+	ws "github.com/ip-05/quizzus/api/controllers/ws"
+
 	"github.com/ip-05/quizzus/api/middleware"
-	"github.com/ip-05/quizzus/app/auth"
 	"github.com/ip-05/quizzus/config"
 	"golang.org/x/oauth2"
 )
 
-func InitWeb(cfg *config.Config, gcfg *oauth2.Config, gameService web.IGameService, authService web.IAuthService, userService auth.IUserService, sessionService web.ISessionService) *gin.Engine {
+func InitWeb(
+	cfg *config.Config,
+	gcfg *oauth2.Config,
+	gameSvc gameController.Service,
+	authSvc authController.AuthService,
+	userSvc userController.Service,
+	sessionSvc sessionController.Service) *gin.Engine {
 	router := gin.New()
 	router.Use(gin.Recovery())
 
@@ -21,12 +30,12 @@ func InitWeb(cfg *config.Config, gcfg *oauth2.Config, gameService web.IGameServi
 	corsConfig.AddAllowHeaders("Authorization")
 	router.Use(cors.New(corsConfig))
 
-	userController := web.NewUserController(userService)
-	sessionsController := web.NewSessionController(sessionService)
-	authController := web.NewAuthController(cfg, gcfg, authService, userService)
+	userController := userController.NewController(userSvc)
+	sessionsController := sessionController.NewController(sessionSvc)
+	authController := authController.NewController(cfg, gcfg, authSvc, userSvc)
+	gameController := gameController.NewController(gameSvc)
 
-	game := web.NewGameController(gameService)
-	ws := ws.NewCoreController(gameService, userService, sessionService)
+	ws := ws.NewCoreController(gameSvc, userSvc, sessionSvc)
 
 	userGroup := router.Group("users")
 	{
@@ -38,19 +47,22 @@ func InitWeb(cfg *config.Config, gcfg *oauth2.Config, gameService web.IGameServi
 
 	authGroup := router.Group("auth")
 	{
-		authGroup.GET("/google", authController.GoogleLogin)
-		authGroup.GET("/google/callback", authController.GoogleCallback)
+		googleGroup := authGroup.Group("google")
+		{
+			googleGroup.GET("", authController.GoogleLogin)
+			googleGroup.GET("/callback", authController.GoogleCallback)
+		}
 	}
 
 	gamesGroup := router.Group("games")
 	{
 		gamesGroup.Use(middleware.AuthMiddleware(cfg))
-		gamesGroup.GET("/:id", game.Get)
-		gamesGroup.GET("", game.GetMany)
-		gamesGroup.POST("/:id/favorite", game.Favorite)
-		gamesGroup.POST("", game.CreateGame)
-		gamesGroup.PATCH("", game.Update)
-		gamesGroup.DELETE("", game.Delete)
+		gamesGroup.GET("/:id", gameController.Get)
+		gamesGroup.GET("", gameController.GetMany)
+		gamesGroup.POST("/:id/favorite", gameController.Favorite)
+		gamesGroup.POST("", gameController.CreateGame)
+		gamesGroup.PATCH("", gameController.Update)
+		gamesGroup.DELETE("", gameController.Delete)
 	}
 
 	sessionsGroup := router.Group("sessions")

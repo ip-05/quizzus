@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/ip-05/quizzus/utils"
 	"nhooyr.io/websocket"
 )
 
@@ -25,26 +26,11 @@ type CoreController struct {
 	gameController *GameSocketController
 }
 
-func NewCoreController(game IGameService, user IUserService, session ISessionService) *CoreController {
+func NewCoreController(game GameService, user UserService, session SessionService) *CoreController {
 	return &CoreController{
 		gameController: NewGameSocketController(game, user, session),
 	}
 }
-
-const (
-	JoinGame       = "JOIN_GAME"
-	GetGame        = "GET_GAME"
-	LeaveGame      = "LEAVE_GAME"
-	IsOwner        = "IS_OWNER"
-	StartGame      = "START_GAME"
-	ResetGame      = "RESET_GAME"
-	AnswerQuestion = "ANSWER_QUESTION"
-	NextRound      = "NEXT_ROUND"
-	SendChat       = "SEND_CHAT"
-	ReceiveChat    = "RECEIVE_CHAT"
-	Ping           = "PING"
-	Pong           = "PONG"
-)
 
 func MessageReply(error bool, message string) SocketReply[types.Nil] {
 	return SocketReply[types.Nil]{
@@ -84,31 +70,31 @@ func (w CoreController) messageHandler(ctx context.Context, conn *websocket.Conn
 				var msg SocketMessage
 				err = json.Unmarshal(message, &msg)
 				if err != nil {
-					DataReply(true, "MESSAGE_ERROR", err.Error()).Send(conn)
+					DataReply(true, utils.MessageError, err.Error()).Send(conn)
 					break
 				}
 
 				switch msg.Message {
-				case JoinGame:
+				case utils.JoinGame:
 					w.gameController.JoinGame(ctx, msg.Data)
-				case LeaveGame:
+				case utils.LeaveGame:
 					w.gameController.LeaveGame(ctx)
-				case GetGame:
+				case utils.GetGame:
 					w.gameController.GetGame(ctx)
-				case IsOwner:
+				case utils.IsOwner:
 					w.gameController.IsOwner(ctx)
-				case StartGame:
+				case utils.StartGame:
 					w.gameController.StartGame(ctx)
-				case ResetGame:
+				case utils.ResetGame:
 					w.gameController.ResetGame(ctx)
-				case AnswerQuestion:
+				case utils.AnswerQuestion:
 					w.gameController.AnswerQuestion(ctx, msg.Data)
-				case SendChat:
+				case utils.SendChat:
 					w.gameController.SendChat(ctx, msg.Data)
-				case NextRound:
+				case utils.NextRound:
 					w.gameController.NextRound(ctx)
-				case Ping:
-					MessageReply(false, Pong).Send(conn)
+				case utils.Ping:
+					MessageReply(false, utils.Pong).Send(conn)
 				}
 			}
 		}

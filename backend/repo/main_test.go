@@ -2,12 +2,13 @@ package repo
 
 import (
 	"fmt"
+	"os"
+	"testing"
+
 	"github.com/ip-05/quizzus/config"
 	"github.com/ip-05/quizzus/entity"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"os"
-	"testing"
 )
 
 func TestMain(m *testing.M) {
@@ -15,7 +16,7 @@ func TestMain(m *testing.M) {
 }
 
 func SetupIntegration(t *testing.T) (*gorm.DB, func() error) {
-	cfg := config.InitConfig("config", "../config")
+	cfg := config.Init("config", "../config")
 
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",

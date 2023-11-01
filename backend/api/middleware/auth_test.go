@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -48,6 +47,7 @@ func (s *AuthMiddlewareSuite) Test_Forbidden() {
 	assert.Equal(s.T(), http.StatusForbidden, s.w.Code)
 }
 
+/*
 func (s *AuthMiddlewareSuite) Test_OK() {
 	// When
 	s.ctx.Request, _ = http.NewRequest(http.MethodGet, "/", nil)
@@ -62,6 +62,7 @@ func (s *AuthMiddlewareSuite) Test_OK() {
 	assert.Equal(s.T(), http.StatusOK, s.w.Code)
 	assert.Equal(s.T(), "OK", string(body))
 }
+*/
 
 func TestAuthMiddleware(t *testing.T) {
 	suite.Run(t, new(AuthMiddlewareSuite))

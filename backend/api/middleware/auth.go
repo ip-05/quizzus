@@ -17,10 +17,10 @@ type AuthedUser struct {
 }
 
 func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		header := c.GetHeader("Authorization")
+	return func(ctx *gin.Context) {
+		header := ctx.GetHeader("Authorization")
 		if header == "" {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Missing `Authorization` header."})
+			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Missing `Authorization` header."})
 			return
 		}
 
@@ -36,7 +36,7 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 		})
 
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -44,7 +44,7 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 			exp := int64(claims["exp"].(float64))
 			now := time.Now().Unix()
 			if now > exp {
-				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Expired token."})
+				ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Expired token."})
 				return
 			}
 
@@ -52,10 +52,10 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 				Id:   uint(claims["id"].(float64)),
 				Name: claims["name"].(string),
 			}
-			c.Set("authedUser", authedUser)
-			c.Next()
+			ctx.Set("authedUser", authedUser)
+			ctx.Next()
 		} else {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid token."})
+			ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid token."})
 		}
 	}
 }
