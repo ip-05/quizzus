@@ -29,7 +29,7 @@
     "eslint-plugin-prettier": "^5.0.1",
     "eslint-plugin-vue": "^9.18.1",
     "jsdom": "^22.1.0",
-    "prettier": "^2.8.8",
+    "prettier": "^3.0.3",
     "typescript": "^5.2.2",
     "vite": "^4.3.9",
     "vitest": "^0.32.0",
