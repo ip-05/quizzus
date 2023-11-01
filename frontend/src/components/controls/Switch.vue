@@ -100,11 +100,7 @@ withDefaults(defineProps<Props>(), { checked: false, size: 'medium' });
   left: calc(var(--container-width) - var(--switch-width) - var(--switch-padding));
 }
 
-/* .input:focus + .switch {
-  outline: 2px black solid;
-} */
-
-/* .input:focus:checked + .switch {
-  outline: 2px black solid;
-} */
+.input:focus-visible + .switch {
+  outline: 2px var(--focus-color) solid;
+}
 </style>
