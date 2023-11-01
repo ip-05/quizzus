@@ -10,9 +10,10 @@ interface Props {
 const props = defineProps<Props>();
 
 const getImageUrl = (name: string) =>
-  new URL(`../assets/svg/icon-${name}.svg`, import.meta.url).href;
+  new URL(`../../assets/svg/icon-${name}.svg`, import.meta.url).href;
 
 const source = computed(() => getImageUrl(props.icon));
+console.log(props.icon);
 </script>
 
 <template>
