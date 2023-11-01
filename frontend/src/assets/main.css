@@ -28,6 +28,8 @@
 
   --color-heading: var(--c-black);
   --color-text: var(--c-black-soft);
+
+  --focus-color: var(--c-black);
 }
 
 ::selection {
