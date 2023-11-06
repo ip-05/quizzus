@@ -1,36 +1,43 @@
-<script setup>
-import ButtonMedium from './buttons/ButtonMedium.vue';
-import { RouterLink } from 'vue-router';
+<script setup lang="ts">
+import { computed } from 'vue';
+import ButtonSecondary from './buttons/ButtonSecondary.vue';
+import { RouterLink, useRoute } from 'vue-router';
+
+const navs = [
+  { path: '/discover', name: 'Discover' },
+  { path: '/dashboard', name: 'Dashboard' },
+  { path: '/library', name: 'Library' },
+  { path: '/play', name: 'Join Game' },
+  { path: '/create', name: 'Create Game' },
+];
+
+const currentPath = computed(() => useRoute().path);
 </script>
 
 <template>
   <nav class="nav">
-    <div class="left">
-      <RouterLink to="/discover" class="logo"><h3>Quizzus</h3></RouterLink>
-      <RouterLink to="/discover" class="link"><ButtonMedium>Discover</ButtonMedium></RouterLink>
-      <RouterLink to="/dashboard" class="link"><ButtonMedium>Dashboard</ButtonMedium></RouterLink>
-      <RouterLink to="/library" class="link"><ButtonMedium>Library</ButtonMedium></RouterLink>
-    </div>
-    <div class="right">
-      <RouterLink to="/play" class="link"
-        ><ButtonMedium state="rainbow">Join Game</ButtonMedium></RouterLink
+    <RouterLink to="/" class="nav--item nav--logo"><h3>Quizzus</h3></RouterLink>
+    <RouterLink v-for="{ path, name } in navs" :key="path" :to="path" class="nav--item nav--link">
+      <ButtonSecondary
+        :style="currentPath === path ? 'active' : path === '/play' ? 'action' : 'default'"
+        >{{ name }}</ButtonSecondary
       >
-      <RouterLink to="/create" class="link"><ButtonMedium>Create Game</ButtonMedium></RouterLink>
-      <!-- TODO: when authed, show username -->
-      <RouterLink to="/login" class="link"><ButtonMedium>Login</ButtonMedium></RouterLink>
-    </div>
+    </RouterLink>
+    <!-- TODO: when authed, show username -->
+    <RouterLink to="/login" class="nav--item nav--link"
+      ><ButtonSecondary>Login</ButtonSecondary></RouterLink
+    >
   </nav>
 </template>
 
 <style scoped>
 .nav {
   display: flex;
-  justify-content: space-between;
   padding: 20px 30px;
   background: var(--color-background);
 }
 
-.logo {
+.nav--logo {
   display: flex;
   align-items: center;
   text-decoration: none;
@@ -38,17 +45,16 @@ import { RouterLink } from 'vue-router';
   margin-right: 20px;
 }
 
-.logo * {
+.nav--logo * {
   font-size: 18px;
   font-weight: 700;
 }
 
-.link {
+.nav--link {
   text-decoration: none;
 }
 
-.left,
-.right {
-  display: flex;
+.nav--item:nth-of-type(5) {
+  margin-left: auto;
 }
 </style>
