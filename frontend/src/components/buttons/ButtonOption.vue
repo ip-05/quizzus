@@ -21,7 +21,7 @@ withDefaults(defineProps<Props>(), { style: 'default', disabled: false });
 .button {
   width: auto;
   height: auto;
-  display: flex;
+  display: inline-flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;

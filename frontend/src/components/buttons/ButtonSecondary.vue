@@ -26,7 +26,7 @@ const currentStyle = computed(() => `button--${props.style}`);
 .button {
   width: auto;
   width: auto;
-  display: flex;
+  display: inline-flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;

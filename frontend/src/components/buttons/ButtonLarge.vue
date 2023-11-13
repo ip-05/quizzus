@@ -25,7 +25,7 @@ withDefaults(defineProps<Props>(), { style: 'default', disabled: false });
   width: auto;
   min-height: 51px;
   height: auto;
-  display: flex;
+  display: inline-flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
