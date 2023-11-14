@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, useSlots } from 'vue';
 import Icon from '../icons/Icon.vue';
+
+const slots = useSlots();
 
 interface Props {
   label: string;
@@ -18,6 +20,11 @@ const isChecked = computed(() => props.modelValue === props.value);
 
 <template>
   <label>
+    <template v-if="slots.content">
+      <span @click="() => $el.querySelector('.input').click()">
+        <slot name="content"></slot>
+      </span>
+    </template>
     <input
       class="input"
       type="radio"
@@ -25,7 +32,7 @@ const isChecked = computed(() => props.modelValue === props.value);
       :value="value"
       @change="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
     />
-    <span class="radio">
+    <span v-show="!slots.content" class="radio">
       <template v-if="isChecked">
         <Icon v-if="color === 'standart'" icon="radio-checked" />
         <Icon v-if="color === 'blue'" icon="radio-blue-checked" />

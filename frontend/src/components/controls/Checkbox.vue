@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, useSlots, onMounted } from 'vue';
 import Icon from '../icons/Icon.vue';
+
+const slots = useSlots();
 
 interface Props {
   value: string | number | (string | number)[];
@@ -19,6 +21,17 @@ const props = withDefaults(defineProps<Props>(), {
   color: 'standart',
 });
 
+const isChecked = ref(props.checked);
+
+// Manual checkbox update
+onMounted(() => {
+  const isOuterBoolean = typeof props.modelValue === 'boolean';
+  const isOuterArray = Array.isArray(props.modelValue);
+  if (isOuterBoolean || (isOuterArray && props.modelValue?.includes(props.value))) {
+    isChecked.value = !isChecked.value;
+  }
+});
+
 const computedModel = computed({
   get(): string | number | boolean | (string | number)[] | undefined {
     return props.modelValue;
@@ -27,12 +40,15 @@ const computedModel = computed({
     emit('update:modelValue', value);
   },
 });
-
-const isChecked = ref(props.checked);
 </script>
 
 <template>
   <label>
+    <template v-if="slots.content">
+      <span @click="() => ($el.querySelector('.input') as HTMLInputElement).click()">
+        <slot name="content"></slot>
+      </span>
+    </template>
     <input
       :id="id"
       v-model="computedModel"
@@ -43,7 +59,7 @@ const isChecked = ref(props.checked);
       class="input"
       @change="isChecked = !isChecked"
     />
-    <span class="checkbox">
+    <span v-show="!slots.content" class="checkbox">
       <template v-if="isChecked">
         <Icon v-if="color === 'standart'" icon="checkbox-checked" />
         <Icon v-if="color === 'blue'" icon="checkbox-blue-checked" />
