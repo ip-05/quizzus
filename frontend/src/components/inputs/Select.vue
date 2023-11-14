@@ -25,7 +25,12 @@ watch(selected, (value) => emit('update:modelValue', value));
 
 <template>
   <div class="form">
-    <v-select v-model="selected" :options="options" class="select"></v-select>
+    <v-select
+      v-model="selected"
+      :options="options"
+      class="select"
+      :placeholder="placeholder"
+    ></v-select>
   </div>
 </template>
 
