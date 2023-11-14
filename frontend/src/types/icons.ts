@@ -23,6 +23,8 @@ export type Icons =
   | 'question'
   | 'search'
   | 'settings'
+  | 'speaker'
+  | 'speaker-mute'
   | 'square-green'
   | 'square-white'
   | 'star-black'
