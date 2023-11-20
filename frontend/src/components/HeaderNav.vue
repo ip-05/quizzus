@@ -24,8 +24,8 @@ const currentPath = computed(() => useRoute().path);
       >
     </RouterLink>
     <!-- TODO: when authed, show username -->
-    <RouterLink to="/login" class="nav--item nav--link"
-      ><ButtonSecondary>Login</ButtonSecondary></RouterLink
+    <RouterLink to="/signin" class="nav--item nav--link"
+      ><ButtonSecondary>Sign In</ButtonSecondary></RouterLink
     >
   </nav>
 </template>
@@ -34,7 +34,6 @@ const currentPath = computed(() => useRoute().path);
 .nav {
   display: flex;
   padding: 20px 30px;
-  background: var(--color-background);
 }
 
 .nav--logo {

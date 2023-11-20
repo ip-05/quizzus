@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { RouterView } from 'vue-router';
 
 import HeaderNav from './components/HeaderNav.vue';
@@ -12,7 +12,9 @@ import Footer from './components/Footer.vue';
     </header>
     <main class="main">
       <div class="main__content">
-        <RouterView />
+        <transition name="page" mode="out-in">
+          <router-view></router-view>
+        </transition>
       </div>
     </main>
     <Footer />
@@ -41,5 +43,15 @@ import Footer from './components/Footer.vue';
 .main__content {
   max-width: 1024px;
   width: calc(100% - 30px * 2);
+}
+
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.15s ease;
+}
+
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
 }
 </style>

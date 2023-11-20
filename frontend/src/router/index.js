@@ -9,7 +9,9 @@ import EditView from '../views/EditView.vue';
 import GameView from '../views/GameView.vue';
 import ConsoleView from '../views/ConsoleView.vue';
 import PlayView from '../views/PlayView.vue';
+import SigninView from '../views/SigninView.vue';
 import NotFoundView from '../views/NotFoundView.vue';
+import DevComponentsView from '../views/DevComponentsView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -67,6 +69,16 @@ const router = createRouter({
       path: '/play/:id',
       name: 'play',
       component: PlayView,
+    },
+    {
+      path: '/signin',
+      name: 'signin',
+      component: SigninView,
+    },
+    {
+      path: '/dev/components',
+      name: 'Components Test',
+      component: DevComponentsView,
     },
     { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFoundView },
   ],
