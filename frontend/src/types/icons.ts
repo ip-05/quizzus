@@ -50,4 +50,8 @@ export type Icons =
   | 'checkbox-blue-checked'
   | 'checkbox-yellow-checked'
   | 'checkbox-red-checked'
+  | 'error-red'
+  | 'info-blue'
+  | 'warning-yellow'
+  | 'success-green'
   | 'checkbox-green-checked';

@@ -3,6 +3,10 @@ import { RouterView } from 'vue-router';
 
 import HeaderNav from './components/HeaderNav.vue';
 import Footer from './components/Footer.vue';
+import ToastMessage from './components/ToastMessage.vue';
+import { useToastMessageStore } from './stores/toast';
+
+const toast = useToastMessageStore();
 </script>
 
 <template>
@@ -19,6 +23,14 @@ import Footer from './components/Footer.vue';
     </main>
     <Footer />
   </div>
+  <Transition name="toast">
+    <ToastMessage
+      v-if="toast.hasMessage"
+      :type="toast.type"
+      :label="toast.label"
+      :message="toast.message"
+    />
+  </Transition>
 </template>
 
 <style scoped>
@@ -43,6 +55,16 @@ import Footer from './components/Footer.vue';
 .main__content {
   max-width: 1024px;
   width: calc(100% - 30px * 2);
+}
+
+.toast-enter-active,
+.toast-leave-active {
+  transition: opacity 0.15s ease;
+}
+
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
 }
 
 .page-enter-active,
