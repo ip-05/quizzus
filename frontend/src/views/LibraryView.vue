@@ -1,5 +1,5 @@
-<script setup></script>
+<script setup lang="ts"></script>
 
 <template>
-  <main>Library</main>
+  <main>Library page</main>
 </template>

@@ -1,5 +1,5 @@
-<script setup></script>
+<script setup lang="ts"></script>
 
 <template>
-  <main>Starred Games</main>
+  <main>Starred Games page</main>
 </template>

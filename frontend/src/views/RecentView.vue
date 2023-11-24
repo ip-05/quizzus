@@ -1,5 +1,5 @@
-<script setup></script>
+<script setup lang="ts"></script>
 
 <template>
-  <main>Recently Played</main>
+  <main>Recently Played page</main>
 </template>

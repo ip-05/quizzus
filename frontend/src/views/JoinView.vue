@@ -1,5 +1,5 @@
 <script setup lang="ts"></script>
 
 <template>
-  <main>Edit game</main>
+  <main>Join Game page</main>
 </template>
