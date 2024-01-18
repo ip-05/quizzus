@@ -59,5 +59,5 @@ func TestValidateQuestion(t *testing.T) {
 	actual.Options = []*Option{}
 	errValidate := actual.Validate()
 
-	assert.Contains(t, errValidate.Error(), "should be 4 options")
+	assert.Contains(t, errValidate.Error(), "should be 2 or 4 options")
 }

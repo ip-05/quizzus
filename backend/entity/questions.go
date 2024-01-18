@@ -43,8 +43,9 @@ func NewQuestion(q CreateQuestion) (*Question, error) {
 }
 
 func (q *Question) Validate() error {
-	if len(q.Options) != 4 {
-		return errors.New("should be 4 options")
+	len := len(q.Options)
+	if len != 2 && len != 4 {
+		return errors.New("should be 2 or 4 options")
 	}
 	return nil
 }
