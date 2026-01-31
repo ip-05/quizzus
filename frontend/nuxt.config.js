@@ -1,7 +1,7 @@
 import { defineNuxtConfig } from 'nuxt/config';
 
 export default defineNuxtConfig({
-  modules: ['@pinia/nuxt', '@nuxt/image-edge'],
+  modules: ['@pinia/nuxt', '@nuxt/image'],
   runtimeConfig: {
     public: {
       apiUrl: process.env.API_URL || 'http://localhost:3001',
